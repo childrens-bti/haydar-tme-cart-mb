@@ -11,13 +11,13 @@ git clone git@github.com:childrens-bti/haydar-scrna.git
 
 2. Pull the docker container:
 ```
-docker pull pgc-images.sbgenomics.com/schen8/haydar-scrna:latest
+docker pull pgc-images.sbgenomics.com/childrens-bti/haydar-scrna:latest
 ```
 NOTE: if running on a Mac with Apple Silicon chip (M1-M4), please add `--platform linux/amd64`; otherwise add `--platform linux/arm64`
 
-3. Start the docker container, from the `chaydar-scrna` folder, run:
+3. Start the docker container, from the `haydar-scrna` folder, run:
 ```
-docker run --platform linux/amd64 --name <CONTAINER_NAME> -d -e PASSWORD=ANYTHING -p 8787:8787 -v $PWD:/home/rstudio/haydar-scrna pgc-images.sbgenomics.com/schen8/haydar-scrna:latest
+docker run --platform linux/amd64 --name <CONTAINER_NAME> -d -e PASSWORD=ANYTHING -p 8787:8787 -v $PWD:/home/rstudio/haydar-scrna pgc-images.sbgenomics.com/childrens-bti/haydar-scrna:latest
 ```
 NOTE: if running on a Mac with Apple Silicon chip (M1-M4), please add `platform linux/amd64`
 
