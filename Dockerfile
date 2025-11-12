@@ -30,3 +30,42 @@ RUN apt-get -y --no-install-recommends install \
 # Required for installing pdftools, which is a dependency of gridGraphics
 RUN apt-get -y --no-install-recommends install \
     libpoppler-cpp-dev
+
+# Install java
+RUN apt-get update && apt-get -y --no-install-recommends install \
+   default-jdk \
+   libxt6
+
+# Enable github copilot
+RUN mkdir -p /etc/rstudio && echo "copilot-enabled=1" >> /etc/rstudio/rsession.conf
+
+# ---- R packages (scRNA-seq only) ----
+# Use CRAN mirror explicitly; Seurat v5 depends on SeuratObject (v5), sctransform, etc.
+RUN R -e 'options(Ncpus = max(1, parallel::detectCores()-1), repos = c(CRAN="https://cloud.r-project.org")); \
+          install.packages(c( \
+            "Seurat",         \
+            "sctransform",    \
+            "SeuratObject",   \
+            "rprojroot",      \
+            "tidyverse",      \
+            "Matrix",         \
+            "devtools",       \
+            "remotes",        \
+            "uwot",           \
+            "RcppAnnoy",       \
+            "scCustomize"     \
+          ))'
+
+# ---- Bioconductor packages ----
+RUN R -e 'if (!requireNamespace("BiocManager", quietly = TRUE)) install.packages("BiocManager", repos="https://cloud.r-project.org"); \
+          BiocManager::install(c("biomaRt", "SingleR", "ComplexHeatmap", "dittoSeq", "DropletUtils", "Nebulosa", "celldex"), ask = FALSE, update = TRUE)'
+
+## install GitHub packages
+RUN R -e "remotes::install_github('clauswilke/colorblindr', ref = '1ac3d4d62dad047b68bb66c06cee927a4517d678', dependencies = TRUE)"
+RUN R -e "remotes::install_github('thomasp85/patchwork')"
+RUN R -e 'remotes::install_github("chris-mcginnis-ucsf/DoubletFinder")'
+RUN R -e 'remotes::install_github("immunogenomics/presto")'
+
+WORKDIR /rocker-build/
+
+ADD Dockerfile .
