@@ -1,0 +1,220 @@
+---
+title: "02-lineage-annotation"
+author: "Sam Chen"
+date: "`r Sys.Date()`"
+output: 
+  html_document:
+  toc: TRUE
+---
+
+## Setup
+
+```{r load-packages, message=FALSE, warning=FALSE}
+# Load libraries
+library(rprojroot)
+library(dplyr)
+library(Seurat)
+library(patchwork)
+library(ggplot2)
+library(DoubletFinder)
+library(tidyverse)
+library(SeuratObject)
+library(scCustomize)
+library(presto)
+library(SingleR)
+library(celldex)
+
+# Define directories
+root_dir <- find_root(has_dir(".git"))
+data_dir <- file.path(root_dir, "data", "v1")
+analysis_dir <- file.path(root_dir, "analyses", "murine-cart-tumor")
+results_dir <- file.path(analysis_dir, "results")
+plot_dir <- file.path(analysis_dir, "plots")
+
+# Source custom theme
+source(file.path(root_dir, "figures", "theme.R"))
+
+# Source function
+source(file.path(analysis_dir, "util", "run_doubletfinder.R"))
+
+# set random seed
+set.seed(1234)
+```
+
+## Load data
+```{r load-seurat-object}
+obj <- readRDS(file.path(results_dir, "cart_integrated.rds"))
+```
+
+## SingleR annotation
+```{r singleR-annotation}
+# Load reference dataset
+general_ref <- MouseRNAseqData()
+immgen_ref <- ImmGenData()
+
+# Run SingleR
+general_annotations <- SingleR::SingleR(
+  test = GetAssayData(obj, slot = "data"),
+  ref = general_ref,
+  labels = general_ref$label.main
+)
+
+immgen_annotations <- SingleR::SingleR(
+  test = GetAssayData(obj, slot = "data"),
+  ref = immgen_ref,
+  labels = immgen_ref$label.main
+)
+# Add annotations to metadata
+obj$general_label <- general_annotations$labels
+obj$immgen_label <- immgen_annotations$labels
+```
+
+## Visualize annotations
+```{r visualize-annotations, fig.height=6, fig.width=12}
+p1 <- DimPlot(obj, group.by = "general_label", label = TRUE, repel = TRUE, reduction = "umap") + ggtitle("General Mouse Cell Types")
+p2 <- DimPlot(obj, group.by = "immgen_label", label = TRUE, repel = TRUE, reduction = "umap") + ggtitle("ImmGen Cell Types")
+p1 + p2
+```
+
+## Annotation summary
+```{r annotation-summary-general}
+SingleR::plotScoreHeatmap(general_annotations)
+SingleR::plotDeltaDistribution(general_annotations)
+```
+```{r annotation-summary-immgen}
+SingleR::plotScoreHeatmap(immgen_annotations)
+SingleR::plotDeltaDistribution(immgen_annotations)
+```
+
+## Clusters vs SingleR labels
+```{r clusters-vs-labels-general, fig.height=6, fig.width=6}
+general_annot <- as.data.frame(table(
+  Cluster = obj$seurat_clusters,
+  Annotation = obj$general_label
+)) %>%
+  group_by(Cluster) %>%
+  mutate(Percentage = Freq / sum(Freq) * 100) %>%
+  ungroup()
+
+general_annot %>%
+  ggplot(aes(x = Annotation, y = fct_rev(Cluster), fill = Percentage)) +
+  geom_tile(color = "white") +
+  scale_fill_viridis_c(option = "D") +
+  theme_bw() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    axis.text.y = element_text(size = 10),
+    plot.title = element_text(hjust = 0.5, face = "bold")
+  ) +
+  labs(x = "Annotation", y = "WNN Cluster",
+       fill = "Percentage",
+       title = "Seurat Cluster – General Annotation Composition Heatmap")
+```
+
+```{r clusters-vs-labels-immgen, fig.height=6, fig.width=6}
+general_annot <- as.data.frame(table(
+  Cluster = obj$seurat_clusters,
+  Annotation = obj$immgen_label
+)) %>%
+  group_by(Cluster) %>%
+  mutate(Percentage = Freq / sum(Freq) * 100) %>%
+  ungroup()
+
+general_annot %>%
+  ggplot(aes(x = Annotation, y = fct_rev(Cluster), fill = Percentage)) +
+  geom_tile(color = "white") +
+  scale_fill_viridis_c(option = "D") +
+  theme_bw() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    axis.text.y = element_text(size = 10),
+    plot.title = element_text(hjust = 0.5, face = "bold")
+  ) +
+  labs(x = "Annotation", y = "WNN Cluster",
+       fill = "Percentage",
+       title = "Seurat Cluster – Immgen Annotation Composition Heatmap")
+```
+
+## Check main lineage marker genes
+```{r marker-gene-expression, fig.height=6, fig.width=6}
+# Macrophages
+FeaturePlot_scCustom(obj, features = c("Lyz2", "Adgre1", "Cd68", "C1qa"), reduction = "umap", colors_use = viridis_light_high)
+# Microglia
+FeaturePlot_scCustom(obj, features = c("P2ry12", "Tmem119", "Sall1", "Hexb"), reduction = "umap", colors_use = viridis_light_high)
+# DC
+FeaturePlot_scCustom(obj, features = c("Cd74", "Flt3", "Itgax", "Cd209a"), reduction = "umap", colors_use = viridis_light_high)
+# T cells
+FeaturePlot_scCustom(obj, features = c("Cd3d", "Cd3e", "Trac", "Gzmb"), reduction = "umap", colors_use = viridis_light_high)
+# B cells
+FeaturePlot_scCustom(obj, features = c("Cd19", "Cd79a", "Ms4a1", "Cd79b"), reduction = "umap", colors_use = viridis_light_high)
+# Fibroblasts
+FeaturePlot_scCustom(obj, features = c("Pdgfra", "Col1a1", "Dcn", "Lum"), reduction = "umap", colors_use = viridis_light_high)
+# Endothelial Cells
+FeaturePlot_scCustom(obj, features = c("Pecam1", "Cdh5", "Kdr", "Flt1"), reduction = "umap", colors_use = viridis_light_high) 
+```
+
+## Manually annotate lineages to clean up labels
+```{r manual-annotation}
+new_cluster_ids <- c(
+  "0"= "Microglia", 
+  "1"= "Macrophages", 
+  "2"= "Microglia", 
+  "3"= "Microglia",
+  "4"= "Microglia",
+  "5"= "Macrophages",
+  "6"= "T cells", 
+  "7"= "Endothelial cells",
+  "8"= "Fibroblasts",
+  "9"= "Neurons",
+  "10"= "Dendritic cells",
+  "11"= "Macrophages",
+  "12"= "B cells",
+  "13"= "Neutrophils",
+  "14"= "Dendritic cells",
+  "15"= "Oligodendrocytes",
+  "16"= "Endothelial cells",
+  "17"= "T cells", 
+  "18"= "Astrocytes",
+  "19"= "Microglia",
+  "20"= "Fibroblasts",
+  "21"= "Monocytes",
+  "22"= "Fibroblasts",
+  "23"= "Monocytes"
+)
+
+obj$cell_type <- plyr::mapvalues(
+  x = as.character(obj$seurat_clusters),
+  from = names(new_cluster_ids),
+  to = as.vector(new_cluster_ids)
+)
+```
+
+## Visualize manual annotations
+```{r visualize-manual-annotations, fig.height=6, fig.width=6}
+DimPlot(obj, group.by = "cell_type", label = TRUE, repel = TRUE, reduction = "umap") + ggtitle("Lineage Annotations")
+```
+
+## Identify and export marker genes
+```{r identify-markers}
+cluster_markers <- FindAllMarkers(obj, 
+                                 only.pos = TRUE, min.pct = 0.5, logfc.threshold = 0.5, 
+                                 group.by = 'seurat_clusters', assay = 'RNA')
+
+lineage_markers <- FindAllMarkers(obj, 
+                                 only.pos = TRUE, min.pct = 0.5, logfc.threshold = 0.5, 
+                                 group.by = 'cell_type', assay = 'RNA')
+
+# Save markers
+write.csv(cluster_markers, file = file.path(results_dir, "cart_cluster_markers.csv"), row.names = FALSE)
+write.csv(lineage_markers, file = file.path(results_dir, "cart_lineage_markers.csv"), row.names = FALSE)
+```
+
+## Save annotated object
+```{r save-annotated-object}
+saveRDS(obj, file = file.path(results_dir, "cart_annotated.rds"))
+```
+
+## Session info
+```{r session-info}
+sessionInfo()
+```
