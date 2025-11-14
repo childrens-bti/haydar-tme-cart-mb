@@ -53,8 +53,8 @@ RUN R -e 'options(Ncpus = max(1, parallel::detectCores()-1), repos = c(CRAN="htt
             "remotes",        \
             "uwot",           \
             "RcppAnnoy",       \
-            "scCustomize"     \
-            "SoupX"
+            "scCustomize",     \
+            "SoupX"            \
           ))'
 
 # ---- Bioconductor packages ----
