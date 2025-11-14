@@ -24,7 +24,7 @@ library(presto)
 
 # Define directories
 root_dir <- find_root(has_dir(".git"))
-data_dir <- file.path(root_dir, "data", "v1")
+data_dir <- file.path(root_dir, "data", "v2")
 analysis_dir <- file.path(root_dir, "analyses", "murine-cart-tumor")
 results_dir <- file.path(analysis_dir, "results")
 plot_dir <- file.path(analysis_dir, "plots")
@@ -34,6 +34,7 @@ source(file.path(root_dir, "figures", "theme.R"))
 
 # Source function
 source(file.path(analysis_dir, "util", "run_doubletfinder.R"))
+source(file.path(analysis_dir, "util", "run_soupx.R"))
 
 # set random seed
 set.seed(1234)
@@ -54,13 +55,10 @@ conditions <- c("tumor", "tumor", "STOP", "STOP",
                 "CD8-41BB", "CD8-41BB",
                 "CD28-41BB", "CD28-41BB")
 
-### Load in data as a list of seurat objects
+### Load in data, run SoupX, and output a list of seurat objects
 obj_list <- lapply(samples, function(sample) {
-  data_path <- file.path(data_dir, sample)
-  print(data_path)
-  seurat_obj <- Read10X(data.dir = data_path) %>%
-    # more lenient parameters for flex libraries
-    CreateSeuratObject(project = sample, min.cells = 1, min.features = 50)
+  print(sample)
+  seurat_obj <- run_soupx(data_dir, sample)
   seurat_obj[["sample"]] <- sample
   seurat_obj[["condition"]] <- conditions[which(samples == sample)]
   return(seurat_obj)
