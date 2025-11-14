@@ -26,7 +26,7 @@ library(celldex)
 
 # Define directories
 root_dir <- find_root(has_dir(".git"))
-data_dir <- file.path(root_dir, "data", "v1")
+data_dir <- file.path(root_dir, "data", "v2")
 analysis_dir <- file.path(root_dir, "analyses", "murine-cart-tumor")
 results_dir <- file.path(analysis_dir, "results")
 plot_dir <- file.path(analysis_dir, "plots")
@@ -36,6 +36,7 @@ source(file.path(root_dir, "figures", "theme.R"))
 
 # Source function
 source(file.path(analysis_dir, "util", "run_doubletfinder.R"))
+source(file.path(analysis_dir, "util", "run_soupx.R"))
 
 # set random seed
 set.seed(1234)
@@ -150,36 +151,31 @@ FeaturePlot_scCustom(obj, features = c("Cd19", "Cd79a", "Ms4a1", "Cd79b"), reduc
 # Fibroblasts
 FeaturePlot_scCustom(obj, features = c("Pdgfra", "Col1a1", "Dcn", "Lum"), reduction = "umap", colors_use = viridis_light_high)
 # Endothelial Cells
-FeaturePlot_scCustom(obj, features = c("Pecam1", "Cdh5", "Kdr", "Flt1"), reduction = "umap", colors_use = viridis_light_high) 
+FeaturePlot_scCustom(obj, features = c("Pecam1", "Cdh5", "Kdr", "Flt1"), reduction = "umap", colors_use = viridis_light_high)
+# Neurons
+FeaturePlot_scCustom(obj, features = c("Map2", "Tubb3", "Rbfox3", "Syt1"), reduction = "umap", colors_use = viridis_light_high)
 ```
 
 ## Manually annotate lineages to clean up labels
 ```{r manual-annotation}
 new_cluster_ids <- c(
   "0"= "Microglia", 
-  "1"= "Macrophages", 
+  "1"= "Neurons", 
   "2"= "Microglia", 
-  "3"= "Microglia",
-  "4"= "Microglia",
-  "5"= "Macrophages",
-  "6"= "T cells", 
+  "3"= "Macrophages",
+  "4"= "Macrophages",
+  "5"= "Lymphoid cells",
+  "6"= "Microglia", 
   "7"= "Endothelial cells",
   "8"= "Fibroblasts",
-  "9"= "Neurons",
+  "9"= "Macrophages",
   "10"= "Dendritic cells",
-  "11"= "Macrophages",
-  "12"= "B cells",
-  "13"= "Neutrophils",
-  "14"= "Dendritic cells",
-  "15"= "Oligodendrocytes",
-  "16"= "Endothelial cells",
-  "17"= "T cells", 
-  "18"= "Astrocytes",
-  "19"= "Microglia",
-  "20"= "Fibroblasts",
-  "21"= "Monocytes",
-  "22"= "Fibroblasts",
-  "23"= "Monocytes"
+  "11"= "Neutrophils",
+  "12"= "Dendritic cells",
+  "13"= "Oligodendrocytes",
+  "14"= "Epithelial cells",
+  "15"= "Astrocytes",
+  "16"= "Lymphoid cells"
 )
 
 obj$cell_type <- plyr::mapvalues(
