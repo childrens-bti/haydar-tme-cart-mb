@@ -60,7 +60,7 @@ RUN R -e 'options(Ncpus = max(1, parallel::detectCores()-1), repos = c(CRAN="htt
 # ---- Bioconductor packages ----
 RUN R -e 'if (!requireNamespace("BiocManager", quietly = TRUE)) install.packages("BiocManager", repos="https://cloud.r-project.org"); \
           BiocManager::install(c("biomaRt", "SingleR", "ComplexHeatmap", "dittoSeq", "DropletUtils", "Nebulosa", "celldex", \
-          "fgsea", "AUCell", "sccomp", "limma", "edgeR"), ask = FALSE, update = TRUE)'
+          "fgsea", "AUCell", "sccomp", "limma", "edgeR", "MAST"), ask = FALSE, update = TRUE)'
 
 ## finish sccomp installation
 RUN R -e 'install.packages("cmdstanr", repos = c("https://stan-dev.r-universe.dev/", getOption("repos")))'
