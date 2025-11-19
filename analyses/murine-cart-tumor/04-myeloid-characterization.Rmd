@@ -18,11 +18,11 @@ library(ggplot2)
 library(tidyverse)
 library(SeuratObject)
 library(scCustomize)
-library(presto)
-library(decoupleR)
 library(AUCell)
 library(msigdbr)
 library(sccomp)
+library(pheatmap)
+library(fgsea)
 
 # Define directories
 root_dir <- find_root(has_dir(".git"))
@@ -63,9 +63,11 @@ cluster_markers <- FindAllMarkers(myeloid_obj,
                                   assay = "RNA",
                                   slot = "data",
                                   only.pos = TRUE,
-                                  min.pct = 0.5,
+                                  min.pct = 0.25,
                                   logfc.threshold = 0.25,
                                   test.use = "MAST")
+
+write.csv(cluster_markers, file.path(results_dir, "myeloid_subcluster_markers.csv"), row.names = FALSE)
 ```
 
 ## Visualize top markers
@@ -130,6 +132,7 @@ sccomp_result =
 ```{r visualize-sccomp-results}
 sccomp_result |> plot()
 ```
+
 ``` {r sccomp-pairwise-fc}
 sccomp_result  |> 
    sccomp_proportional_fold_change(
@@ -139,11 +142,34 @@ sccomp_result  |>
     ) |> 
   select(cell_group, statement)
 ```
-## Pathway and geneset analysis using decoupler
-```{r get-genesets, message=FALSE, warning=FALSE}
-# progeny
-progeny_pathways <- decoupleR::get_progeny(organism = "mouse", top = 500)
+## plot relative proportions of clusters between conditions
+```{r plot-relative-proportions}
 
+## stacked barplot
+prop_df <- myeloid_obj@meta.data %>%
+  count(condition, seurat_clusters) %>%
+  group_by(condition) %>%
+  mutate(prop = n / sum(n))
+
+ggplot(prop_df, aes(x = condition, y = prop, fill = seurat_clusters)) +
+  geom_col(position = position_dodge(width = 0.8)) +
+  ylab("Proportion") +
+  theme_classic()
+
+## dotplot of proportions
+ggplot(prop_df, aes(x = condition, y = seurat_clusters, size = prop, color = prop)) +
+  geom_point() +
+  scale_color_viridis_c() +
+  scale_y_discrete(limits = rev) + 
+  theme_classic() +
+  ylab("Cluster") + 
+  xlab("Condition")
+```
+
+# Single Cell gene set analysis
+
+## AUCell scoring on MSigDB Hallmark Gene sets
+```{r get-genesets, message=FALSE, warning=FALSE}
 # msigdb hallmark
 msigdb_hallmark <- msigdbr::msigdbr(species = "Mus musculus", category = "H") %>%
   dplyr::select(gs_name, gene_symbol) %>%
@@ -151,7 +177,14 @@ msigdb_hallmark <- msigdbr::msigdbr(species = "Mus musculus", category = "H") %>
   dplyr::summarise(genes = list(gene_symbol)) %>%
   deframe()
 
-# msigdb c7 (immunologic signatures)
+# c5 onology
+msigdb_c5 <- msigdbr::msigdbr(species = "Mus musculus", category = "C5", subcategory = "BP") %>%
+  dplyr::select(gs_name, gene_symbol) %>%
+  dplyr::group_by(gs_name) %>%
+  dplyr::summarise(genes = list(gene_symbol)) %>%
+  deframe()
+
+# c7 immune
 msigdb_c7 <- msigdbr::msigdbr(species = "Mus musculus", category = "C7") %>%
   dplyr::select(gs_name, gene_symbol) %>%
   dplyr::group_by(gs_name) %>%
@@ -164,7 +197,6 @@ msigdb_c7 <- msigdbr::msigdbr(species = "Mus musculus", category = "C7") %>%
 # AUCell on hallmark genesets
 cells_rankings <- AUCell_buildRankings(GetAssayData(myeloid_obj, assay = "RNA", slot = "data"), nCores = 4, plotStats = TRUE)
 hallmark_AUC <- AUCell_calcAUC(msigdb_hallmark, cells_rankings)
-hallmark_thresholds <- AUCell_exploreThresholds(hallmark_AUC, plotHist=TRUE, assign=TRUE) 
 ```
 
 ```{r visualize-hallmark-activity, fig.height=10, fig.width=16}
@@ -191,130 +223,185 @@ VlnPlot_scCustom(myeloid_obj, features = hallmark_pathways_to_plot, group.by = "
   plot_annotation(title = "Hallmark Pathway Activity by Myeloid Subcluster")
 ```
 
-## DE genes analysis between conditions within each myeloid subcluster
-Use pseudobulk + EdgeR as it is more statistically sound compared to the default Wilcox test. 
+## Cluster vs pathway heatmap of AUCell scores
+```{r cluster-pathway-heatmap, fig.height=8, fig.width=16}
+# z scores of AUCell scores across clusters per gene set
+hallmark_scores_df$cluster = myeloid_obj$seurat_clusters
 
-```{r pseudobulk-edgeR-de-analysis}
-# extract raw counts and meta data
-counts <- GetAssayData(myeloid_obj, assay = "RNA", slot = "counts")
-meta <- myeloid_obj@meta.data
-meta$cluster <- paste0("c", meta$seurat_clusters)
-samples_df <- meta %>% distinct(.data[['sample']], .data[['condition']])
+avg_hallmark_scores <- hallmark_scores_df %>%
+  group_by(cluster) %>%
+  summarise(across(starts_with("HALLMARK"), mean)) %>%
+  column_to_rownames("cluster")
 
-pseudobulk_by_cluster <- function(counts, cell_meta,
-                                  cluster_col = "cluster",
-                                  sample_col = "sample_id") {
-  # Make a combined grouping label: "sample_cluster"
-  group_ids <- paste(cell_meta[[sample_col]], cell_meta[[cluster_col]], sep = "__")
-  
-  # For each group, sum counts across its cells
-  # This uses Matrix's efficient rowSums on sparse matrices
-  groups <- split(seq_along(group_ids), group_ids)
-  
-  pb_list <- lapply(groups, function(idx) {
-    if (length(idx) == 1L) {
-      counts[, idx, drop = FALSE]
-    } else {
-      Matrix::rowSums(counts[, idx, drop = FALSE])
-    }
-  })
-  
-  pb_mat <- do.call(cbind, pb_list)
-  colnames(pb_mat) <- names(groups)
-  round(pb_mat)
-}
-
-pb_counts <- pseudobulk_by_cluster(counts, meta,
-                                   cluster_col = "cluster",
-                                   sample_col = "sample")
-dim(pb_counts)
+hallmark_z_scores <- scale(avg_hallmark_scores)
 
 
+# Color scale
+colors <- rev(RColorBrewer::brewer.pal(n = 11, name = "RdBu"))
+colors.use <- grDevices::colorRampPalette(colors = colors)(100)
+breaks <- seq(-3, 3, length.out = 101)
 
-pb_samples <- data.frame(sample_cluster = colnames(pb_counts)) |>
-  tidyr::separate(sample_cluster, into = c("sample", "cluster"), sep = "__")
-
-# Map condition (and other covariates) from original cell-level metadata
-sample_level <- meta %>%
-  dplyr::select(sample, condition) %>%
-  distinct()
-
-pb_samples <- pb_samples %>%
-  left_join(sample_level, by = "sample")
-
-head(pb_samples)
-
-run_edger_multi_condition <- function(cluster_id,
-                                      pb_counts,
-                                      pb_samples,
-                                      condition_col = "condition",
-                                      min_reps = 2,
-                                      do_pairwise = TRUE) {
-  # subset to cluster
-  keep_lib   <- pb_samples$cluster == cluster_id
-  sub_counts <- pb_counts[, keep_lib, drop = FALSE]
-  sub_samples <- pb_samples[keep_lib, , drop = FALSE]
-  
-  # need ≥2 conditions
-  cond <- factor(sub_samples[[condition_col]])
-  if (length(levels(cond)) < 2L) {
-    message("Cluster ", cluster_id, ": only one condition present, skipping.")
-    return(NULL)
-  }
-  # need enough reps per condition
-  if (any(table(cond) < min_reps)) {
-    message("Cluster ", cluster_id, ": not enough replicates per condition, skipping.")
-    return(NULL)
-  }
-  
-  # DGEList
-  y <- DGEList(counts = sub_counts, samples = sub_samples)
-  
-  # Filter lowly expressed genes using full design
-  design <- model.matrix(~ 0 + cond)
-  colnames(design) <- levels(cond)   # nicer names
-  
-  keep_genes <- filterByExpr(y, design = design)
-  y <- y[keep_genes, , keep.lib.sizes = FALSE]
-  
-  # Normalization + dispersion
-  y <- calcNormFactors(y)
-  y <- estimateDisp(y, design)
-  fit <- glmQLFit(y, design)
-  
-  out_list <- list()
-  
-  ## 3a. Overall test: any condition difference (F-test)
-  overall_test <- glmQLFTest(fit, coef = 1:ncol(design))
-  overall_res <- topTags(overall_test, n = Inf)$table
-  overall_res$gene    <- rownames(overall_res)
-  overall_res$cluster <- cluster_id
-  overall_res$contrast <- "overall"
-  out_list[["overall"]] <- overall_res
-  
-  ## 3b. Pairwise contrasts between conditions
-  if (do_pairwise && length(levels(cond)) >= 2L) {
-    levs <- levels(cond)
-    for (i in seq_along(levs)) {
-      for (j in seq_along(levs)) {
-        if (j <= i) next
-        c1 <- levs[j]
-        c0 <- levs[i]
-        contrast_vec <- rep(0, length(levs))
-        names(contrast_vec) <- levs
-        contrast_vec[c1] <-  1
-        contrast_vec[c0] <- -1
-        
-        qlf <- glmQLFTest(fit, contrast = contrast_vec)
-        res <- topTags(qlf, n = Inf)$table
-        res$gene     <- rownames(res)
-        res$cluster  <- cluster_id
-        res$contrast <- paste0(c1, "_vs_", c0)
-        out_list[[paste0(c1, "_vs_", c0)]] <- res
-      }
-    }
-  }
-  
-  dplyr::bind_rows(out_list)
-}
+pheatmap::pheatmap(mat = hallmark_z_scores,
+                   color = colors.use,
+                   border_color = "white",
+                   breaks = breaks,
+                   clustering_distance_rows = "correlation",
+                  clustering_distance_cols = "correlation") 
 ```
+## GSEA analysis of Hallmark gene sets
+```{r gsea-hallmark}
+# get foldchanges for each gene per cluster
+clusters <- levels(Idents(myeloid_obj))
+fc_list <- lapply(clusters, function(cl){
+  df <- FoldChange(
+    object = myeloid_obj,
+    ident.1 = cl,
+    ident.2 = NULL,
+    assay = "RNA",
+    slot = "data"
+  )
+  df <- as.data.frame(df)
+  df$gene <- rownames(df)
+
+  # Filter by pct.1
+  df <- df %>% filter(pct.1 >= 0.05)
+  
+  df$cluster <- cl
+  df
+})
+names(fc_list) <- clusters  
+
+# rank genes by product of log FCs and -log10 p values
+make_rank_vector <- function(df) {
+  stat <- df$avg_log2FC
+  names(stat) <- df$gene
+  stat[is.finite(stat)]
+}
+
+fgsea_list_hallmark <- map(fc_list, function(df_cluster) {
+  stats_vec <- make_rank_vector(df_cluster)
+  print(length(stats_vec))
+
+  fgsea(
+    pathways = msigdb_hallmark,
+    stats    = stats_vec,
+    minSize  = 15,
+    maxSize  = 500,
+  )
+})
+
+fgsea_res_hallmark <- imap_dfr(fgsea_list_hallmark, ~ mutate(.x, cluster = .y))
+fgsea_res_hallmark_sig <- fgsea_res_hallmark %>% 
+  filter(padj < 0.1 & NES > 0) %>%
+  arrange(cluster, desc(NES)) %>%
+  select(cluster, pathway, NES, pval, padj)
+write.csv(fgsea_res_hallmark_sig, file.path(results_dir, "myeloid_subcluster_hallmark_gsea_results.csv"), row.names = FALSE)
+```
+
+Visualize select significant genesets
+```{r visualize-gsea-results, fig.height=8, fig.width=12}
+c0_ranks <- make_rank_vector(fc_list[["0"]])
+c7_ranks <- make_rank_vector(fc_list[["7"]])
+
+fgsea::plotEnrichment(msigdb_hallmark[["HALLMARK_TNFA_SIGNALING_VIA_NFKB"]], c0_ranks) +
+  ggtitle("Cluster 0: TNFA Signaling via NFKB")
+
+fgsea::plotEnrichment(msigdb_hallmark[["HALLMARK_INTERFERON_GAMMA_RESPONSE"]], c7_ranks) +
+  ggtitle("Cluster 7: Interferon Gamma Response")
+```
+## GSEA on C5 GO gene sets
+```{r gsea-c5}
+fgsea_list_c5 <- map(fc_list, function(df_cluster) {
+  stats_vec <- make_rank_vector(df_cluster)
+  print(length(stats_vec))
+  
+  fgsea(
+    pathways = msigdb_c5,
+    stats    = stats_vec,
+    minSize  = 15,
+    maxSize  = 500,
+  )
+})
+
+fgsea_res_c5 <- imap_dfr(fgsea_list_c5, ~ mutate(.x, cluster = .y))
+fgsea_res_c5_sig <- fgsea_res_c5 %>% 
+  filter(padj < 0.1) %>%
+  arrange(cluster, desc(NES)) %>%
+  select(cluster, pathway, NES, pval, padj)
+write.csv(fgsea_res_c5_sig, file.path(results_dir, "myeloid_subcluster_c5_gsea_results.csv"), row.names = FALSE)
+```
+
+## GSEA on C7 immune gene sets
+```{r gsea-c7}
+fgsea_list_c7 <- map(fc_list, function(df_cluster) {
+  stats_vec <- make_rank_vector(df_cluster)
+  print(length(stats_vec))
+  
+  fgsea(
+    pathways = msigdb_c7,
+    stats    = stats_vec,
+    minSize  = 15,
+    maxSize  = 500,
+  )
+})
+
+fgsea_res_c7 <- imap_dfr(fgsea_list_c7, ~ mutate(.x, cluster = .y))
+fgsea_res_c7_sig <- fgsea_res_c7 %>% 
+       filter(padj < 0.1) %>%
+       arrange(cluster, desc(NES)) %>%
+       select(cluster, pathway, NES, pval, padj)
+write.csv(fgsea_res_c7_sig, file.path(results_dir, "myeloid_subcluster_c7_gsea_results.csv"), row.names = FALSE)
+```
+
+# Summary of the 8 myeloid clusters
+## Cluster 0: Inflammatory activated microglia
+- Key markers:
+  - Inflammatory/chemokine: Il1a, Tnf, Ccl3, Icam1
+  - Activation markers: Egr1, Kdm6b
+  - Core microlia: Sparc, Hexb, Csf1r
+- Enriched in tumor and STOP samples
+
+## Cluster 1: Homeostatic/stress-response microglia
+- Key markers:
+  - Core microlia: Sparc, Hexb, Csf1r
+  - Metababolic: Selenop, Sgk1
+  - Stress response: Hspa1a, Hspa1b, Hsp90aa1
+- Enriched in tumor and STOP samples
+
+## Cluster 2: Complement/phagocytic microglia
+- Key markers:
+  - Complement: C1qa, C1qb, Tyrobp
+  - Lysosomal/phagocytic: Ctsd, Ctsb
+- Slightly enriched in CD28-41BB samples
+
+## Cluster 3: TAM (Tumor associated macrophages)
+- Key markers:
+  - TAM markers: Apoe, Lyz2, Ms4a7, Cd14
+- Enriched in 41BB-L and B7H3 samples
+
+## Cluster 4: MHCII+ antigen presenting macrophages
+- Key markers:
+  - MHCII: H2-Aa, H2-Ab1, Cd74
+- Enriched in CD8-41BB samples
+
+## Cluster 5: Lipid-loaded TAMs
+- Key markers:
+  - Lipid metabolism: Gpnmb, Fabp5, Lipa
+  - TAM markers: Lgals3, Lyz2
+- Enriched in B7H3 samples
+
+## Cluster 6: Perivascular macrophages
+- Key markers:
+  - Perivascular markers: Mrc1, Dab2, Gas6
+- Enriched in B7H3 and 41BB-L samples
+
+## Cluster 7: Interferon-responsive macrophages
+- Key markers:
+  - Interferon response: Ifit2, Ifit3, Rsad2, Isg15, Irf7
+- Enriched in B7H3 samples
+
+## Session Info
+```{r session-info}
+sessionInfo()
+```
+  
