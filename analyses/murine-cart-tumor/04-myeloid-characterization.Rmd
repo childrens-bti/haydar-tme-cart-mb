@@ -19,7 +19,9 @@ library(tidyverse)
 library(SeuratObject)
 library(scCustomize)
 library(presto)
+library(decoupleR)
 library(AUCell)
+library(msigdbr)
 library(sccomp)
 
 # Define directories
@@ -38,4 +40,281 @@ source(file.path(analysis_dir, "util", "run_soupx.R"))
 
 # set random seed
 set.seed(1234)
+```
+
+## Load Data
+```{r load-data}
+# Load Seurat object
+myeloid_obj <- readRDS(file.path(results_dir, "cart_myeloid_subclusters.rds"))
+```
+
+## Visualize myeloid subclusters
+```{r visualize-myeloid-subclusters, fig.height=6, fig.width=12}
+p1 <- DimPlot(myeloid_obj, reduction = "umap", group.by = "seurat_clusters", label = TRUE, label.size = 4) + 
+  ggtitle("Subclusters")
+p2 <- DimPlot(myeloid_obj, reduction = "umap", group.by = "cell_type", label = TRUE, label.size = 4) + 
+  ggtitle("Myeloid Cell Lineages")
+
+p1 + p2
+```
+## Cluster marker genes
+```{r cluster-markers, message=FALSE, warning=FALSE}
+cluster_markers <- FindAllMarkers(myeloid_obj,
+                                  assay = "RNA",
+                                  slot = "data",
+                                  only.pos = TRUE,
+                                  min.pct = 0.5,
+                                  logfc.threshold = 0.25,
+                                  test.use = "MAST")
+```
+
+## Visualize top markers
+```{r visualize-top-markers, fig.height=6, fig.width=6}
+top_markers_table <- cluster_markers %>%
+  group_by(cluster) %>%
+  slice_max(order_by = avg_log2FC, n = 4) %>%
+  ungroup() %>%
+  arrange(cluster, desc(avg_log2FC))
+
+for (clust in unique(top_markers_table$cluster)) {
+  clust_markers <- top_markers_table %>% filter(cluster == clust) %>% pull(gene)
+  p <- FeaturePlot_scCustom(myeloid_obj, features = clust_markers, reduction = "umap", pt.size = 0.1, alpha_exp = 0.5, colors_use = viridis_light_high) + 
+    plot_annotation(title = paste0("Cluster ", clust))
+  print(p)
+}
+```
+
+```{r other-markers, fig.height=6, fig.width=6}
+FeaturePlot_scCustom(myeloid_obj, features = c("Lyz2", "Apoc2", "Ifngr2", "Irf7"), reduction = "umap", pt.size = 0.1, alpha_exp = 0.5, colors_use = viridis_light_high) + plot_annotation(title = "Inflammation")
+
+FeaturePlot_scCustom(myeloid_obj, features = c("Arg1", "Ccl8", "Spp1", "Gpnmb"), reduction = "umap", pt.size = 0.1, alpha_exp = 0.5, colors_use = viridis_light_high) + plot_annotation(title = "Immune regulation")
+
+FeaturePlot_scCustom(myeloid_obj, features = c("Arg1", "Mrc1", "Chil3", "Fn1"), reduction = "umap", pt.size = 0.1, alpha_exp = 0.5, colors_use = viridis_light_high) + plot_annotation(title = "Immunosuppressive")
+
+FeaturePlot_scCustom(myeloid_obj, features = c("Cxcl2", "Thbs1", "Pf4", "Isg15"), reduction = "umap", pt.size = 0.1, alpha_exp = 0.5, colors_use = viridis_light_high) + plot_annotation(title = "Proinflammatory")
+```
+
+## Composition analysis using sccomp
+
+```{r visualize-split-umap, fig.height=8, fig.width=12}
+DimPlot(myeloid_obj, reduction = "umap", group.by = "seurat_clusters", split.by = "condition", ncol = 3, label = TRUE, label.size = 4) + 
+  ggtitle("Myeloid Subclusters by Condition")
+```
+
+```{r composition-analysis-sccomp, message=FALSE, warning=FALSE}
+sccomp_input <- myeloid_obj@meta.data |>
+  tibble::rownames_to_column("cell") |>
+  dplyr::select(
+    cell,
+    sample = sample,
+    cell_group = seurat_clusters,
+    condition
+  ) %>% mutate(condition = factor(condition,
+               levels = c('tumor', 'STOP', '41BB-L', 'B7H3', 'CD28-41BB', 'CD8-41BB'))) %>%  
+  as_tibble()
+
+sccomp_result = 
+  sccomp_input |>
+  sccomp_estimate( 
+    formula_composition = ~ condition, 
+    .sample = sample, 
+    .cell_group = cell_group,
+    bimodal_mean_variability_association  = TRUE,
+    cores = 4,
+    verbose = FALSE
+  ) |> 
+  sccomp_test()
+
+```
+
+```{r visualize-sccomp-results}
+sccomp_result |> plot()
+```
+``` {r sccomp-pairwise-fc}
+sccomp_result  |> 
+   sccomp_proportional_fold_change(
+     formula_composition = ~  condition,
+     from =  "tumor", 
+     to = "B7H3"
+    ) |> 
+  select(cell_group, statement)
+```
+## Pathway and geneset analysis using decoupler
+```{r get-genesets, message=FALSE, warning=FALSE}
+# progeny
+progeny_pathways <- decoupleR::get_progeny(organism = "mouse", top = 500)
+
+# msigdb hallmark
+msigdb_hallmark <- msigdbr::msigdbr(species = "Mus musculus", category = "H") %>%
+  dplyr::select(gs_name, gene_symbol) %>%
+  dplyr::group_by(gs_name) %>%
+  dplyr::summarise(genes = list(gene_symbol)) %>%
+  deframe()
+
+# msigdb c7 (immunologic signatures)
+msigdb_c7 <- msigdbr::msigdbr(species = "Mus musculus", category = "C7") %>%
+  dplyr::select(gs_name, gene_symbol) %>%
+  dplyr::group_by(gs_name) %>%
+  dplyr::summarise(genes = list(gene_symbol)) %>%
+  deframe()
+```
+
+## Hallmark gene set activity by myeloid subcluster
+```{r hallmark-activity, message=FALSE, warning=FALSE}
+# AUCell on hallmark genesets
+cells_rankings <- AUCell_buildRankings(GetAssayData(myeloid_obj, assay = "RNA", slot = "data"), nCores = 4, plotStats = TRUE)
+hallmark_AUC <- AUCell_calcAUC(msigdb_hallmark, cells_rankings)
+hallmark_thresholds <- AUCell_exploreThresholds(hallmark_AUC, plotHist=TRUE, assign=TRUE) 
+```
+
+```{r visualize-hallmark-activity, fig.height=10, fig.width=16}
+# add hallmark scores to seurat object
+hallmark_scores_df <- as.data.frame(t(getAUC(hallmark_AUC)))
+myeloid_obj <- AddMetaData(myeloid_obj, metadata = hallmark_scores_df)
+# visualize selected hallmark pathways
+hallmark_pathways_to_plot <- c("HALLMARK_INFLAMMATORY_RESPONSE",
+                                "HALLMARK_TNFA_SIGNALING_VIA_NFKB",
+                                "HALLMARK_COAGULATION",
+                                "HALLMARK_INTERFERON_ALPHA_RESPONSE",
+                                "HALLMARK_COMPLEMENT",
+                               "HALLMARK_GLYCOLYSIS",
+                               "HALLMARK_REACTIVE_OXYGEN_SPECIES_PATHWAY",
+                               "HALLMARK_E2F_TARGETS",
+                               "HALLMARK_MYC_TARGETS_V1")
+FeaturePlot_scCustom(myeloid_obj, features = hallmark_pathways_to_plot, reduction = "umap",
+                     pt.size = 0.1, alpha_exp = 0.5, colors_use = viridis_plasma_light_high) + 
+  plot_annotation(title = "Hallmark Pathway Activity in Myeloid Subclusters")
+
+
+VlnPlot_scCustom(myeloid_obj, features = hallmark_pathways_to_plot, group.by = "seurat_clusters",
+                 pt.size = 0, log = FALSE, colors_use = viridis::viridis(8)) + 
+  plot_annotation(title = "Hallmark Pathway Activity by Myeloid Subcluster")
+```
+
+## DE genes analysis between conditions within each myeloid subcluster
+Use pseudobulk + EdgeR as it is more statistically sound compared to the default Wilcox test. 
+
+```{r pseudobulk-edgeR-de-analysis}
+# extract raw counts and meta data
+counts <- GetAssayData(myeloid_obj, assay = "RNA", slot = "counts")
+meta <- myeloid_obj@meta.data
+meta$cluster <- paste0("c", meta$seurat_clusters)
+samples_df <- meta %>% distinct(.data[['sample']], .data[['condition']])
+
+pseudobulk_by_cluster <- function(counts, cell_meta,
+                                  cluster_col = "cluster",
+                                  sample_col = "sample_id") {
+  # Make a combined grouping label: "sample_cluster"
+  group_ids <- paste(cell_meta[[sample_col]], cell_meta[[cluster_col]], sep = "__")
+  
+  # For each group, sum counts across its cells
+  # This uses Matrix's efficient rowSums on sparse matrices
+  groups <- split(seq_along(group_ids), group_ids)
+  
+  pb_list <- lapply(groups, function(idx) {
+    if (length(idx) == 1L) {
+      counts[, idx, drop = FALSE]
+    } else {
+      Matrix::rowSums(counts[, idx, drop = FALSE])
+    }
+  })
+  
+  pb_mat <- do.call(cbind, pb_list)
+  colnames(pb_mat) <- names(groups)
+  round(pb_mat)
+}
+
+pb_counts <- pseudobulk_by_cluster(counts, meta,
+                                   cluster_col = "cluster",
+                                   sample_col = "sample")
+dim(pb_counts)
+
+
+
+pb_samples <- data.frame(sample_cluster = colnames(pb_counts)) |>
+  tidyr::separate(sample_cluster, into = c("sample", "cluster"), sep = "__")
+
+# Map condition (and other covariates) from original cell-level metadata
+sample_level <- meta %>%
+  dplyr::select(sample, condition) %>%
+  distinct()
+
+pb_samples <- pb_samples %>%
+  left_join(sample_level, by = "sample")
+
+head(pb_samples)
+
+run_edger_multi_condition <- function(cluster_id,
+                                      pb_counts,
+                                      pb_samples,
+                                      condition_col = "condition",
+                                      min_reps = 2,
+                                      do_pairwise = TRUE) {
+  # subset to cluster
+  keep_lib   <- pb_samples$cluster == cluster_id
+  sub_counts <- pb_counts[, keep_lib, drop = FALSE]
+  sub_samples <- pb_samples[keep_lib, , drop = FALSE]
+  
+  # need ≥2 conditions
+  cond <- factor(sub_samples[[condition_col]])
+  if (length(levels(cond)) < 2L) {
+    message("Cluster ", cluster_id, ": only one condition present, skipping.")
+    return(NULL)
+  }
+  # need enough reps per condition
+  if (any(table(cond) < min_reps)) {
+    message("Cluster ", cluster_id, ": not enough replicates per condition, skipping.")
+    return(NULL)
+  }
+  
+  # DGEList
+  y <- DGEList(counts = sub_counts, samples = sub_samples)
+  
+  # Filter lowly expressed genes using full design
+  design <- model.matrix(~ 0 + cond)
+  colnames(design) <- levels(cond)   # nicer names
+  
+  keep_genes <- filterByExpr(y, design = design)
+  y <- y[keep_genes, , keep.lib.sizes = FALSE]
+  
+  # Normalization + dispersion
+  y <- calcNormFactors(y)
+  y <- estimateDisp(y, design)
+  fit <- glmQLFit(y, design)
+  
+  out_list <- list()
+  
+  ## 3a. Overall test: any condition difference (F-test)
+  overall_test <- glmQLFTest(fit, coef = 1:ncol(design))
+  overall_res <- topTags(overall_test, n = Inf)$table
+  overall_res$gene    <- rownames(overall_res)
+  overall_res$cluster <- cluster_id
+  overall_res$contrast <- "overall"
+  out_list[["overall"]] <- overall_res
+  
+  ## 3b. Pairwise contrasts between conditions
+  if (do_pairwise && length(levels(cond)) >= 2L) {
+    levs <- levels(cond)
+    for (i in seq_along(levs)) {
+      for (j in seq_along(levs)) {
+        if (j <= i) next
+        c1 <- levs[j]
+        c0 <- levs[i]
+        contrast_vec <- rep(0, length(levs))
+        names(contrast_vec) <- levs
+        contrast_vec[c1] <-  1
+        contrast_vec[c0] <- -1
+        
+        qlf <- glmQLFTest(fit, contrast = contrast_vec)
+        res <- topTags(qlf, n = Inf)$table
+        res$gene     <- rownames(res)
+        res$cluster  <- cluster_id
+        res$contrast <- paste0(c1, "_vs_", c0)
+        out_list[[paste0(c1, "_vs_", c0)]] <- res
+      }
+    }
+  }
+  
+  dplyr::bind_rows(out_list)
+}
 ```
