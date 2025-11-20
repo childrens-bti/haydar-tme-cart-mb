@@ -1,0 +1,223 @@
+---
+title: "01-ambient-setup.Rmd"
+author: "Sam Chen"
+date: "`r Sys.Date()`"
+output: 
+  html_document:
+  toc: TRUE
+---
+
+## Setup
+
+```{r load-packages, message=FALSE, warning=FALSE}
+# Load libraries
+library(rprojroot)
+library(dplyr)
+library(Seurat)
+library(patchwork)
+library(ggplot2)
+library(DoubletFinder)
+library(tidyverse)
+library(SeuratObject)
+library(scCustomize)
+library(presto)
+library(pheatmap)
+
+# Define directories
+root_dir <- find_root(has_dir(".git"))
+data_dir <- file.path(root_dir, "data", "v2")
+analysis_dir <- file.path(root_dir, "analyses", "murine-cart-tumor")
+results_dir <- file.path(analysis_dir, "results")
+plot_dir <- file.path(analysis_dir, "plots")
+
+# Source custom theme
+source(file.path(root_dir, "figures", "theme.R"))
+
+# Source function
+source(file.path(analysis_dir, "util", "run_doubletfinder.R"))
+source(file.path(analysis_dir, "util", "run_soupx.R"))
+
+# set random seed
+set.seed(1234)
+```
+
+## Load Cell Ranger data and merge
+```{r load-data}
+# All 14 sample names and conditions
+samples <- c("Tumor_only_D1", "Tumor_only_D2", "STOP_pos_T_D1", "STOP_pos_T_D2",
+             "B7H3_pos_T_D1", "B7H3_pos_T_D2",
+             "41BB-L_pos_T_D1", "41BB-L_pos_T_D2", 
+             "CD8-41BB_pos_T_D1", "CD8-41BB_pos_T_D2",
+             "CD28-41BB_pos_T_D1", "CD28-41BB_pos_T_D2")
+
+objs <- lapply(samples, function(s) {
+  counts <- Read10X(data.dir = file.path(data_dir, s, "filtered_bc"))
+  CreateSeuratObject(counts, project = s)
+})
+
+combined <- Reduce(function(x, y) merge(x, y), objs)
+combined <- JoinLayers(combined)
+```
+
+
+## Define myeloid core + lineage marker lists
+```{r define-marker-lists}
+# T cells
+tcell_genes <- c(
+  "Cd3d","Cd3e","Cd3g","Cd247",
+  "Trac","Trbc1","Trbc2",
+  "Il7r","Ccr7","Tcf7","Lef1",
+  "Cd4","Cd8a","Cd8b1"
+)
+
+# B cells
+bcell_genes <- c("Ms4a1","Cd79a","Cd79b","Cd74","Bank1","Cd22","Cd19", "Mzb1")
+
+# Hard-core myeloid (safe for SoupX)
+myeloid_hard <- c(
+  "Lyz2","Lyz1",
+  "C1qa","C1qb","C1qc",
+  "Lst1","Tyrobp","Aif1",
+  "Csf1r","Ctss","Ctsd","Ctsb","Laptm5",
+  "Ms4a7","Fcgr3","S100a8","S100a9",
+  "P2ry12","Trem2","Gpr34","Spi1"
+)
+
+# TAM/lipid/MHCII (note for SoupX)
+soft_tam_genes <- c(
+  "Apoe","Apoc1","Fabp5","Lgals3","Spp1","Lpl",
+  "H2-Aa","H2-Ab1","H2-Eb1","Cd74"
+)
+
+# Astrocytes
+astro_genes <- c("Gfap","Aqp4","Aldh1l1","Slc1a3")
+
+# Neurons
+neuron_genes <- c("Snap25","Rbfox3","Syt1","Grin1","Nefl")
+
+# Oligodendrocytes
+oligo_genes <- c("Mbp","Plp1","Mog","Mobp","Sox10")
+
+# Endothelial cells
+endo_genes <- c("Pecam1","Eng","Kdr","Esam","Rgs5","Cdh5","Cldn5","Vwf")
+
+# Fibroblasts
+fibro_genes <- c("Pdgfra","Pdgfrb","Col1a1","Col1a2","Dcn","Lum")
+```
+
+## Basic QC
+```{r basic-qc}
+# Calculate percent mito
+combined[["percent.mito"]] <- PercentageFeatureSet(combined, pattern = "^mt-")
+combined <- subset(
+  combined,
+  subset = nFeature_RNA > 50 &
+           nCount_RNA > 100 &
+           percent.mito < 10
+)
+```
+
+## Normalize + module scores
+```{r module-scores, warning=FALSE}
+combined <- NormalizeData(combined)
+
+combined <- AddModuleScore(combined, list(Tc=tcell_genes),      name="Tscore")
+combined <- AddModuleScore(combined, list(Bc=bcell_genes),      name="Bscore")
+combined <- AddModuleScore(combined, list(My=myeloid_hard), name="Myeloid")
+combined <- AddModuleScore(combined, list(As=astro_genes),      name="Astro")
+combined <- AddModuleScore(combined, list(Ne=neuron_genes),     name="Neuron")
+combined <- AddModuleScore(combined, list(Ol=oligo_genes),      name="Oligo")
+combined <- AddModuleScore(combined, list(Et=endo_genes),       name="Endo")
+combined <- AddModuleScore(combined, list(Fb=fibro_genes),      name="Fibro")
+```
+
+## HVGs + coarse clustering
+```{r hvg-clustering}
+combined <- FindVariableFeatures(combined, nfeatures = 3000)
+combined <- ScaleData(combined, features = VariableFeatures(combined))
+combined <- RunPCA(combined, features = VariableFeatures(combined))
+combined <- FindNeighbors(combined, dims = 1:30)
+combined <- FindClusters(combined, resolution = 0.5)
+combined <- RunUMAP(combined, dims = 1:30)
+```
+
+## Examine module scores
+```{r visualize-module-scores, warning=FALSE, message=FALSE}
+DimPlot(combined, group.by = "seurat_clusters", label = TRUE) + NoLegend()
+
+for (score in c("Tscore1", "Bscore1", "Myeloid1", "Astro1", "Neuron1", "Oligo1", "Endo1", "Fibro1")) {
+  p <- FeaturePlot(combined, features = score) + 
+    scale_color_viridis_c() + 
+    ggtitle(paste0("Module Score: ", score))
+  print(p)
+}
+```
+
+## Assign coarse cell types per cluster
+```{r assign-coarse-celltypes}
+Idents(combined) <- combined$seurat_clusters
+
+cluster_scores <- FetchData(
+  combined,
+  vars = c("Tscore1", "Bscore1", "Myeloid1", "Astro1", "Neuron1", "Oligo1", "Endo1", "Fibro1", "seurat_clusters"
+)) %>%
+  group_by(seurat_clusters) %>%
+  summarise(
+    Tscore = mean(Tscore1),
+    Bscore = mean(Bscore1),
+    Myeloid = mean(Myeloid1),
+    Astro = mean(Astro1),
+    Neuron = mean(Neuron1),
+    Oligo = mean(Oligo1),
+    Endo = mean(Endo1),
+    Fibro = mean(Fibro1),
+    n_cells = n()
+  )
+
+# heatmap of cluster X module score
+pheatmap(
+  as.data.frame(cluster_scores %>% select(-n_cells)) %>% column_to_rownames("seurat_clusters"),
+  scale = "row",
+  cluster_rows = F, cluster_cols = F,
+  main = "Cluster Module Scores"
+)
+
+# Manually assign coarse cell types based on module scores
+coarse_celltypes <- c(
+  "0"="Myeloid",
+  "1"="Myeloid",
+  "2"="T",
+  "3"="Myeloid",
+  "4"="Myeloid",
+  "5"="Endo",
+  "6"="Neuron",
+  "7"="B",
+  "8"="Myeloid",
+  "9"="Fibro",
+  "10"="Myeloid",
+  "11"="Myeloid",
+  "12"="B",
+  "13"="Myeloid",
+  "14"="B",
+  "15"="Fibro",
+  "16"="Oligo",
+  "17"="Astro",
+  "18"="Myeloid",
+  "19"="Astro",
+  "20"="Astro",
+  "21"="Fibro",
+  "22"="Myeloid",
+  "23"="Endo"
+)
+
+combined$coarse_celltype <- plyr::mapvalues(
+  x = as.character(combined$seurat_clusters),
+  from = names(coarse_celltypes),
+  to = coarse_celltypes
+)
+```
+
+## Visualize coarse cell types
+```{r visualize-coarse-celltypes}
+DimPlot(combined, group.by = "coarse_celltype", label = TRUE) + NoLegend()
+```
