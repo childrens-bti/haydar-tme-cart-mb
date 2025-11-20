@@ -1,0 +1,215 @@
+---
+title: "05-lymphoid-characterization.Rmd"
+author: "Sam Chen"
+date: "`r Sys.Date()`"
+output: 
+  html_document:
+  toc: TRUE
+---
+
+## Setup
+```{r load-packages, message=FALSE, warning=FALSE}
+# Load libraries
+library(rprojroot)
+library(dplyr)
+library(Seurat)
+library(patchwork)
+library(ggplot2)
+library(tidyverse)
+library(SeuratObject)
+library(scCustomize)
+library(AUCell)
+library(msigdbr)
+library(sccomp)
+library(pheatmap)
+library(fgsea)
+
+# Define directories
+root_dir <- find_root(has_dir(".git"))
+data_dir <- file.path(root_dir, "data", "v2")
+analysis_dir <- file.path(root_dir, "analyses", "murine-cart-tumor")
+results_dir <- file.path(analysis_dir, "results")
+plot_dir <- file.path(analysis_dir, "plots")
+
+# Source custom theme
+source(file.path(root_dir, "figures", "theme.R"))
+
+# Source function
+source(file.path(analysis_dir, "util", "run_doubletfinder.R"))
+source(file.path(analysis_dir, "util", "run_soupx.R"))
+
+# set random seed
+set.seed(1234)
+```
+
+## Load Data
+```{r load-data}
+# Load Seurat object
+lymphoid_obj <- readRDS(file.path(results_dir, "cart_lymphoid_subclusters.rds"))
+```
+
+## Visualize lymphoid subclusters
+```{r visualize-lymphoid-subclusters, fig.height=6, fig.width=12}
+p1 <- DimPlot(lymphoid_obj, reduction = "umap", group.by = "seurat_clusters", label = TRUE, label.size = 4) + 
+  ggtitle("Subclusters")
+p2 <- DimPlot(lymphoid_obj, reduction = "umap", group.by = "cell_type", label = TRUE, label.size = 4) + 
+  ggtitle("lymphoid Cell Lineages")
+
+p1 + p2
+```
+
+## Cluster marker genes
+```{r cluster-markers, message=FALSE, warning=FALSE}
+cluster_markers <- FindAllMarkers(lymphoid_obj,
+                                  assay = "RNA",
+                                  slot = "data",
+                                  only.pos = TRUE,
+                                  min.pct = 0.25,
+                                  logfc.threshold = 0.25,
+                                  test.use = "MAST")
+
+write.csv(cluster_markers, file.path(results_dir, "lymphoid_subcluster_markers.csv"), row.names = FALSE)
+```
+
+## Visualize top markers
+```{r visualize-top-markers, fig.height=6, fig.width=6}
+top_markers_table <- cluster_markers %>%
+  group_by(cluster) %>%
+  slice_max(order_by = avg_log2FC, n = 4) %>%
+  ungroup() %>%
+  arrange(cluster, desc(avg_log2FC))
+
+for (clust in unique(top_markers_table$cluster)) {
+  clust_markers <- top_markers_table %>% filter(cluster == clust) %>% pull(gene)
+  p <- FeaturePlot_scCustom(lymphoid_obj, features = clust_markers, reduction = "umap", pt.size = 0.1, alpha_exp = 0.5, colors_use = viridis_light_high) + 
+    plot_annotation(title = paste0("Cluster ", clust))
+  print(p)
+}
+```
+
+## Check T cell genes
+```{r check-t-cell-genes, fig.height=6, fig.width=12}
+t_cell_genes <- c("Cd3d", "Cd3e", "Cd4", "Cd8a", "Cd8b1", "Trac", "Trbc2", "Gzmb", "Ifng", "Pdcd1", "Ctla4")
+FeaturePlot_scCustom(lymphoid_obj, features = t_cell_genes, reduction = "umap", pt.size = 0.1, alpha_exp = 0.5, colors_use = viridis_light_high) + 
+  plot_annotation(title = "T Cell Marker Genes")
+```
+
+## Check macrophage genes
+```{r check-macrophage-genes, fig.height=6, fig.width=12}
+macrophage_genes <- c("Lyz2", "C1qc", "Csf1r", "Mrc1", "Cd14", "Itgam")
+FeaturePlot_scCustom(lymphoid_obj, features = macrophage_genes, reduction = "umap", pt.size = 0.1, alpha_exp = 0.5, colors_use = viridis_light_high) + 
+  plot_annotation(title = "Macrophage Marker Genes")
+```
+```{r other-markers, fig.height=6, fig.width=6}
+FeaturePlot_scCustom(lymphoid_obj, features = c("Tcf7", "Sell", "Lef1"), reduction = "umap", pt.size = 0.1, alpha_exp = 0.5, colors_use = viridis_light_high) + plot_annotation(title = "Naive-like")
+
+FeaturePlot_scCustom(lymphoid_obj, features = c("S1pr1", "Klf2", "Slfn1"), reduction = "umap", pt.size = 0.1, alpha_exp = 0.5, colors_use = viridis_light_high) + plot_annotation(title = "Quiescent")
+
+FeaturePlot_scCustom(lymphoid_obj, features = c("Cd28", "C1qa", "Lat"), reduction = "umap", pt.size = 0.1, alpha_exp = 0.5, colors_use = viridis_light_high) + plot_annotation(title = "T-cell activation")
+
+FeaturePlot_scCustom(lymphoid_obj, features = c("Zap70", "Ifitm1", "Ifngr1"), reduction = "umap", pt.size = 0.1, alpha_exp = 0.5, colors_use = viridis_light_high) + plot_annotation(title = "Cytokine signaling")
+
+FeaturePlot_scCustom(lymphoid_obj, features = c("Gzmb", "Gzma", "Prf1"), reduction = "umap", pt.size = 0.1, alpha_exp = 0.5, colors_use = viridis_light_high) + plot_annotation(title = "Cytotoxicity")
+
+FeaturePlot_scCustom(lymphoid_obj, features = c("Pdcd1", "Ctla4", "Lag3", "Havcr2", "Eomes", "Tox"), reduction = "umap", pt.size = 0.1, alpha_exp = 0.5, colors_use = viridis_light_high) + plot_annotation(title = "Inhibitory receptors")
+
+FeaturePlot_scCustom(lymphoid_obj, features = c("Foxp3", "Tnfrsf9"), reduction = "umap", pt.size = 0.1, alpha_exp = 0.5, colors_use = viridis_light_high) + plot_annotation(title = "Regulatory CD4")
+
+FeaturePlot_scCustom(lymphoid_obj, features = c("Ifng", "Ccl1", "Ccl4"), reduction = "umap", pt.size = 0.1, alpha_exp = 0.5, colors_use = viridis_light_high) + plot_annotation(title = "Effector CD4")
+```
+
+
+## Further subsetting of the object to only T cells
+Upon inspection of top marker genes in each cluster:
+- clusters 0, 2, 3, 7, 9 likely represent myeloid cells
+- cluster 6 is B cells
+- cluster 10 is neurons
+
+```{r subset-t-cells}
+tcell_obj <- subset(lymphoid_obj, idents = c(1, 4, 5, 8), invert = FALSE)
+```
+
+## Reprocess T cell object
+```{r reprocess-tcell-object, message=FALSE, warning=FALSE}
+tcell_obj[['RNA']] <- split(tcell_obj[['RNA']], tcell_obj$sample)
+tcell_obj <- NormalizeData(tcell_obj)
+tcell_obj <- FindVariableFeatures(tcell_obj, selection.method = "vst", nfeatures = 2000)
+tcell_obj <- ScaleData(tcell_obj)
+tcell_obj <- RunPCA(tcell_obj, npcs = 30)
+ElbowPlot(tcell_obj, ndims = 30) # use 15 dims
+
+tcell_obj <- IntegrateLayers(
+  object = tcell_obj, method = CCAIntegration,
+  orig.reduction = "pca", new.reduction = "integrated.cca", verbose=FALSE, k.weight=30
+)
+tcell_obj [["RNA"]] <- JoinLayers(tcell_obj[["RNA"]])
+
+tcell_obj <- FindNeighbors(tcell_obj, reduction = "integrated.cca", dims = 1:15)
+tcell_obj <- FindClusters(tcell_obj, resolution = 0.5)
+
+tcell_obj <- RunUMAP(tcell_obj, reduction = "integrated.cca", dims = 1:15)
+```
+
+## Visualize T cell subclusters
+```{r visualize-lymphoid-subclusters, fig.height=6, fig.width=7}
+DimPlot(tcell_obj, reduction = "umap", group.by = "seurat_clusters", label = TRUE, label.size = 4) +
+  ggtitle("Subclusters")
+```
+
+## Split by condition
+```{r visualize-lymphoid-subclusters-by-condition, fig.height=6, fig.width=8}
+DimPlot(tcell_obj, reduction = "umap", group.by = "seurat_clusters", split.by = "condition", ncol = 3) + 
+  ggtitle("T Cell Subclusters by Condition")
+```
+
+## Save T cell object
+```{r save-tcell-object}
+saveRDS(tcell_obj, file.path(results_dir, "cart_tcell_subclusters.rds"))
+```
+
+## Cluster marker genes
+```{r t-cell-cluster-markers, message=FALSE, warning=FALSE}
+cluster_markers <- FindAllMarkers(tcell_obj,
+                                  assay = "RNA",
+                                  slot = "data",
+                                  only.pos = TRUE,
+                                  min.pct = 0.25,
+                                  logfc.threshold = 0.25,
+                                  test.use = "MAST")
+
+write.csv(cluster_markers, file.path(results_dir, "tcell_subcluster_markers.csv"), row.names = FALSE)
+```
+
+## Visualize top markers
+```{r visualize-top-tcell-markers, fig.height=6, fig.width=6}
+top_markers_table <- cluster_markers %>%
+  group_by(cluster) %>%
+  slice_max(order_by = avg_log2FC, n = 4) %>%
+  ungroup() %>%
+  arrange(cluster, desc(avg_log2FC))
+
+for (clust in unique(top_markers_table$cluster)) {
+  clust_markers <- top_markers_table %>% filter(cluster == clust) %>% pull(gene)
+  p <- FeaturePlot_scCustom(tcell_obj, features = clust_markers, reduction = "umap", pt.size = 0.1, alpha_exp = 0.5, colors_use = viridis_light_high) + 
+    plot_annotation(title = paste0("Cluster ", clust))
+  print(p)
+}
+```
+
+```{r other-markers, fig.height=6, fig.width=6}
+FeaturePlot_scCustom(tcell_obj, features = c("Tcf7", "Sell", "Lef1"), reduction = "umap", pt.size = 0.1, alpha_exp = 0.5, colors_use = viridis_light_high) + plot_annotation(title = "Naive-like")
+
+FeaturePlot_scCustom(tcell_obj, features = c("S1pr1", "Klf2", "Slfn1"), reduction = "umap", pt.size = 0.1, alpha_exp = 0.5, colors_use = viridis_light_high) + plot_annotation(title = "Quiescent")
+
+FeaturePlot_scCustom(tcell_obj, features = c("Cd28", "C1qa", "Lat"), reduction = "umap", pt.size = 0.1, alpha_exp = 0.5, colors_use = viridis_light_high) + plot_annotation(title = "T-cell activation")
+
+FeaturePlot_scCustom(tcell_obj, features = c("Zap70", "Ifitm1", "Ifngr1"), reduction = "umap", pt.size = 0.1, alpha_exp = 0.5, colors_use = viridis_light_high) + plot_annotation(title = "Cytokine signaling")
+
+FeaturePlot_scCustom(tcell_obj, features = c("Gzmb", "Gzma", "Prf1"), reduction = "umap", pt.size = 0.1, alpha_exp = 0.5, colors_use = viridis_light_high) + plot_annotation(title = "Cytotoxicity")
+
+FeaturePlot_scCustom(tcell_obj, features = c("Pdcd1", "Ctla4", "Lag3", "Havcr2", "Eomes", "Tox"), reduction = "umap", pt.size = 0.1, alpha_exp = 0.5, colors_use = viridis_light_high) + plot_annotation(title = "Inhibitory receptors")
+
+FeaturePlot_scCustom(tcell_obj, features = c("Foxp3", "Tnfrsf9"), reduction = "umap", pt.size = 0.1, alpha_exp = 0.5, colors_use = viridis_light_high) + plot_annotation(title = "Regulatory CD4")
+
+FeaturePlot_scCustom(tcell_obj, features = c("Ifng", "Ccl1", "Ccl4"), reduction = "umap", pt.size = 0.1, alpha_exp = 0.5, colors_use = viridis_light_high) + plot_annotation(title = "Effector CD4")
+```
