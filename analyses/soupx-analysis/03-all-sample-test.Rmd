@@ -1,0 +1,165 @@
+---
+title: "03-all-sample-test.Rmd"
+author: "Sam Chen"
+date: "`r Sys.Date()`"
+output: 
+  html_document:
+  toc: TRUE
+---
+
+## Setup
+
+```{r load-packages, message=FALSE, warning=FALSE}
+# Load libraries
+library(rprojroot)
+library(dplyr)
+library(Seurat)
+library(patchwork)
+library(ggplot2)
+library(DoubletFinder)
+library(tidyverse)
+library(SeuratObject)
+library(scCustomize)
+library(presto)
+library(pheatmap)
+
+# Define directories
+root_dir <- find_root(has_dir(".git"))
+data_dir <- file.path(root_dir, "data", "v2")
+analysis_dir <- file.path(root_dir, "analyses", "soupx-analysis")
+results_dir <- file.path(analysis_dir, "results")
+plot_dir <- file.path(analysis_dir, "plots")
+
+# Source custom theme
+source(file.path(root_dir, "figures", "theme.R"))
+
+# Source function
+source(file.path(analysis_dir, "util", "run_doubletfinder.R"))
+source(file.path(analysis_dir, "util", "run_soupx.R"))
+
+# set random seed
+set.seed(1234)
+```
+
+## Macrophage, microglia, and t cell markers
+```{r define-marker-lists}
+macrophage_genes <- c("Adgre1", "Cd68", "Lyz2", "Cd14")
+microglia_genes <- c("Tmem119", "Hexb", "Sparc", "Csf1r")
+tcell_genes <- c("Cd3d", "Cd3e", "Cd2", "Trac")
+```
+
+# Condition 1: Not running SoupX
+```{r load-data}
+# All 14 sample names and conditions
+samples <- c("Tumor_only_D1", "Tumor_only_D2", "STOP_pos_T_D1", "STOP_pos_T_D2",
+             "B7H3_pos_T_D1", "B7H3_pos_T_D2",
+             "41BB-L_pos_T_D1", "41BB-L_pos_T_D2", 
+             "CD8-41BB_pos_T_D1", "CD8-41BB_pos_T_D2",
+             "CD28-41BB_pos_T_D1", "CD28-41BB_pos_T_D2")
+
+conditions <- c("tumor", "tumor", "STOP", "STOP",
+                "B7H3", "B7H3",
+                "41BB-L", "41BB-L",
+                "CD8-41BB", "CD8-41BB",
+                "CD28-41BB", "CD28-41BB")
+
+### Load in data, and output a list of seurat objects
+obj_list <- lapply(samples, function(sample) {
+  print(sample)
+  counts <- Read10X(data.dir = file.path(data_dir, sample, "filtered_bc"))
+  seurat_obj <- CreateSeuratObject(counts = counts, project = sample, min.cells = 1, min.features = 50)
+  seurat_obj[["sample"]] <- sample
+  seurat_obj[["condition"]] <- conditions[which(samples == sample)]
+  return(seurat_obj)
+})
+
+# merge all samples into one Seurat object
+nosoupx <- Reduce(function(x, y) merge(x, y), obj_list)
+```
+
+## Standard processing and integration of all samples without SoupX
+```{r process-all-no-soupx}
+# standard processing
+nosoupx <- NormalizeData(nosoupx)
+nosoupx <- FindVariableFeatures(nosoupx, selection.method = "vst", nfeatures = 2000)
+nosoupx <- ScaleData(nosoupx)
+nosoupx <- RunPCA(nosoupx, features = VariableFeatures(object = nosoupx))
+
+# integration
+nosoupx <- IntegrateLayers(
+  object = nosoupx, method = CCAIntegration,
+  orig.reduction = "pca", new.reduction = "integrated.cca",
+  verbose = FALSE
+)
+# re-join layers after integration
+nosoupx[["RNA"]] <- JoinLayers(nosoupx[["RNA"]])
+
+# umap
+nosoupx <- RunUMAP(nosoupx, reduction = "integrated.cca", dims = 1:30)
+```
+
+```{r visualize-no-soupx, fig.width=8, fig.height=6}
+FeaturePlot_scCustom(nosoupx, features = macrophage_genes, reduction = "umap", 
+                     pt.size = 0.1, alpha_exp = 0.25, colors_use = viridis_light_high)
+FeaturePlot_scCustom(nosoupx, features = microglia_genes, reduction = "umap", 
+                     pt.size = 0.1, alpha_exp = 0.25, colors_use = viridis_light_high)
+FeaturePlot_scCustom(nosoupx, features = tcell_genes, reduction = "umap", 
+                     pt.size = 0.1, alpha_exp = 0.25, colors_use = viridis_light_high)
+```
+
+# Condition 2: Run SoupX with lineage genes and no clustering
+```{r run-soupx-no-cluster}
+### Load in data, run SoupX, and output a list of seurat objects
+obj_list <- lapply(samples, function(sample) {
+  print(sample)
+  seurat_obj <- run_soupx(data_dir, sample, 
+                          guide_genes = list(
+                            mf = c("Adgre1", "Cd68", "Lyz2", "Cd14", "Mafb", "Fcgr1"),
+                            mg =  c("P2ry12", "Tmem119", "Hexb", "Sparc", "Csf1r"),
+                            t = c("Cd3d", "Cd3e", "Cd3g", "Cd2", "Trac"),
+                            nu = c("Snap25", "Syt1", "Rbfox3", "Camk2n1", "Map2"),
+                            ed = c("Cldn5", "Flt1", "Pecam1", "Kdr", "Vwf"),
+                            fb = c("Dcn", "Col1a1", "Col1a2", "Pdgfra", "Lum")
+                          ), 
+                          use_clustering = FALSE, 
+                          min_cells = 1, min_features = 50)
+  seurat_obj[["sample"]] <- sample
+  seurat_obj[["condition"]] <- conditions[which(samples == sample)]
+  return(seurat_obj)
+})
+
+# merge all samples into one Seurat object
+withsoupx <- Reduce(function(x, y) merge(x, y), obj_list)
+```
+
+## Standard processing and integration of all samples with SoupX
+```{r process-all-with-soupx}
+# standard processing
+withsoupx <- NormalizeData(withsoupx)
+withsoupx <- FindVariableFeatures(withsoupx, selection.method = "vst", nfeatures = 2000)
+withsoupx <- ScaleData(withsoupx)
+withsoupx <- RunPCA(withsoupx, features = VariableFeatures(object = withsoupx))
+# integration
+withsoupx <- IntegrateLayers(
+  object = withsoupx, method = CCAIntegration,
+  orig.reduction = "pca", new.reduction = "integrated.cca",
+  verbose = FALSE
+)
+# re-join layers after integration
+withsoupx[["RNA"]] <- JoinLayers(withsoupx[["RNA"]])
+# umap
+withsoupx <- RunUMAP(withsoupx, reduction = "integrated.cca", dims = 1:30)
+```
+
+```{r visualize-with-soupx, fig.width=8, fig.height=6}
+FeaturePlot_scCustom(withsoupx, features = macrophage_genes, reduction = "umap", 
+                     pt.size = 0.1, alpha_exp = 0.25, colors_use = viridis_light_high)
+FeaturePlot_scCustom(withsoupx, features = microglia_genes, reduction = "umap",
+                     pt.size = 0.1, alpha_exp = 0.25, colors_use = viridis_light_high)
+FeaturePlot_scCustom(withsoupx, features = tcell_genes, reduction = "umap",
+                     pt.size = 0.1, alpha_exp = 0.25, colors_use = viridis_light_high)
+```
+## Session info
+``` {r session-info}
+sessionInfo()
+```

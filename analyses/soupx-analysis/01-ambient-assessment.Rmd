@@ -181,3 +181,8 @@ plotChangeMap(sc, out, "Camk2n1") + ggtitle("Camk2n1 Adjusted")
 plotChangeMap(sc, out, "Cldn5") + ggtitle("Cldn5 Adjusted")
 plotChangeMap(sc, out, "Dcn") + ggtitle("Dcn Adjusted")
 ```
+
+## Session Info
+```{r session-info}
+sessionInfo()
+```

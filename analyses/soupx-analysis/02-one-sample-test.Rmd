@@ -205,3 +205,7 @@ FeaturePlot_scCustom(soupx_markers_clusters, features = microglia_genes, reducti
 FeaturePlot_scCustom(soupx_markers_clusters, features = tcell_genes, reduction = "umap", 
                      pt.size = 0.1, alpha_exp = 0.25, colors_use = viridis_light_high)
 ```
+## Session Info
+```{r session-info}
+sessionInfo()
+```
