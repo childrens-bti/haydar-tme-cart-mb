@@ -1,0 +1,183 @@
+---
+title: "01-ambient-setup.Rmd"
+author: "Sam Chen"
+date: "`r Sys.Date()`"
+output: 
+  html_document:
+  toc: TRUE
+---
+
+## Setup
+
+```{r load-packages, message=FALSE, warning=FALSE}
+# Load libraries
+library(rprojroot)
+library(dplyr)
+library(Seurat)
+library(patchwork)
+library(ggplot2)
+library(DoubletFinder)
+library(tidyverse)
+library(SeuratObject)
+library(scCustomize)
+library(presto)
+library(pheatmap)
+
+# Define directories
+root_dir <- find_root(has_dir(".git"))
+data_dir <- file.path(root_dir, "data", "v2")
+analysis_dir <- file.path(root_dir, "analyses", "soupx-analysis")
+results_dir <- file.path(analysis_dir, "results")
+plot_dir <- file.path(analysis_dir, "plots")
+
+# Source custom theme
+source(file.path(root_dir, "figures", "theme.R"))
+
+# Source function
+source(file.path(analysis_dir, "util", "run_doubletfinder.R"))
+source(file.path(analysis_dir, "util", "run_soupx.R"))
+
+# set random seed
+set.seed(1234)
+```
+
+## Load Cell Ranger data
+```{r load-data}
+# use B7H3_pos_T_D2 sample as example
+counts <- Read10X(data.dir = file.path(data_dir, "B7H3_pos_T_D2", "filtered_bc"))
+obj <- CreateSeuratObject(counts, project = "B7H3_pos_T_D2", min.cells = 1, min.features = 50)
+
+```
+
+## Define lineage marker lists for guide estimation of contamination fraction in SoupX
+```{r define-marker-lists}
+macrophage_genes <- c("Adgre1", "Cd68", "Lyz2", "Cd14", "Mafb", "Fcgr1")
+
+microglia_genes <- c("P2ry12", "Tmem119", "Hexb", "Sparc", "Csf1r")
+
+tcell_genes <- c("Cd3d", "Cd3e", "Cd3g", "Cd2", "Trac")
+
+neuron_genes <- c("Snap25", "Syt1", "Rbfox3", "Camk2n1", "Map2")
+
+endothelial_genes <- c("Cldn5", "Flt1", "Pecam1", "Kdr", "Vwf")
+
+fibroblast_genes <- c("Dcn", "Col1a1", "Col1a2", "Pdgfra", "Lum")
+```
+
+## Normalize + module scores
+```{r module-scores, warning=FALSE}
+obj <- NormalizeData(obj)
+
+obj <- AddModuleScore(obj, list(Tc=tcell_genes),      name="Tscore")
+obj <- AddModuleScore(obj, list(Mf=macrophage_genes), name="Mfscore")
+obj <- AddModuleScore(obj, list(Mg=microglia_genes), name="Mgscore")
+obj <- AddModuleScore(obj, list(Nu=neuron_genes), name="Nuscore")
+obj <- AddModuleScore(obj, list(Ed=endothelial_genes), name="Edscore")
+obj <- AddModuleScore(obj, list(Fb=fibroblast_genes), name="Fbscore")
+```
+
+## HVGs + coarse clustering
+```{r hvg-clustering}
+obj <- FindVariableFeatures(obj, nfeatures = 2000)
+obj <- ScaleData(obj, features = VariableFeatures(obj))
+obj <- RunPCA(obj, features = VariableFeatures(obj))
+obj <- FindNeighbors(obj, dims = 1:15)
+obj <- FindClusters(obj, resolution = 0.8)
+obj <- RunUMAP(obj, dims = 1:15)
+```
+
+## Examine module scores
+```{r visualize-module-scores, fig.width=7, fig.height=6, warning=FALSE, message=FALSE}
+DimPlot(obj, group.by = "seurat_clusters", label = TRUE) + NoLegend()
+
+for (score in c("Tscore1", "Nuscore1", "Mfscore1", "Mgscore1", "Edscore1", "Fbscore1")) {
+  p <- FeaturePlot(obj, features = score) + 
+    scale_color_viridis_c() + 
+    ggtitle(paste0("Module Score: ", score))
+  print(p)
+}
+```
+
+## Extract clusters for SoupX and save
+```{r extract-clusters}
+soupx_clusters <- obj@meta.data %>% tibble::rownames_to_column(var = "cell_name") %>%
+  select(cell_name, seurat_clusters)
+
+write.csv(soupx_clusters, 
+          file = file.path(analysis_dir, "results", "soupx_clusters_B7H3_pos_T_D2.csv"), 
+          row.names = FALSE)
+
+saveRDS(obj, file = file.path(analysis_dir, "results", "B7H3_pos_T_D2_no_soupx.rds"))
+```
+
+## Examine ambient RNAcontents in SoupX package
+
+```{r load-soupx}
+# Load the raw data
+raw_mat <- Read10X(data.dir = file.path(data_dir, "B7H3_pos_T_D2", "raw_bc"))
+filt_mat <- Read10X(data.dir = file.path(data_dir, "B7H3_pos_T_D2", "filtered_bc"))
+
+# intersect genes
+common_genes <- intersect(rownames(raw_mat), rownames(filt_mat))
+# subset and reorder them identically
+raw_mat  <- raw_mat[common_genes, ]
+filt_mat <- filt_mat[common_genes, ]
+
+# Create a SoupChannel object
+sc <- SoupChannel(tod = raw_mat, toc = filt_mat)
+sc <- setClusters(sc, obj$seurat_clusters)
+sc <- setDR(sc, Embeddings(object = obj[["umap"]]))
+```
+
+```{r check-soup-markers}
+plotMarkerMap(sc, "Lyz2") + ggtitle("Lyz2")
+plotMarkerMap(sc, "Sparc") + ggtitle("Sparc")
+plotMarkerMap(sc, "Cd3e") + ggtitle("Cd3e")
+plotMarkerMap(sc, "Cd19") + ggtitle("Cd19")
+plotMarkerMap(sc, "Camk2n1") + ggtitle("Camk2n1")
+```
+
+```{r top-ambient-markers}
+head(sc$soupProfile[order(sc$soupProfile$est, decreasing = TRUE), ], n = 20)
+plotMarkerDistribution(sc)
+```
+
+```{r estimate-contamination-example}
+useToEst = estimateNonExpressingCells(sc, nonExpressedGeneList = list(mf = macrophage_genes),  clusters = FALSE)
+plotMarkerMap(sc, geneSet = macrophage_genes, useToEst = useToEst)
+
+# I'll need to use clusters = FALSE when actually estimating contamination fractions
+useToEst = estimateNonExpressingCells(sc, nonExpressedGeneList = list(t = macrophage_genes))
+plotMarkerMap(sc, geneSet = macrophage_genes, useToEst = useToEst)
+```
+
+```{r estimate-contamination-fraction}
+useToEst = estimateNonExpressingCells(sc, nonExpressedGeneList = list(
+  mf = macrophage_genes,
+  mg = microglia_genes,
+  t = tcell_genes,
+  nu = neuron_genes,
+  ed = endothelial_genes,
+  fb = fibroblast_genes),  clusters = FALSE)
+
+sc <- calculateContaminationFraction(sc, nonExpressedGeneList = list(
+  mf = macrophage_genes,
+  mg = microglia_genes,
+  t = tcell_genes,
+  nu = neuron_genes,
+  ed = endothelial_genes,
+  fb = fibroblast_genes
+), useToEst = useToEst)
+```
+
+```{r adjust-counts}
+out = adjustCounts(sc)
+
+plotChangeMap(sc, out, "Lyz2") + ggtitle("Lyz2 Adjusted")
+plotChangeMap(sc, out, "Sparc") + ggtitle("Sparc Adjusted")
+plotChangeMap(sc, out, "Cd3e") + ggtitle("Cd3e Adjusted")
+plotChangeMap(sc, out, "Cd19") + ggtitle("Cd19 Adjusted")
+plotChangeMap(sc, out, "Camk2n1") + ggtitle("Camk2n1 Adjusted")
+plotChangeMap(sc, out, "Cldn5") + ggtitle("Cldn5 Adjusted")
+plotChangeMap(sc, out, "Dcn") + ggtitle("Dcn Adjusted")
+```
