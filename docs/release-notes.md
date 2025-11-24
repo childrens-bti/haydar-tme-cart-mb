@@ -1,6 +1,147 @@
 # release notes
 
-## current release (v1)
+## current release (v2)
+- Data release date: 2025-11-14
+- status: available
+
+Added files:
+- 10X cellranger raw barcode matrix files for each sample, also reorganized directory structure to separate filtered and raw data.
+  - `barcodes.tsv.gz`
+  - `features.tsv.gz`
+  - `matrix.mtx.gz`
+  
+```
+└── v2
+    ├── 41BB-L_pos_T_D1
+    │   ├── filtered_bc
+    │   │   ├── barcodes.tsv.gz
+    │   │   ├── features.tsv.gz
+    │   │   └── matrix.mtx.gz
+    │   └── raw_bc
+    │       ├── barcodes.tsv.gz
+    │       ├── features.tsv.gz
+    │       └── matrix.mtx.gz
+    ├── 41BB-L_pos_T_D2
+    │   ├── filtered_bc
+    │   │   ├── barcodes.tsv.gz
+    │   │   ├── features.tsv.gz
+    │   │   └── matrix.mtx.gz
+    │   └── raw_bc
+    │       ├── barcodes.tsv.gz
+    │       ├── features.tsv.gz
+    │       └── matrix.mtx.gz
+    ├── B7H3_at_endpoint
+    │   ├── filtered_bc
+    │   │   ├── barcodes.tsv.gz
+    │   │   ├── features.tsv.gz
+    │   │   └── matrix.mtx.gz
+    │   └── raw_bc
+    │       ├── barcodes.tsv.gz
+    │       ├── features.tsv.gz
+    │       └── matrix.mtx.gz
+    ├── B7H3_pos_T_D1
+    │   ├── filtered_bc
+    │   │   ├── barcodes.tsv.gz
+    │   │   ├── features.tsv.gz
+    │   │   └── matrix.mtx.gz
+    │   └── raw_bc
+    │       ├── barcodes.tsv.gz
+    │       ├── features.tsv.gz
+    │       └── matrix.mtx.gz
+    ├── B7H3_pos_T_D2
+    │   ├── filtered_bc
+    │   │   ├── barcodes.tsv.gz
+    │   │   ├── features.tsv.gz
+    │   │   └── matrix.mtx.gz
+    │   └── raw_bc
+    │       ├── barcodes.tsv.gz
+    │       ├── features.tsv.gz
+    │       └── matrix.mtx.gz
+    ├── CD28-41BB_at_endpoint
+    │   ├── filtered_bc
+    │   │   ├── barcodes.tsv.gz
+    │   │   ├── features.tsv.gz
+    │   │   └── matrix.mtx.gz
+    │   └── raw_bc
+    │       ├── barcodes.tsv.gz
+    │       ├── features.tsv.gz
+    │       └── matrix.mtx.gz
+    ├── CD28-41BB_pos_T_D1
+    │   ├── filtered_bc
+    │   │   ├── barcodes.tsv.gz
+    │   │   ├── features.tsv.gz
+    │   │   └── matrix.mtx.gz
+    │   └── raw_bc
+    │       ├── barcodes.tsv.gz
+    │       ├── features.tsv.gz
+    │       └── matrix.mtx.gz
+    ├── CD28-41BB_pos_T_D2
+    │   ├── filtered_bc
+    │   │   ├── barcodes.tsv.gz
+    │   │   ├── features.tsv.gz
+    │   │   └── matrix.mtx.gz
+    │   └── raw_bc
+    │       ├── barcodes.tsv.gz
+    │       ├── features.tsv.gz
+    │       └── matrix.mtx.gz
+    ├── CD8-41BB_pos_T_D1
+    │   ├── filtered_bc
+    │   │   ├── barcodes.tsv.gz
+    │   │   ├── features.tsv.gz
+    │   │   └── matrix.mtx.gz
+    │   └── raw_bc
+    │       ├── barcodes.tsv.gz
+    │       ├── features.tsv.gz
+    │       └── matrix.mtx.gz
+    ├── CD8-41BB_pos_T_D2
+    │   ├── filtered_bc
+    │   │   ├── barcodes.tsv.gz
+    │   │   ├── features.tsv.gz
+    │   │   └── matrix.mtx.gz
+    │   └── raw_bc
+    │       ├── barcodes.tsv.gz
+    │       ├── features.tsv.gz
+    │       └── matrix.mtx.gz
+    ├── STOP_pos_T_D1
+    │   ├── filtered_bc
+    │   │   ├── barcodes.tsv.gz
+    │   │   ├── features.tsv.gz
+    │   │   └── matrix.mtx.gz
+    │   └── raw_bc
+    │       ├── barcodes.tsv.gz
+    │       ├── features.tsv.gz
+    │       └── matrix.mtx.gz
+    ├── STOP_pos_T_D2
+    │   ├── filtered_bc
+    │   │   ├── barcodes.tsv.gz
+    │   │   ├── features.tsv.gz
+    │   │   └── matrix.mtx.gz
+    │   └── raw_bc
+    │       ├── barcodes.tsv.gz
+    │       ├── features.tsv.gz
+    │       └── matrix.mtx.gz
+    ├── Tumor_only_D1
+    │   ├── filtered_bc
+    │   │   ├── barcodes.tsv.gz
+    │   │   ├── features.tsv.gz
+    │   │   └── matrix.mtx.gz
+    │   └── raw_bc
+    │       ├── barcodes.tsv.gz
+    │       ├── features.tsv.gz
+    │       └── matrix.mtx.gz
+    └── Tumor_only_D2
+    │   ├── filtered_bc
+    │   │   ├── barcodes.tsv.gz
+    │   │   ├── features.tsv.gz
+    │   │   └── matrix.mtx.gz
+    │   └── raw_bc
+    │       ├── barcodes.tsv.gz
+    │       ├── features.tsv.gz
+    │       └── matrix.mtx.gz
+    └── release-notes.md
+```
+
+## archived release (v1)
 - Data release date: 2025-11-12
 - status: available
 
