@@ -72,8 +72,8 @@ obj$immgen_label <- immgen_annotations$labels
 
 ## Visualize annotations
 ```{r visualize-annotations, fig.height=6, fig.width=12}
-p1 <- DimPlot(obj, group.by = "general_label", label = TRUE, repel = TRUE, reduction = "umap") + ggtitle("General Mouse Cell Types")
-p2 <- DimPlot(obj, group.by = "immgen_label", label = TRUE, repel = TRUE, reduction = "umap") + ggtitle("ImmGen Cell Types")
+p1 <- DimPlot(obj, group.by = "general_label", label = TRUE, repel = TRUE, reduction = "umap", pt.size = 0.25, alpha = 0.25) + ggtitle("General Mouse Cell Types")
+p2 <- DimPlot(obj, group.by = "immgen_label", label = TRUE, repel = TRUE, reduction = "umap", pt.size = 0.25, alpha = 0.25) + ggtitle("ImmGen Cell Types")
 p1 + p2
 ```
 
@@ -160,22 +160,24 @@ FeaturePlot_scCustom(obj, features = c("Map2", "Tubb3", "Rbfox3", "Syt1"), reduc
 ```{r manual-annotation}
 new_cluster_ids <- c(
   "0"= "Microglia", 
-  "1"= "Neurons", 
+  "1"= "Macrophages", 
   "2"= "Microglia", 
-  "3"= "Macrophages",
+  "3"= "Microglia",
   "4"= "Macrophages",
   "5"= "Lymphoid cells",
-  "6"= "Microglia", 
-  "7"= "Endothelial cells",
-  "8"= "Fibroblasts",
-  "9"= "Macrophages",
+  "6"= "Endothelial cells", 
+  "7"= "Fibroblasts",
+  "8"= "Microglia",
+  "9"= "Neurons",
   "10"= "Dendritic cells",
-  "11"= "Neutrophils",
-  "12"= "Dendritic cells",
-  "13"= "Oligodendrocytes",
+  "11"= "Macrophages",
+  "12"= "Neutrophils",
+  "13"= "Dendritic cells",
   "14"= "Epithelial cells",
-  "15"= "Astrocytes",
-  "16"= "Lymphoid cells"
+  "15"= "Oligodendrocytes",
+  "16"= "Astrocytes",
+  "17"= "Monocytes",
+  "18"= "Fibroblasts"
 )
 
 obj$cell_type <- plyr::mapvalues(
@@ -187,18 +189,18 @@ obj$cell_type <- plyr::mapvalues(
 
 ## Visualize manual annotations
 ```{r visualize-manual-annotations, fig.height=6, fig.width=6}
-DimPlot(obj, group.by = "cell_type", label = TRUE, repel = TRUE, reduction = "umap") + ggtitle("Lineage Annotations")
+DimPlot(obj, group.by = "cell_type", size = 0.25, alpha = 0.25, label = TRUE, repel = TRUE, reduction = "umap") + ggtitle("Lineage Annotations")
 ```
 
 ## Identify and export marker genes
 ```{r identify-markers}
 cluster_markers <- FindAllMarkers(obj, 
                                  only.pos = TRUE, min.pct = 0.5, logfc.threshold = 0.5, 
-                                 group.by = 'seurat_clusters', assay = 'RNA')
+                                 group.by = 'seurat_clusters', assay = 'RNA', test.use = "MAST")
 
 lineage_markers <- FindAllMarkers(obj, 
                                  only.pos = TRUE, min.pct = 0.5, logfc.threshold = 0.5, 
-                                 group.by = 'cell_type', assay = 'RNA')
+                                 group.by = 'cell_type', assay = 'RNA', test.use = "MAST")
 
 # Save markers
 write.csv(cluster_markers, file = file.path(results_dir, "cart_cluster_markers.csv"), row.names = FALSE)

@@ -20,7 +20,8 @@ library(DoubletFinder)
 library(tidyverse)
 library(SeuratObject)
 library(scCustomize)
-library(presto)
+library(MAST)
+library(SoupX)
 
 # Define directories
 root_dir <- find_root(has_dir(".git"))
@@ -58,12 +59,21 @@ conditions <- c("tumor", "tumor", "STOP", "STOP",
 ### Load in data, run SoupX, and output a list of seurat objects
 obj_list <- lapply(samples, function(sample) {
   print(sample)
-  seurat_obj <- run_soupx(data_dir, sample)
+  seurat_obj <- run_soupx(data_dir, sample, 
+                          guide_genes = list(
+                            mf = c("Adgre1", "Cd68", "Lyz2", "Cd14", "Mafb", "Fcgr1"),
+                            mg =  c("P2ry12", "Tmem119", "Hexb", "Sparc", "Csf1r"),
+                            t = c("Cd3d", "Cd3e", "Cd3g", "Cd2", "Trac"),
+                            nu = c("Snap25", "Syt1", "Rbfox3", "Camk2n1", "Map2"),
+                            ed = c("Cldn5", "Flt1", "Pecam1", "Kdr", "Vwf"),
+                            fb = c("Dcn", "Col1a1", "Col1a2", "Pdgfra", "Lum")
+                          ), 
+                          use_clustering = FALSE, 
+                          min_cells = 1, min_features = 50)
   seurat_obj[["sample"]] <- sample
   seurat_obj[["condition"]] <- conditions[which(samples == sample)]
   return(seurat_obj)
 })
-
 ```
 
 ## Run doublet removal on individual samples
@@ -205,7 +215,8 @@ combined_obj <- RunUMAP(combined_obj, dims = 1:30, reduction = "pca", reduction.
 DimPlot(combined_obj, reduction = "merged_umap", 
         group.by = c("merged_clusters", "sample"), alpha = 0.25)
 ```
-```{r split-native-merge-umap, fig.width=8, fig.height=16, out.width='100%', fig.align='center'}}
+
+```{r split-naive-merge-umap, fig.width=8, fig.height=16, out.width='100%', fig.align='center'}
 DimPlot(combined_obj, reduction = "merged_umap", 
         group.by = "sample", split.by = "sample", ncol = 4, alpha = 0.5) + 
   theme(
@@ -252,7 +263,7 @@ DimPlot(integrated_obj, reduction = "umap",
         group.by = c("seurat_clusters", "sample"), alpha = 0.25)
 ```
 
-```{r split-integrated-umap, fig.width=8, fig.height=16, out.width='100%', fig.align='center'}}
+```{r split-integrated-umap, fig.width=8, fig.height=16, out.width='100%', fig.align='center'}
 DimPlot(integrated_obj, reduction = "umap", 
         group.by = "sample", split.by = "sample", ncol = 4, alpha = 0.5) + 
   theme(
