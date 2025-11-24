@@ -58,7 +58,7 @@ DimPlot(obj, reduction = "umap", group.by = "cell_type", split.by = "condition",
 
 ## Subset myeloid cells
 ```{r subset-myeloid-cells}
-myeloid_cells <- c("Macrophages", "Microglia")
+myeloid_cells <- c("Macrophages", "Microglia", "Monocytes")
 myeloid_obj <- subset(obj, subset = cell_type %in% myeloid_cells)
 ```
 
