@@ -53,18 +53,28 @@ RUN R -e 'options(Ncpus = max(1, parallel::detectCores()-1), repos = c(CRAN="htt
             "remotes",        \
             "uwot",           \
             "RcppAnnoy",       \
-            "scCustomize"     \
+            "scCustomize",     \
+            "SoupX", \
+            "instantiate", \
+            "msigdbr" \
           ))'
 
 # ---- Bioconductor packages ----
 RUN R -e 'if (!requireNamespace("BiocManager", quietly = TRUE)) install.packages("BiocManager", repos="https://cloud.r-project.org"); \
-          BiocManager::install(c("biomaRt", "SingleR", "ComplexHeatmap", "dittoSeq", "DropletUtils", "Nebulosa", "celldex"), ask = FALSE, update = TRUE)'
+          BiocManager::install(c("biomaRt", "SingleR", "ComplexHeatmap", "dittoSeq", "DropletUtils", "Nebulosa", "celldex", \
+          "fgsea", "AUCell", "MAST"), ask = FALSE, update = TRUE)'
 
 ## install GitHub packages
 RUN R -e "remotes::install_github('clauswilke/colorblindr', ref = '1ac3d4d62dad047b68bb66c06cee927a4517d678', dependencies = TRUE)"
 RUN R -e "remotes::install_github('thomasp85/patchwork')"
 RUN R -e 'remotes::install_github("chris-mcginnis-ucsf/DoubletFinder")'
 RUN R -e 'remotes::install_github("immunogenomics/presto")'
+RUN R -e 'remotes::install_github("MangiolaLaboratory/sccomp")'
+
+## finish sccomp installation
+RUN R -e 'install.packages("cmdstanr", repos = c("https://stan-dev.r-universe.dev/", getOption("repos")))'
+RUN R -e 'cmdstanr::check_cmdstan_toolchain(fix = TRUE)'
+RUN R -e 'cmdstanr::install_cmdstan()'
 
 WORKDIR /rocker-build/
 
