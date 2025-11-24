@@ -11,7 +11,7 @@ Added files:
   - `matrix.mtx.gz`
   
 ```
-└── v1
+└── v2
     ├── 41BB-L_pos_T_D1
     │   ├── filtered_bc
     │   │   ├── barcodes.tsv.gz
