@@ -62,7 +62,7 @@ RUN R -e 'options(Ncpus = max(1, parallel::detectCores()-1), repos = c(CRAN="htt
 # ---- Bioconductor packages ----
 RUN R -e 'if (!requireNamespace("BiocManager", quietly = TRUE)) install.packages("BiocManager", repos="https://cloud.r-project.org"); \
           BiocManager::install(c("biomaRt", "SingleR", "ComplexHeatmap", "dittoSeq", "DropletUtils", "Nebulosa", "celldex", \
-          "fgsea", "AUCell", "limma", "edgeR", "MAST"), ask = FALSE, update = TRUE)'
+          "fgsea", "AUCell", "MAST"), ask = FALSE, update = TRUE)'
 
 ## install GitHub packages
 RUN R -e "remotes::install_github('clauswilke/colorblindr', ref = '1ac3d4d62dad047b68bb66c06cee927a4517d678', dependencies = TRUE)"
