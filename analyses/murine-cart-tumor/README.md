@@ -8,6 +8,8 @@
 
 1. `01-seurat-processing.Rmd`: performs the standard Seurat processing and integration for 12 murine brain tumor samples with various CAR-T treatments.
 2. `02-lineage-annotation.Rmd`: performs cell type annotation analysis for major cell lineages
+3. `03-subclustering.Rmd`: performs subsetting and subclustering of myeloid, lymphoid, and DC lineages
+4. `04-myeloid-characterization.Rmd`: performs in depth characterization of macophage and microglia subtypes present in the dataset. Includes identification of markers, annotation, composition analysis, and GSEA enrichements.
 
 ## Analysis module directory structure
 ```
