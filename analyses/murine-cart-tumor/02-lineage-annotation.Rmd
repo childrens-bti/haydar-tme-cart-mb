@@ -190,6 +190,10 @@ obj$cell_type <- plyr::mapvalues(
 ## Visualize manual annotations
 ```{r visualize-manual-annotations, fig.height=6, fig.width=6}
 DimPlot(obj, group.by = "cell_type", size = 0.25, alpha = 0.25, label = TRUE, repel = TRUE, reduction = "umap") + ggtitle("Lineage Annotations")
+ggsave(filename = file.path(plot_dir, "cart_umap_lineage_annotations.png"), width = 6, height = 6)
+
+DimPlot(obj, group.by = "cell_type", size = 0.25, alpha = 0.25, label = TRUE, repel = TRUE, reduction = "umap") + ggtitle("Lineage Annotations")
+ggsave(filename = file.path(plot_dir, "cart_umap_clusters.png"), width = 6, height = 6)
 ```
 
 ## Identify and export marker genes
@@ -205,6 +209,53 @@ lineage_markers <- FindAllMarkers(obj,
 # Save markers
 write.csv(cluster_markers, file = file.path(results_dir, "cart_cluster_markers.csv"), row.names = FALSE)
 write.csv(lineage_markers, file = file.path(results_dir, "cart_lineage_markers.csv"), row.names = FALSE)
+```
+
+## Visualize top markers per lineage by heatmap
+```{r visualize-top-markers-heatmap, fig.height=16, fig.width=8}
+lineage_markers <- read.csv(file.path(results_dir, "cart_lineage_markers.csv"))
+
+top50_markers <- lineage_markers %>%
+  group_by(cluster) %>%
+  top_n(n = 50, wt = avg_log2FC)
+
+# scale top markers in RNA assay
+obj <- ScaleData(obj, features = unique(top50_markers$gene), assay = "RNA")
+
+# separate heatmap for each cluster, save in one pdf file
+pdf(file = file.path(plot_dir, "cart_heatmap_top_lineage_markers.pdf"), width = 16, height = 8)
+for (lineage in unique(top50_markers$cluster)) {
+  markers <- top50_markers %>%
+    filter(cluster == lineage) %>%
+    pull(gene)
+  
+  p <- DoHeatmap(obj, features = markers, group.by = "cell_type", assay = "RNA", cells = 1:2000) +
+    ggtitle(paste("Top Markers for", lineage)) +
+    theme(plot.title = element_text(hjust = 0.5, face = "bold"))
+  
+  print(p)
+}
+dev.off()
+```
+
+## Lineage dot plot
+```{r lineage-dot-plot, fig.height=5, fig.width=8}
+## stacked barplot
+meta <- as.data.frame(obj@meta.data)
+prop_df <- meta %>%
+  dplyr::count(condition, cell_type) %>%
+  group_by(condition) %>%
+  mutate(prop = n / sum(n))
+
+## dotplot of proportions
+ggplot(prop_df, aes(x = condition, y = cell_type, size = prop, color = prop)) +
+  geom_point() +
+  scale_color_viridis_c() +
+  scale_y_discrete(limits = rev) + 
+  theme_classic() +
+  ylab("Cluster") + 
+  xlab("Condition")
+ggsave(filename = file.path(plot_dir, "cart_dotplot_lineage_proportions.png"), width = 8, height = 5)
 ```
 
 ## Save annotated object

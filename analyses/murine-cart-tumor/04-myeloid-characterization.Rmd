@@ -366,7 +366,7 @@ fgsea_res_hallmark_sig <- fgsea_res_hallmark %>%
 write.csv(fgsea_res_hallmark_sig, file.path(results_dir, "myeloid_subtype_hallmark_gsea_results.csv"), row.names = FALSE)
 ```
 
-##Visualize select significant genesets
+## Visualize select significant genesets
 ```{r visualize-gsea-results, fig.height=8, fig.width=12}
 c0_ranks <- make_rank_vector(fc_list[["Activated microglia"]])
 c7_ranks <- make_rank_vector(fc_list[["Interferon-responsive macrophages"]])
@@ -425,50 +425,55 @@ write.csv(fgsea_res_c7_sig, file.path(results_dir, "myeloid_subtype_c7_gsea_resu
 # Summary of the myeloid subtypes
 AI-assisted summerization of the full marker lists for each myeloid subtype:
 
-## Homeostatic / Stress-Response Microglia
+### Homeostatic / Stress-Response Microglia
 - Key markers: Tmem119, Siglech, Sparc, Hspa1a/b, Hsp90aa1, Txnip
 - Enriched in tumor and STOP samples
 - A core microglial population maintaining tissue surveillance, enriched for canonical homeostatic genes (Tmem119, Siglech, Sparc) but showing a mild stress-response program marked by heat-shock proteins (Hspa1a/b, Hsp90aa1). Reflects stable microglia experiencing environmental or handling-related cellular stress.
 
 
-## Activated microglia
+### Activated microglia
 - Key markers: Il1a, Tnf, Ccl3, Egr1, Atf3
 - Enriched in tumor and STOP samples
 - This population represents danger-sensing, cytokine-producing, immune-interactive microglia with strong NF-κB/AP-1 activity and maintained microglial identity. It aligns with injury-induced, tumor-associated, or cytokine-exposed activated microglia.
 
-## Phagocytic microglia
+### Phagocytic microglia
 - Key markers: Apoe, Trem2, C1qa, Tyrobp, Cst7
 - Slightly enriched in CD28-41BB samples
 - This population represents actively engulfing, lipid-processing phagocytic microglia with strong lysosomal and lipid-catabolic machinery. Their profile is consistent with DAM/LAM microglia responding to debris, dying cells, myelin, or tumor-derived material.
 
-## Lipid-associated macrophages
+### Lipid-associated macrophages
 - Key markers: Gpnmb, Fabp5, Lipa, Lgals3
 - Enriched in B7H3, 41BBL, and CD28-41BB samples
 - A highly lipid-scavenging, lysosome-expanded, Trem2-Tyrobp–driven macrophage population analogous to LAM/TAM signatures in cancer. These cells manage lipid-rich debris, remodel extracellular matrix, buffer oxidative stress, and maintain persistent low-grade antigen presentation.
 
-## Antigen presenting macrophages
+### Antigen presenting macrophages
 - Key markers: H2-Aa, H2-Ab1, Cd74, Vim, Srgn
 - Enriched in CD8-41BB samples
 - A highly activated, MHC-II–intense antigen-presenting macrophage population enriched for inflammatory cytokines and migration machinery.
 
-## Interferon-responsive macrophages
+### Interferon-responsive macrophages
 - Key markers: Ifit2, Ifit3, Rsad2, Isg15, Irf7
 - Enriched in B7H3 samples
 - Highly antiviral, type I interferon–driven macrophages expressing strong ISG modules (Ifit/Isg15/Oasl/Rsad2), chemokines (Cxcl9/10), antigen-presentation machinery, and nucleic-acid sensors. Represents macrophages engaged in innate immune amplification, viral-mimicry sensing, or tumor-associated interferon signaling.
 
-## Perivascular macrophages
+### Perivascular macrophages
 - Key markers: Mrc1, Dab2, Gas6, Cd163, Pf4
 - Depleted in B7H3 and 41BB-L samples
 - A population specializing in endothelial interaction, chemokine-mediated leukocyte recruitment, oxidative-stress buffering, and vascular remodeling. These cells form a vessel-associated, tissue-resident macrophage compartment with a balanced inflammatory and tolerogenic signature.
 
-## Monocytes: 
+### Monocytes: 
 - Key markers: Plac8, Ccr2, S100a4, Alox5ap
 - Enriched in B7H3 samples
 - Represents the major infiltrating monocyte pool that seeds the macrophage and inflammatory myeloid states within the tissue.
 
-## Neurons:
+### Neurons:
 - Key markers: Ryr1, Syt7, Ank1, Itpr1
 - Contamination
+
+## Save final myeloid object
+```{r save-final-object}
+saveRDS(myeloid_obj, file.path(results_dir, "cart_myeloid_subtypes.rds"))
+```
 
 ## Session Info
 ```{r session-info}

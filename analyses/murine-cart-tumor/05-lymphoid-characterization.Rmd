@@ -540,22 +540,22 @@ saveRDS(tcell_obj, file.path(results_dir, "cart_tcell_subclusters.rds"))
 AI-assisted summerization of the full marker lists for each T cell subtype.
 Confidence is very low due to low numbers of cells left and contamination still present. 
 
-## Heat-shock Activated T cells
+### Heat-shock Activated T cells
 - Key markers: Hspa1a, Hspa1b, Dnajb1, Jun, Cd69, Ms4a4b, Rasal3, Btg2
 - Recently activated / acutely stressed T cells (common in tumor or harsh dissociation).
 
-## Foxo1+ Satb1+ T cells (not sure what this is)
+### Foxo1+ Satb1+ T cells (not sure what this is)
 - Key markers: Gramd3, Vps37b, Foxo1, Gzmb
 - Potentially central memory T cells, but not clean
 
-## CD4+ Regulatory T cells
+### CD4+ Regulatory T cells
 - Key markers: Foxp3, Cd4, Tnfrsf4, Ctla4, Cd4
 - Classic Treg markers indicating immunosuppressive function.
 
-## Myeloid Contamination
+### Myeloid Contamination
 - Key markers: Cd74, H2-Ab1, H2-Aa, H2-Eb1, Cxcl16, Il1b, Alox5ap, Tyrobp, Spi1
 
-## Cxcr6+ Bhlhe40+ T cells (not sure)
+### Cxcr6+ Bhlhe40+ T cells (not sure)
 - Key markers: Cxcr6, Bhlhe40, Furin, S100a4, Hif1a
 - Potentially exhausted T cells
 
