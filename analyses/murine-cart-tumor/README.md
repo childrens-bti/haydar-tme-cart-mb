@@ -10,6 +10,7 @@
 2. `02-lineage-annotation.Rmd`: performs cell type annotation analysis for major cell lineages
 3. `03-subclustering.Rmd`: performs subsetting and subclustering of myeloid, lymphoid, and DC lineages
 4. `04-myeloid-characterization.Rmd`: performs in depth characterization of macophage and microglia subtypes present in the dataset. Includes identification of markers, annotation, composition analysis, and GSEA enrichements.
+5. `05-lymphoid-characterization.Rmd`: Same as myeloid, but also performed a further round of cell filtering for T cells as there are still strong contamination from other lineages.
 
 ## Analysis module directory structure
 ```
@@ -20,8 +21,11 @@ murine-cart-tumor/
 │   ├── myeloid_subcluster_markers.csv
 │   ├── myeloid_subtype_c5_gsea_results.csv
 │   ├── myeloid_subtype_c7_gsea_results.csv
-│   ├── myeloid_subtype_hallmark_gsea_results.csv
-│   └── myeloid_subtype_markers.csv
+│   ├── myeloid_subtype_markers.csv
+│   ├── tcell_subtype_c5_gsea_results.csv
+│   ├── tcell_subtype_c7_gsea_results.csv
+│   ├── tcell_subtype_hallmark_gsea_results.csv
+│   └── tcell_subtype_markers.csv
 │
 ├── util/
 │   ├── run_doubletfinder.R
@@ -39,6 +43,7 @@ murine-cart-tumor/
 ├── 04-myeloid-characterization.Rmd
 ├── 04-myeloid-characterization.html
 ├── 05-lymphoid-characterization.Rmd
+├── 05-lymphoid-characterization.html
 ├── README.md
 └── run_module.sh
 ```
