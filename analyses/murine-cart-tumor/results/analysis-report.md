@@ -11,7 +11,7 @@ This document summarizes the analysis performed for the **Haydar Lab murine brai
 - Ran SoupX and DoubletFinder algorithms to correct for ambient RNA and remove doublets, respectively
 - Standard Seurat QC, processing and integration workflow for 12 10X v2 flex libraries
 - Annotated main cell lienages by combining automatic algorithm (SingleR) and manual marker inspection
-- Deliverables
+- Deliverables (main_dataset/)
     - UMAP plots: cart_umap_lineage_annotations.png & cart_umap_clusters.png
     - Marker gene heatmap: cart_heatmap_top_lineage_markers.pdf
     - Marker gene lists: cart_cluster_markers.csv & cart_lineage_markers.csv
@@ -33,10 +33,47 @@ This document summarizes the analysis performed for the **Haydar Lab murine brai
     - Hallmark
     - C5: Ontology
     - C7: Immunology
-- Deliverables
-    - 
+- Deliverables (myeloid_subtypes)
+    - UMAP plots: myeloid_subtypes_umap.png & myeloid_subtypes_by_condition.png
+    - Marker gene heatmap: myeloid_subtype_heatmap_top_markers.pdf
+    - Marker gene lists: myeloid_subcluster_markers.csv & myeloid_subtype_markers.csv
+    - sccomp results
+        - myeloid_subtype_composition_sccomp.png
+        - myeloid_subtype_proportions_barplot.png
+        - myeloid_subtype_proportions_dotplot.png
+    - AUCell results: myeloid_subtype_hallmark_auc_heatmap.pdf
+    - GSEA results
+        - myeloid_subtype_hallmark_gsea_results.csv
+        - myeloid_subtype_c5_gsea_results.csv
+        - myeloid_subtype_c7_gsea_results.csv
 
 ## T cell heterogenity
+- Subclustering of lymphoid cell clusters
+- Further enrichment and filtering for cleaner T cell populations by in silico gating on lineage gene module scores
+- Refined into interpretable T cell subtypes
+    - Heat-shock/stressed cytotoxic T cells
+    - Foxo1+ Satb1+ T cells (not confident)
+    - CD4+ regulatory T cells
+    - Cxcr6+ Bhlhe40+ T cells (not confident)
+    - Early activated T cells
+    - NK cells
+    - Myeloid contamination
+    - B cell contamination
+- Compositional analysis of T cell subtypes across CAR-T design conditions
+- Gene sets enrichment analysis using MSigDB gene sets.
+- Deliverables (tcell_subtypes)
+    - UMAP plots: tcell_subtypes_umap.png & tcell_subtypes_by_condition.png
+    - Marker gene heatmap: tell_subtype_heatmap_top_markers.pdf
+    - Marker gene lists: tcell_subtype_markers.csv
+    - sccomp results
+        - tcell_subtype_composition_sccomp.png
+        - tcell_subtype_proportions_barplot.png
+        - tcell_subtype_proportions_dotplot.png
+    - AUCell results: tcell_subtype_hallmark_auc_heatmap.pdf
+    - GSEA results
+        - tcell_subtype_hallmark_gsea_results.csv
+        - tcell_subtype_c5_gsea_results.csv
+        - tcell_subtype_c7_gsea_results.csv
 
 # Key takeaways
 

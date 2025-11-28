@@ -46,6 +46,7 @@ set.seed(1234)
 ```{r load-data}
 # Load Seurat object
 lymphoid_obj <- readRDS(file.path(results_dir, "cart_lymphoid_subclusters.rds"))
+tcell_obj <- readRDS(file.path(results_dir, "cart_tcell_subclusters.rds"))
 ```
 
 ## Visualize lymphoid subclusters
@@ -288,6 +289,7 @@ tcell_obj$tcell_subtype <- plyr::mapvalues(
 
 DimPlot(tcell_obj, reduction = "umap", group.by = "tcell_subtype") + 
   ggtitle("T Cell Subtypes")
+ggsave(filename = file.path(plot_dir, "tcell_subtypes_umap.png"), width = 9, height = 6)
 ```
 
 ## Marker genes on subsets
@@ -304,12 +306,39 @@ subtype_markers <- FindAllMarkers(tcell_obj,
 write.csv(subtype_markers, file.path(results_dir, "tcell_subtype_markers.csv"), row.names = FALSE)
 ```
 
+```{r visualize-top-markers-heatmap, fig.height=16, fig.width=8}
+subtype_markers <- read.csv(file.path(results_dir, "tcell_subtype_markers.csv"))
+
+top50_markers <- subtype_markers %>%
+  group_by(cluster) %>%
+  top_n(n = 50, wt = avg_log2FC)
+
+# scale top markers in RNA assay
+tcell_obj <- ScaleData(tcell_obj, features = unique(top50_markers$gene), assay = "RNA")
+
+# separate heatmap for each cluster, save in one pdf file
+pdf(file = file.path(plot_dir, "tcell_subtype_heatmap_top_markers.pdf"), width = 16, height = 8)
+for (lineage in unique(top50_markers$cluster)) {
+  markers <- top50_markers %>%
+    filter(cluster == lineage) %>%
+    pull(gene)
+  
+  p <- DoHeatmap(tcell_obj, features = markers, group.by = "tcell_subtype", assay = "RNA", cells = 1:2000) +
+    ggtitle(paste("Top Markers for", lineage)) +
+    theme(plot.title = element_text(hjust = 0.5, face = "bold"))
+  
+  print(p)
+}
+dev.off()
+```
+
 # Composition analysis using sccomp
 
 ## Split by condition
 ```{r visualize-lymphoid-subclusters-by-condition, fig.height=6, fig.width=8}
-DimPlot(tcell_obj, reduction = "umap", group.by = "seurat_clusters", split.by = "condition", ncol = 3) + 
+DimPlot(tcell_obj, reduction = "umap", group.by = "tcell_subtype", split.by = "condition", ncol = 3) + 
   ggtitle("T Cell Subclusters by Condition")
+ggsave(filename = file.path(plot_dir, "tcell_subtypes_by_condition.png"), width = 16, height = 6)
 ```
 
 ```{r composition-analysis-sccomp, message=FALSE, warning=FALSE}
@@ -338,8 +367,10 @@ sccomp_result =
 
 ```
 
-```{r visualize-sccomp-results}
-sccomp_result |> plot()
+```{r visualize-sccomp-results, fig.height=6, fig.width=12}
+sccomp_result |> 
+  plot_1D_intervals()
+ggsave(file.path(plot_dir, "tcell_subtype_composition_sccomp.png"), width = 12, height = 6)
 ```
 
 ``` {r sccomp-pairwise-fc}
@@ -354,7 +385,6 @@ sccomp_result  |>
 
 ## plot relative proportions of clusters between conditions
 ```{r plot-relative-proportions}
-
 ## stacked barplot
 prop_df <- tcell_obj@meta.data %>%
   count(condition, tcell_subtype) %>%
@@ -365,6 +395,7 @@ ggplot(prop_df, aes(x = condition, y = prop, fill = tcell_subtype)) +
   geom_col(position = position_dodge(width = 0.8)) +
   ylab("Proportion") +
   theme_classic()
+ggsave(filename = file.path(plot_dir, "tcell_subtype_proportions_barplot.png"), width =9, height = 6)
 
 ## dotplot of proportions
 ggplot(prop_df, aes(x = condition, y = tcell_subtype, size = prop, color = prop)) +
@@ -374,6 +405,7 @@ ggplot(prop_df, aes(x = condition, y = tcell_subtype, size = prop, color = prop)
   theme_classic() +
   ylab("Cluster") + 
   xlab("Condition")
+ggsave(filename = file.path(plot_dir, "tcell_subtype_proportions_dotplot.png"), width =9, height = 6)
 ```
 
 # Gene set enrichment analysis
@@ -428,12 +460,14 @@ colors <- rev(RColorBrewer::brewer.pal(n = 11, name = "RdBu"))
 colors.use <- grDevices::colorRampPalette(colors = colors)(100)
 breaks <- seq(-3, 3, length.out = 101)
 
+pdf(file = file.path(plot_dir, "tcell_subtype_hallmark_auc_heatmap.pdf"), width = 16, height = 8)
 pheatmap::pheatmap(mat = hallmark_z_scores,
                    color = colors.use,
                    border_color = "white",
                    breaks = breaks,
                    clustering_distance_rows = "correlation",
                   clustering_distance_cols = "correlation") 
+dev.off()
 ```
 
 ## GSEA analysis of Hallmark gene sets

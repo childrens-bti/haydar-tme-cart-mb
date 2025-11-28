@@ -45,7 +45,7 @@ set.seed(1234)
 ## Load Data
 ```{r load-data}
 # Load Seurat object
-myeloid_obj <- readRDS(file.path(results_dir, "cart_myeloid_subclusters.rds"))
+myeloid_obj <- readRDS(file.path(results_dir, "cart_myeloid_subtypes.rds"))
 ```
 
 ## Re-run clusters in higher resolution
@@ -126,9 +126,16 @@ myeloid_obj$myeloid_subtype <- plyr::mapvalues(
   from = names(new_cluster_ids),
   to = new_cluster_ids
 )
+```
 
-DimPlot(myeloid_obj, reduction = "umap", group.by = "myeloid_subtype") + 
-  ggtitle("Myeloid Subsets")
+```{r umap-visualization, fig.height=6, fig.width=16}
+p1 <- DimPlot(myeloid_obj, reduction = "umap", group.by = "seurat_clusters") + 
+  ggtitle("Seurat Clustering")
+p2 <- DimPlot(myeloid_obj, reduction = "umap", group.by = "myeloid_subtype") + 
+  ggtitle("Myeloid Subtypes")
+
+p1 + p2
+ggsave(file.path(plot_dir, "myeloid_subtypes_umap.png"), width = 16, height = 6)
 ```
 
 ## Marker genes on subsets
@@ -161,11 +168,39 @@ for (clust in unique(top_markers_table$cluster)) {
 }
 ```
 
+```{r visualize-top-markers-heatmap, fig.height=16, fig.width=8}
+subtype_markers <- read.csv(file.path(results_dir, "myeloid_subtype_markers.csv"))
+
+top50_markers <- subtype_markers %>%
+  group_by(cluster) %>%
+  top_n(n = 50, wt = avg_log2FC)
+
+# scale top markers in RNA assay
+myeloid_obj <- ScaleData(myeloid_obj, features = unique(top50_markers$gene), assay = "RNA")
+
+# separate heatmap for each cluster, save in one pdf file
+pdf(file = file.path(plot_dir, "myeloid_subtype_heatmap_top_markers.pdf"), width = 16, height = 8)
+for (lineage in unique(top50_markers$cluster)) {
+  markers <- top50_markers %>%
+    filter(cluster == lineage) %>%
+    pull(gene)
+  
+  p <- DoHeatmap(myeloid_obj, features = markers, group.by = "myeloid_subtype", assay = "RNA", cells = 1:2000) +
+    ggtitle(paste("Top Markers for", lineage)) +
+    theme(plot.title = element_text(hjust = 0.5, face = "bold"))
+  
+  print(p)
+}
+dev.off()
+```
+
 ## Composition analysis using sccomp
 
-```{r visualize-split-umap, fig.height=8, fig.width=12}
+```{r visualize-split-umap, fig.height=8, fig.width=16}
 DimPlot(myeloid_obj, reduction = "umap", group.by = "myeloid_subtype", split.by = "condition", ncol = 3) + 
   ggtitle("Myeloid Subclusters by Condition")
+
+ggsave(file.path(plot_dir, "myeloid_subtypes_by_condition_umap.png"), width = 16, height = 8)
 ```
 
 ```{r composition-analysis-sccomp, message=FALSE, warning=FALSE}
@@ -194,8 +229,10 @@ sccomp_result =
 
 ```
 
-```{r visualize-sccomp-results}
-sccomp_result |> plot()
+```{r visualize-sccomp-results, fig.height=6, fig.width=12}
+sccomp_result |> 
+  plot_1D_intervals()
+ggsave(file.path(plot_dir, "myeloid_subtype_composition_sccomp.png"), width = 12, height = 6)
 ```
 
 ``` {r sccomp-pairwise-fc}
@@ -210,7 +247,6 @@ sccomp_result  |>
 
 ## plot relative proportions of clusters between conditions
 ```{r plot-relative-proportions}
-
 ## stacked barplot
 prop_df <- myeloid_obj@meta.data %>%
   count(condition, myeloid_subtype) %>%
@@ -222,6 +258,8 @@ ggplot(prop_df, aes(x = condition, y = prop, fill = myeloid_subtype)) +
   ylab("Proportion") +
   theme_classic()
 
+ggsave(file.path(plot_dir, "myeloid_subtype_proportions_barplot.png"), width = 9, height = 6)
+
 ## dotplot of proportions
 ggplot(prop_df, aes(x = condition, y = myeloid_subtype, size = prop, color = prop)) +
   geom_point() +
@@ -230,6 +268,8 @@ ggplot(prop_df, aes(x = condition, y = myeloid_subtype, size = prop, color = pro
   theme_classic() +
   ylab("Cluster") + 
   xlab("Condition")
+
+ggsave(file.path(plot_dir, "myeloid_subtype_proportions_dotplot.png"), width = 9, height = 6)
 ```
 
 # Gene set enrichment analysis
@@ -307,12 +347,17 @@ colors <- rev(RColorBrewer::brewer.pal(n = 11, name = "RdBu"))
 colors.use <- grDevices::colorRampPalette(colors = colors)(100)
 breaks <- seq(-3, 3, length.out = 101)
 
-pheatmap::pheatmap(mat = hallmark_z_scores,
+# save heatmap as pdf
+pdf(file = file.path(plot_dir, "myeloid_subtype_hallmark_auc_heatmap.pdf"), width = 16, height = 8)
+
+hm <- pheatmap::pheatmap(mat = hallmark_z_scores,
                    color = colors.use,
                    border_color = "white",
                    breaks = breaks,
                    clustering_distance_rows = "correlation",
-                  clustering_distance_cols = "correlation") 
+                  clustering_distance_cols = "correlation",
+                  main = "Hallmark Pathway AUCell Activity across Myeloid Subtypes") 
+dev.off()
 ```
 
 ## GSEA analysis of Hallmark gene sets
