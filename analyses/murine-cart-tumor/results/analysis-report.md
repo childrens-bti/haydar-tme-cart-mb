@@ -7,6 +7,7 @@ Date: Dec 2025
 This document summarizes the analysis performed for the **Haydar Lab murine brain tumor CAR-T scRNA-seq**. The goal was to assess the heterogenity of myeloid and T cells across CAR-T design conditions.
 
 # Key takeaways
+- Read depth per cell are pretty low across samples, with high ambient RNA contamination. This may stem from the trade off between 10X flex and chronium kits and would adversely affect the analysis for smaller cell populations.
 - **Interesting patterns emerged in myeloid cells**:
     - Control samples (tumor and STOP) are enriched for homeostatic and activated microglia
     - Macrophage populations expand in CAR-T treated samples
