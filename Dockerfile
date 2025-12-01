@@ -57,10 +57,6 @@ RUN R -e 'options(Ncpus = max(1, parallel::detectCores()-1), repos = c(CRAN="htt
             "SoupX", \
             "instantiate", \
             "msigdbr" \
-            "scCustomize",     \
-            "SoupX", \
-            "instantiate", \
-            "msigdbr" \
           ))'
 
 # ---- Bioconductor packages ----
@@ -73,12 +69,6 @@ RUN R -e "remotes::install_github('clauswilke/colorblindr', ref = '1ac3d4d62dad0
 RUN R -e "remotes::install_github('thomasp85/patchwork')"
 RUN R -e 'remotes::install_github("chris-mcginnis-ucsf/DoubletFinder")'
 RUN R -e 'remotes::install_github("immunogenomics/presto")'
-RUN R -e 'remotes::install_github("MangiolaLaboratory/sccomp")'
-
-## finish sccomp installation
-RUN R -e 'install.packages("cmdstanr", repos = c("https://stan-dev.r-universe.dev/", getOption("repos")))'
-RUN R -e 'cmdstanr::check_cmdstan_toolchain(fix = TRUE)'
-RUN R -e 'cmdstanr::install_cmdstan()'
 RUN R -e 'remotes::install_github("MangiolaLaboratory/sccomp")'
 
 ## finish sccomp installation
