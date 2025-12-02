@@ -192,7 +192,7 @@ obj$cell_type <- plyr::mapvalues(
 DimPlot(obj, group.by = "cell_type", size = 0.25, alpha = 0.25, label = TRUE, repel = TRUE, reduction = "umap") + ggtitle("Lineage Annotations")
 ggsave(filename = file.path(plot_dir, "cart_umap_lineage_annotations.png"), width = 6, height = 6)
 
-DimPlot(obj, group.by = "cell_type", size = 0.25, alpha = 0.25, label = TRUE, repel = TRUE, reduction = "umap") + ggtitle("Lineage Annotations")
+DimPlot(obj, group.by = "seurat_clusters", size = 0.25, alpha = 0.25, label = TRUE, repel = TRUE, reduction = "umap") + ggtitle("Seurat Clusters")
 ggsave(filename = file.path(plot_dir, "cart_umap_clusters.png"), width = 6, height = 6)
 ```
 

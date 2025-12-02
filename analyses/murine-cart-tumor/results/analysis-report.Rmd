@@ -1,3 +1,26 @@
+---
+title: "Murine Brain Tumor CAR-T scRNA-seq Analysis Report"
+author: "Sam Chen"
+date: "`r Sys.Date()`"
+output: 
+  html_document:
+  toc: TRUE
+---
+
+```{r setup}
+# Define directories
+library(rprojroot)
+
+root_dir <- find_root(has_dir(".git"))
+data_dir <- file.path(root_dir, "data", "v2")
+analysis_dir <- file.path(root_dir, "analyses", "murine-cart-tumor")
+results_dir <- file.path(analysis_dir, "results")
+plot_dir <- file.path(analysis_dir, "plots")
+
+# Source custom theme
+source(file.path(root_dir, "figures", "theme.R"))
+```
+
 # Murine Brain Tumor CAR-T scRNA-seq Analysis Report
 
 Prepared by: Sam Chen
@@ -28,9 +51,19 @@ This document summarizes the analysis performed for the **Haydar Lab murine brai
 
 - Deliverables (main_dataset/)
     - UMAP plots: cart_umap_lineage_annotations.png & cart_umap_clusters.png
+```{r all-umap-plots, echo=FALSE, fig.width=6, fig.height=6}
+    knitr::include_graphics(c(file.path(plot_dir, "cart_umap_lineage_annotations.png"),
+                              file.path(plot_dir, "cart_umap_clusters.png")))
+```
     - Marker gene heatmap: cart_heatmap_top_lineage_markers.pdf
+```{r all-marker-gene-heatmap, echo=FALSE, out.width="1000px", out.height="600px"}
+    knitr::include_graphics(c(file.path(plot_dir, "cart_heatmap_top_lineage_markers.pdf")))
+```
     - Marker gene lists: cart_cluster_markers.csv & cart_lineage_markers.csv
     - Lineage dot plot: cart_dotplot_lineage_proportions.png
+```{r all-prop-plots, echo=FALSE, fig.width=6, fig.height=6}
+    knitr::include_graphics(c(file.path(plot_dir, "cart_dotplot_lineage_proportions.png")))
+```
 
 ## Myeloid heterogenity
 - Subclustering of macrophage, microglia, and monocyte clusters
@@ -51,13 +84,28 @@ This document summarizes the analysis performed for the **Haydar Lab murine brai
 
 - Deliverables (myeloid_subtypes)
     - UMAP plots: myeloid_subtypes_umap.png & myeloid_subtypes_by_condition_umap.png
+```{r myeloid-umap-plots, echo=FALSE, fig.width=6, fig.height=6}
+    knitr::include_graphics(c(file.path(plot_dir, "myeloid_subtypes_umap.png"),
+                              file.path(plot_dir, "myeloid_subtypes_by_condition_umap.png")))
+```
     - Marker gene heatmap: myeloid_subtype_heatmap_top_markers.pdf
+```{r myeloid-marker-gene-heatmap, echo=FALSE, out.width="1000px", out.height="600px"}
+    knitr::include_graphics(c(file.path(plot_dir, "myeloid_subtype_heatmap_top_markers.pdf")))
+```
     - Marker gene lists: myeloid_subcluster_markers.csv & myeloid_subtype_markers.csv
     - sccomp results
         - myeloid_subtype_composition_sccomp.png
         - myeloid_subtype_proportions_barplot.png
         - myeloid_subtype_proportions_dotplot.png
+```{r myeloid-prop-plots, echo=FALSE, fig.width=6, fig.height=6}
+    knitr::include_graphics(c(file.path(plot_dir, "myeloid_subtype_composition_sccomp.png"),
+                              file.path(plot_dir, "myeloid_subtype_proportions_barplot.png"),
+                              file.path(plot_dir, "myeloid_subtype_proportions_dotplot.png")))
+```
     - AUCell results: myeloid_subtype_hallmark_auc_heatmap.pdf
+```{r myeloid-auc-heatmap, echo=FALSE, out.width="800px", out.height="300px"}
+    knitr::include_graphics(c(file.path(plot_dir, "myeloid_subtype_hallmark_auc_heatmap.pdf")))
+```
     - GSEA results
         - myeloid_subtype_hallmark_gsea_results.csv
         - myeloid_subtype_c5_gsea_results.csv
@@ -80,13 +128,28 @@ This document summarizes the analysis performed for the **Haydar Lab murine brai
 
 - Deliverables (tcell_subtypes)
     - UMAP plots: tcell_subtypes_umap.png & tcell_subtypes_by_condition.png
+```{r tcell-umap-plots, echo=FALSE, fig.width=6, fig.height=6}
+    knitr::include_graphics(c(file.path(plot_dir, "tcell_subtypes_umap.png"),
+                              file.path(plot_dir, "tcell_subtypes_by_condition.png")))
+```
     - Marker gene heatmap: tell_subtype_heatmap_top_markers.pdf
+```{r tcell-marker-gene-heatmap, echo=FALSE, out.width="1000px", out.height="600px"}
+    knitr::include_graphics(c(file.path(plot_dir, "tcell_subtype_heatmap_top_markers.pdf")))
+```
     - Marker gene lists: tcell_subtype_markers.csv
     - sccomp results
         - tcell_subtype_composition_sccomp.png
         - tcell_subtype_proportions_barplot.png
         - tcell_subtype_proportions_dotplot.png
+```{r tcell-prop-plots, echo=FALSE, fig.width=6, fig.height=6}
+    knitr::include_graphics(c(file.path(plot_dir, "tcell_subtype_composition_sccomp.png"),
+                              file.path(plot_dir, "tcell_subtype_proportions_barplot.png"),
+                              file.path(plot_dir, "tcell_subtype_proportions_dotplot.png")))
+```
     - AUCell results: tcell_subtype_hallmark_auc_heatmap.pdf
+```{r tcell-auc-heatmap, echo=FALSE, out.width="800px", out.height="300px"}
+    knitr::include_graphics(c(file.path(plot_dir, "tcell_subtype_hallmark_auc_heatmap.pdf")))
+```
     - GSEA results
         - tcell_subtype_hallmark_gsea_results.csv
         - tcell_subtype_c5_gsea_results.csv
