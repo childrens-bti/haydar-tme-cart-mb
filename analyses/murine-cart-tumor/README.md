@@ -15,10 +15,34 @@
 ## Analysis module directory structure
 ```
 murine-cart-tumor/
+├── plots/
+│   ├── cart_dotplot_lineage_proportions.png
+│   ├── cart_heatmap_top_lineage_markers.pdf
+│   ├── cart_umap_clusters.png
+│   ├── cart_umap_lineage_annotations.png
+│   ├── myeloid_subtype_composition_sccomp.png
+│   ├── myeloid_subtype_hallmark_auc_heatmap.pdf
+│   ├── myeloid_subtype_heatmap_top_markers.pdf
+│   ├── myeloid_subtype_proportions_barplot.png
+│   ├── myeloid_subtype_proportions_dotplot.png
+│   ├── myeloid_subtypes_by_condition_umap.png
+│   ├── myeloid_subtypes_umap.png
+│   ├── tcell_subtype_composition_sccomp.png
+│   ├── tcell_subtype_hallmark_auc_heatmap.pdf
+│   ├── tcell_subtype_heatmap_top_markers.pdf
+│   ├── tcell_subtype_proportions_barplot.png
+│   ├── tcell_subtype_proportions_dotplot.png
+│   ├── tcell_subtypes_by_condition.png
+│   └── tcell_subtypes_umap.png
+│
 ├── results/
+│   ├── analysis-report.Rmd
+│   ├── analysis-report.html
+│   ├── analysis-report.md
 │   ├── cart_cluster_markers.csv
 │   ├── cart_lineage_markers.csv
 │   ├── myeloid_subcluster_markers.csv
+│   ├── myeloid_subtype_markers.csv
 │   ├── myeloid_subtype_c5_gsea_results.csv
 │   ├── myeloid_subtype_c7_gsea_results.csv
 │   ├── myeloid_subtype_markers.csv
@@ -37,9 +61,6 @@ murine-cart-tumor/
 ├── 02-lineage-annotation.html
 ├── 03-subclustering.Rmd
 ├── 03-subclustering.html
-├── 04-myeloid-characterization.Rmd
-├── 04-myeloid-characterization.html
-├── 03-subclustering.Rmd
 ├── 04-myeloid-characterization.Rmd
 ├── 04-myeloid-characterization.html
 ├── 05-lymphoid-characterization.Rmd
