@@ -7,7 +7,9 @@ set -o pipefail
 Rscript -e "rmarkdown::render('01-seurat-processing.Rmd')"
 # Cell lienage annotation analysis and plots
 Rscript -e "rmarkdown::render('02-lineage-annotation.Rmd')"
-# Subclustering of main cell lineages
+# Subclustering to myeloid, lymphoid, and dendritic cells
 Rscript -e "rmarkdown::render('03-subclustering.Rmd')"
-# Characterization of subclustered myeloid subtypes
+# Characterization of myeloid heterogenity
 Rscript -e "rmarkdown::render('04-myeloid-characterization.Rmd')"
+# Characterization of lymphoid and T cell heterogenity
+Rscript -e "rmarkdown::render('05-lymphoid-characterization.Rmd')"
