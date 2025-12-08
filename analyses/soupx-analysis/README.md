@@ -15,8 +15,8 @@
 3. `03-all-sample-test.Rmd`: Check before vs after running SoupX with lineage gene sets guidance using all samples.
 
 ## Analysis module directory structure
-
-tr37_analysis/
+```
+soupx_analysis/
 ├── results/
 │   └── soupx_clusters_B7H3_pos_T_D2.csv
 │
@@ -32,3 +32,4 @@ tr37_analysis/
 ├── 03-all-sample-test.html
 ├── README.md
 └── run_module.sh
+```

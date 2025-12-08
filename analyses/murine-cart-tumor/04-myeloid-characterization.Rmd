@@ -45,7 +45,7 @@ set.seed(1234)
 ## Load Data
 ```{r load-data}
 # Load Seurat object
-myeloid_obj <- readRDS(file.path(results_dir, "cart_myeloid_subclusters.rds"))
+myeloid_obj <- readRDS(file.path(results_dir, "cart_myeloid_subtypes.rds"))
 ```
 
 ## Re-run clusters in higher resolution
@@ -126,9 +126,16 @@ myeloid_obj$myeloid_subtype <- plyr::mapvalues(
   from = names(new_cluster_ids),
   to = new_cluster_ids
 )
+```
 
-DimPlot(myeloid_obj, reduction = "umap", group.by = "myeloid_subtype") + 
-  ggtitle("Myeloid Subsets")
+```{r umap-visualization, fig.height=6, fig.width=16}
+p1 <- DimPlot(myeloid_obj, reduction = "umap", group.by = "seurat_clusters") + 
+  ggtitle("Seurat Clustering")
+p2 <- DimPlot(myeloid_obj, reduction = "umap", group.by = "myeloid_subtype") + 
+  ggtitle("Myeloid Subtypes")
+
+p1 + p2
+ggsave(file.path(plot_dir, "myeloid_subtypes_umap.png"), width = 16, height = 6)
 ```
 
 ## Marker genes on subsets
@@ -161,11 +168,39 @@ for (clust in unique(top_markers_table$cluster)) {
 }
 ```
 
+```{r visualize-top-markers-heatmap, fig.height=16, fig.width=8}
+subtype_markers <- read.csv(file.path(results_dir, "myeloid_subtype_markers.csv"))
+
+top50_markers <- subtype_markers %>%
+  group_by(cluster) %>%
+  top_n(n = 50, wt = avg_log2FC)
+
+# scale top markers in RNA assay
+myeloid_obj <- ScaleData(myeloid_obj, features = unique(top50_markers$gene), assay = "RNA")
+
+# separate heatmap for each cluster, save in one pdf file
+pdf(file = file.path(plot_dir, "myeloid_subtype_heatmap_top_markers.pdf"), width = 16, height = 8)
+for (lineage in unique(top50_markers$cluster)) {
+  markers <- top50_markers %>%
+    filter(cluster == lineage) %>%
+    pull(gene)
+  
+  p <- DoHeatmap(myeloid_obj, features = markers, group.by = "myeloid_subtype", assay = "RNA", cells = 1:2000) +
+    ggtitle(paste("Top Markers for", lineage)) +
+    theme(plot.title = element_text(hjust = 0.5, face = "bold"))
+  
+  print(p)
+}
+dev.off()
+```
+
 ## Composition analysis using sccomp
 
-```{r visualize-split-umap, fig.height=8, fig.width=12}
+```{r visualize-split-umap, fig.height=8, fig.width=16}
 DimPlot(myeloid_obj, reduction = "umap", group.by = "myeloid_subtype", split.by = "condition", ncol = 3) + 
   ggtitle("Myeloid Subclusters by Condition")
+
+ggsave(file.path(plot_dir, "myeloid_subtypes_by_condition_umap.png"), width = 16, height = 8)
 ```
 
 ```{r composition-analysis-sccomp, message=FALSE, warning=FALSE}
@@ -194,8 +229,10 @@ sccomp_result =
 
 ```
 
-```{r visualize-sccomp-results}
-sccomp_result |> plot()
+```{r visualize-sccomp-results, fig.height=6, fig.width=12}
+sccomp_result |> 
+  plot_1D_intervals()
+ggsave(file.path(plot_dir, "myeloid_subtype_composition_sccomp.png"), width = 12, height = 6)
 ```
 
 ``` {r sccomp-pairwise-fc}
@@ -210,7 +247,6 @@ sccomp_result  |>
 
 ## plot relative proportions of clusters between conditions
 ```{r plot-relative-proportions}
-
 ## stacked barplot
 prop_df <- myeloid_obj@meta.data %>%
   count(condition, myeloid_subtype) %>%
@@ -222,6 +258,8 @@ ggplot(prop_df, aes(x = condition, y = prop, fill = myeloid_subtype)) +
   ylab("Proportion") +
   theme_classic()
 
+ggsave(file.path(plot_dir, "myeloid_subtype_proportions_barplot.png"), width = 9, height = 6)
+
 ## dotplot of proportions
 ggplot(prop_df, aes(x = condition, y = myeloid_subtype, size = prop, color = prop)) +
   geom_point() +
@@ -230,6 +268,8 @@ ggplot(prop_df, aes(x = condition, y = myeloid_subtype, size = prop, color = pro
   theme_classic() +
   ylab("Cluster") + 
   xlab("Condition")
+
+ggsave(file.path(plot_dir, "myeloid_subtype_proportions_dotplot.png"), width = 9, height = 6)
 ```
 
 # Gene set enrichment analysis
@@ -307,12 +347,17 @@ colors <- rev(RColorBrewer::brewer.pal(n = 11, name = "RdBu"))
 colors.use <- grDevices::colorRampPalette(colors = colors)(100)
 breaks <- seq(-3, 3, length.out = 101)
 
-pheatmap::pheatmap(mat = hallmark_z_scores,
+# save heatmap as pdf
+pdf(file = file.path(plot_dir, "myeloid_subtype_hallmark_auc_heatmap.pdf"), width = 16, height = 8)
+
+hm <- pheatmap::pheatmap(mat = hallmark_z_scores,
                    color = colors.use,
                    border_color = "white",
                    breaks = breaks,
                    clustering_distance_rows = "correlation",
-                  clustering_distance_cols = "correlation") 
+                  clustering_distance_cols = "correlation",
+                  main = "Hallmark Pathway AUCell Activity across Myeloid Subtypes") 
+dev.off()
 ```
 
 ## GSEA analysis of Hallmark gene sets
@@ -366,7 +411,7 @@ fgsea_res_hallmark_sig <- fgsea_res_hallmark %>%
 write.csv(fgsea_res_hallmark_sig, file.path(results_dir, "myeloid_subtype_hallmark_gsea_results.csv"), row.names = FALSE)
 ```
 
-##Visualize select significant genesets
+## Visualize select significant genesets
 ```{r visualize-gsea-results, fig.height=8, fig.width=12}
 c0_ranks <- make_rank_vector(fc_list[["Activated microglia"]])
 c7_ranks <- make_rank_vector(fc_list[["Interferon-responsive macrophages"]])
@@ -425,50 +470,55 @@ write.csv(fgsea_res_c7_sig, file.path(results_dir, "myeloid_subtype_c7_gsea_resu
 # Summary of the myeloid subtypes
 AI-assisted summerization of the full marker lists for each myeloid subtype:
 
-## Homeostatic / Stress-Response Microglia
+### Homeostatic / Stress-Response Microglia
 - Key markers: Tmem119, Siglech, Sparc, Hspa1a/b, Hsp90aa1, Txnip
 - Enriched in tumor and STOP samples
 - A core microglial population maintaining tissue surveillance, enriched for canonical homeostatic genes (Tmem119, Siglech, Sparc) but showing a mild stress-response program marked by heat-shock proteins (Hspa1a/b, Hsp90aa1). Reflects stable microglia experiencing environmental or handling-related cellular stress.
 
 
-## Activated microglia
+### Activated microglia
 - Key markers: Il1a, Tnf, Ccl3, Egr1, Atf3
 - Enriched in tumor and STOP samples
 - This population represents danger-sensing, cytokine-producing, immune-interactive microglia with strong NF-κB/AP-1 activity and maintained microglial identity. It aligns with injury-induced, tumor-associated, or cytokine-exposed activated microglia.
 
-## Phagocytic microglia
+### Phagocytic microglia
 - Key markers: Apoe, Trem2, C1qa, Tyrobp, Cst7
 - Slightly enriched in CD28-41BB samples
 - This population represents actively engulfing, lipid-processing phagocytic microglia with strong lysosomal and lipid-catabolic machinery. Their profile is consistent with DAM/LAM microglia responding to debris, dying cells, myelin, or tumor-derived material.
 
-## Lipid-associated macrophages
+### Lipid-associated macrophages
 - Key markers: Gpnmb, Fabp5, Lipa, Lgals3
 - Enriched in B7H3, 41BBL, and CD28-41BB samples
 - A highly lipid-scavenging, lysosome-expanded, Trem2-Tyrobp–driven macrophage population analogous to LAM/TAM signatures in cancer. These cells manage lipid-rich debris, remodel extracellular matrix, buffer oxidative stress, and maintain persistent low-grade antigen presentation.
 
-## Antigen presenting macrophages
+### Antigen presenting macrophages
 - Key markers: H2-Aa, H2-Ab1, Cd74, Vim, Srgn
 - Enriched in CD8-41BB samples
 - A highly activated, MHC-II–intense antigen-presenting macrophage population enriched for inflammatory cytokines and migration machinery.
 
-## Interferon-responsive macrophages
+### Interferon-responsive macrophages
 - Key markers: Ifit2, Ifit3, Rsad2, Isg15, Irf7
 - Enriched in B7H3 samples
 - Highly antiviral, type I interferon–driven macrophages expressing strong ISG modules (Ifit/Isg15/Oasl/Rsad2), chemokines (Cxcl9/10), antigen-presentation machinery, and nucleic-acid sensors. Represents macrophages engaged in innate immune amplification, viral-mimicry sensing, or tumor-associated interferon signaling.
 
-## Perivascular macrophages
+### Perivascular macrophages
 - Key markers: Mrc1, Dab2, Gas6, Cd163, Pf4
 - Depleted in B7H3 and 41BB-L samples
 - A population specializing in endothelial interaction, chemokine-mediated leukocyte recruitment, oxidative-stress buffering, and vascular remodeling. These cells form a vessel-associated, tissue-resident macrophage compartment with a balanced inflammatory and tolerogenic signature.
 
-## Monocytes: 
+### Monocytes: 
 - Key markers: Plac8, Ccr2, S100a4, Alox5ap
 - Enriched in B7H3 samples
 - Represents the major infiltrating monocyte pool that seeds the macrophage and inflammatory myeloid states within the tissue.
 
-## Neurons:
+### Neurons:
 - Key markers: Ryr1, Syt7, Ank1, Itpr1
 - Contamination
+
+## Save final myeloid object
+```{r save-final-object}
+saveRDS(myeloid_obj, file.path(results_dir, "cart_myeloid_subtypes.rds"))
+```
 
 ## Session Info
 ```{r session-info}
