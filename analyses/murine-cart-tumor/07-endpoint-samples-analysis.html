@@ -13,7 +13,7 @@
 
 <meta name="date" content="2025-12-18" />
 
-<title>06-endpoint-samples-analysis</title>
+<title>07-endpoint-samples-analysis</title>
 
 <script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
 // be compatible with the behavior of Pandoc < 2.8).
@@ -350,7 +350,7 @@ display: none;
 
 
 
-<h1 class="title toc-ignore">06-endpoint-samples-analysis</h1>
+<h1 class="title toc-ignore">07-endpoint-samples-analysis</h1>
 <h4 class="author">Sam Chen</h4>
 <h4 class="date">2025-12-18</h4>
 
@@ -1330,21 +1330,21 @@ integrated_obj &lt;- FindNeighbors(integrated_obj, reduction = &quot;integrated.
 ## Elapsed time: 1 seconds</code></pre>
 <pre class="r"><code># umap
 integrated_obj &lt;- RunUMAP(integrated_obj, reduction = &quot;integrated.cca&quot;, dims = 1:20)</code></pre>
-<pre><code>## 20:58:10 UMAP embedding parameters a = 0.9922 b = 1.112</code></pre>
-<pre><code>## 20:58:10 Read 14627 rows and found 20 numeric columns</code></pre>
-<pre><code>## 20:58:10 Using Annoy for neighbor search, n_neighbors = 30</code></pre>
-<pre><code>## 20:58:10 Building Annoy index with metric = cosine, n_trees = 50</code></pre>
+<pre><code>## 21:51:07 UMAP embedding parameters a = 0.9922 b = 1.112</code></pre>
+<pre><code>## 21:51:07 Read 14627 rows and found 20 numeric columns</code></pre>
+<pre><code>## 21:51:07 Using Annoy for neighbor search, n_neighbors = 30</code></pre>
+<pre><code>## 21:51:07 Building Annoy index with metric = cosine, n_trees = 50</code></pre>
 <pre><code>## 0%   10   20   30   40   50   60   70   80   90   100%</code></pre>
 <pre><code>## [----|----|----|----|----|----|----|----|----|----|</code></pre>
 <pre><code>## **************************************************|
-## 20:58:12 Writing NN index file to temp file /tmp/RtmpWiqlNS/file4eaf896a55
-## 20:58:12 Searching Annoy index using 1 thread, search_k = 3000
-## 20:58:16 Annoy recall = 100%
-## 20:58:16 Commencing smooth kNN distance calibration using 1 thread with target n_neighbors = 30
-## 20:58:18 Initializing from normalized Laplacian + noise (using RSpectra)
-## 20:58:19 Commencing optimization for 200 epochs, with 641982 positive edges
-## 20:58:19 Using rng type: pcg
-## 20:58:25 Optimization finished</code></pre>
+## 21:51:09 Writing NN index file to temp file /tmp/RtmpWP6V02/file5d41de3116f
+## 21:51:09 Searching Annoy index using 1 thread, search_k = 3000
+## 21:51:13 Annoy recall = 100%
+## 21:51:13 Commencing smooth kNN distance calibration using 1 thread with target n_neighbors = 30
+## 21:51:15 Initializing from normalized Laplacian + noise (using RSpectra)
+## 21:51:16 Commencing optimization for 200 epochs, with 641982 positive edges
+## 21:51:16 Using rng type: pcg
+## 21:51:22 Optimization finished</code></pre>
 </div>
 <div id="visualize-umap-of-integrated-object" class="section level2">
 <h2>Visualize UMAP of integrated object</h2>
