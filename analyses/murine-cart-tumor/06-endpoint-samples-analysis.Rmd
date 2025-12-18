@@ -22,6 +22,7 @@ library(SeuratObject)
 library(scCustomize)
 library(MAST)
 library(SoupX)
+library(SingleR)
 
 # Define directories
 root_dir <- find_root(has_dir(".git"))
@@ -96,20 +97,20 @@ VlnPlot(combined_obj, split.by = "doublet_finder",
 combined_obj <- subset(x = combined_obj, subset = doublet_finder == 'Singlet')
 
 # Save the combined singlet object so I don't need to rerun doublet removal
-saveRDS(combined_obj, file = file.path(results_dir, "cart_combined.rds"))
+saveRDS(combined_obj, file = file.path(results_dir, "endpoint_combined.rds"))
 ```
 
 ## Basic QC metrics
 ```{r visualize-qc-metrics, fig.width=10, fig.height=6, out.width='100%', fig.align='center', message=FALSE, warning=FALSE}
 
-combined_obj <- readRDS(file.path(results_dir, "cart_combined.rds"))
+combined_obj <- readRDS(file.path(results_dir, "endpoint_combined.rds"))
 
 # add mitochondrial percentage
 combined_obj[["percent.mt"]] <- PercentageFeatureSet(combined_obj, pattern = "^mt-")
 # Visualize QC metrics
 p1 <- QC_Plots_Genes(seurat_object = combined_obj, alpha = 0.2, pt.size=0)
 p2 <- QC_Plots_UMIs(seurat_object = combined_obj,  y_axis_log = TRUE, alpha = 0.2, pt.size=0)
-p3 <- QC_Plots_Mito(seurat_object = combined_obj, mito_name = "percent.mt", high_cutoff = 10, alpha = 0.2, pt.size = 0)
+p3 <- QC_Plots_Mito(seurat_object = combined_obj, mito_name = "percent.mt", high_cutoff = 5, alpha = 0.2, pt.size = 0)
 
 plots <- list(p1, p2, p3)
 plots <- lapply(plots, function(p)
@@ -190,42 +191,10 @@ combined_obj <- RunPCA(combined_obj)
 ElbowPlot(combined_obj, ndims = 50) # use 30 PCs for downstream analysis
 ```
 
-## Clustering and UMAP with naive merging
-```{r naive-merge-cluster-and-umap}
-# clustering
-combined_obj <- FindNeighbors(combined_obj, dims = 1:30, reduction = "pca")
-combined_obj <- FindClusters(combined_obj, resolution = 0.5, cluster.name = "merged_clusters")
-
-# umap 
-combined_obj <- RunUMAP(combined_obj, dims = 1:30, reduction = "pca", reduction.name = "merged_umap")
-```
-
-## Visualize UMAP after naive merging
-```{r visualize-naive-merge-umap, fig.width=12, fig.height=6, out.width='100%', fig.align='center'}
-DimPlot(combined_obj, reduction = "merged_umap", 
-        group.by = c("merged_clusters", "sample"), alpha = 0.25)
-```
-
-```{r split-naive-merge-umap, fig.width=8, fig.height=16, out.width='100%', fig.align='center'}
-DimPlot(combined_obj, reduction = "merged_umap", 
-        group.by = "sample", split.by = "sample", ncol = 4, alpha = 0.5) + 
-  theme(
-    legend.text = element_text(size = 8),
-    legend.title = element_text(size = 10),
-    axis.text = element_text(size = 6),
-    strip.text = element_text(size = 10, face = "bold")
-  )
-```
-
-## Save naive merged object
-```{r save-merged-object}
-saveRDS(combined_obj, file = file.path(results_dir, "cart_merged.rds"))
-```
-
 ## CCA integration
 Run CCA-based integration to mitigate sample/batch effects and re-compute neighbors/clusters
 ```{r cca-integration, message=FALSE, warning=FALSE}
-combined_obj <- readRDS(file.path(results_dir, "cart_merged.rds"))
+combined_obj <- readRDS(file.path(results_dir, "endpoint_merged.rds"))
 
 integrated_obj <- IntegrateLayers(
   object = combined_obj, method = CCAIntegration,
@@ -240,11 +209,11 @@ integrated_obj[["RNA"]] <- JoinLayers(integrated_obj[["RNA"]])
 ## Clustering and UMAP of integrated object
 ```{r cluster-and-umap-integrated}
 # clustering
-integrated_obj <- FindNeighbors(integrated_obj, reduction = "integrated.cca", dims = 1:30)
+integrated_obj <- FindNeighbors(integrated_obj, reduction = "integrated.cca", dims = 1:20)
 integrated_obj <- FindClusters(integrated_obj, resolution = 0.5)
 
 # umap
-integrated_obj <- RunUMAP(integrated_obj, reduction = "integrated.cca", dims = 1:30)
+integrated_obj <- RunUMAP(integrated_obj, reduction = "integrated.cca", dims = 1:20)
 ```
 
 ## Visualize UMAP of integrated object
@@ -253,7 +222,7 @@ DimPlot(integrated_obj, reduction = "umap",
         group.by = c("seurat_clusters", "sample"), alpha = 0.25)
 ```
 
-```{r split-integrated-umap, fig.width=8, fig.height=16, out.width='100%', fig.align='center'}
+```{r split-integrated-umap, fig.width=10, fig.height=8, out.width='100%', fig.align='center'}
 DimPlot(integrated_obj, reduction = "umap", 
         group.by = "sample", split.by = "sample", ncol = 4, alpha = 0.5) + 
   theme(
@@ -264,10 +233,124 @@ DimPlot(integrated_obj, reduction = "umap",
   )
 ```
 
-## Save integrated object
 ```{r save-integrated-object}
-saveRDS(integrated_obj, file = file.path(results_dir, "cart_integrated.rds"))
+saveRDS(integrated_obj, file = file.path(results_dir, "endpoint_integrated.rds"))
 ```
+
+## SingleR annotation
+```{r singleR-annotation}
+obj <- integrated_obj
+
+# Load reference dataset
+general_ref <- MouseRNAseqData()
+immgen_ref <- ImmGenData()
+
+# Run SingleR
+general_annotations <- SingleR::SingleR(
+  test = GetAssayData(obj, slot = "data"),
+  ref = general_ref,
+  labels = general_ref$label.main
+)
+
+immgen_annotations <- SingleR::SingleR(
+  test = GetAssayData(obj, slot = "data"),
+  ref = immgen_ref,
+  labels = immgen_ref$label.main
+)
+# Add annotations to metadata
+obj$general_label <- general_annotations$labels
+obj$immgen_label <- immgen_annotations$labels
+```
+
+## Visualize annotations
+```{r visualize-annotations, fig.height=6, fig.width=12}
+p1 <- DimPlot(obj, group.by = "general_label", label = TRUE, repel = TRUE, reduction = "umap", pt.size = 0.25, alpha = 0.25) + ggtitle("General Mouse Cell Types")
+p2 <- DimPlot(obj, group.by = "immgen_label", label = TRUE, repel = TRUE, reduction = "umap", pt.size = 0.25, alpha = 0.25) + ggtitle("ImmGen Cell Types")
+p1 + p2
+```
+
+## Annotation summary
+```{r annotation-summary-general}
+SingleR::plotScoreHeatmap(general_annotations)
+SingleR::plotDeltaDistribution(general_annotations)
+```
+```{r annotation-summary-immgen}
+SingleR::plotScoreHeatmap(immgen_annotations)
+SingleR::plotDeltaDistribution(immgen_annotations)
+```
+
+## Clusters vs SingleR labels
+```{r clusters-vs-labels-general, fig.height=6, fig.width=6}
+general_annot <- as.data.frame(table(
+  Cluster = obj$seurat_clusters,
+  Annotation = obj$general_label
+)) %>%
+  group_by(Cluster) %>%
+  mutate(Percentage = Freq / sum(Freq) * 100) %>%
+  ungroup()
+
+general_annot %>%
+  ggplot(aes(x = Annotation, y = fct_rev(Cluster), fill = Percentage)) +
+  geom_tile(color = "white") +
+  scale_fill_viridis_c(option = "D") +
+  theme_bw() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    axis.text.y = element_text(size = 10),
+    plot.title = element_text(hjust = 0.5, face = "bold")
+  ) +
+  labs(x = "Annotation", y = "WNN Cluster",
+       fill = "Percentage",
+       title = "Seurat Cluster – General Annotation Composition Heatmap")
+```
+
+```{r clusters-vs-labels-immgen, fig.height=6, fig.width=6}
+general_annot <- as.data.frame(table(
+  Cluster = obj$seurat_clusters,
+  Annotation = obj$immgen_label
+)) %>%
+  group_by(Cluster) %>%
+  mutate(Percentage = Freq / sum(Freq) * 100) %>%
+  ungroup()
+
+general_annot %>%
+  ggplot(aes(x = Annotation, y = fct_rev(Cluster), fill = Percentage)) +
+  geom_tile(color = "white") +
+  scale_fill_viridis_c(option = "D") +
+  theme_bw() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    axis.text.y = element_text(size = 10),
+    plot.title = element_text(hjust = 0.5, face = "bold")
+  ) +
+  labs(x = "Annotation", y = "WNN Cluster",
+       fill = "Percentage",
+       title = "Seurat Cluster – Immgen Annotation Composition Heatmap")
+```
+
+## Check main lineage marker genes
+```{r marker-gene-expression, fig.height=6, fig.width=6}
+# Macrophages
+FeaturePlot_scCustom(obj, features = c("Lyz2", "Adgre1", "Cd68", "C1qa"), reduction = "umap", colors_use = viridis_light_high)
+# Microglia
+FeaturePlot_scCustom(obj, features = c("P2ry12", "Tmem119", "Sall1", "Hexb"), reduction = "umap", colors_use = viridis_light_high)
+# DC
+FeaturePlot_scCustom(obj, features = c("Cd74", "Flt3", "Itgax", "Cd209a"), reduction = "umap", colors_use = viridis_light_high)
+# T cells
+FeaturePlot_scCustom(obj, features = c("Cd3d", "Cd3e", "Trac", "Gzmb"), reduction = "umap", colors_use = viridis_light_high)
+# B cells
+FeaturePlot_scCustom(obj, features = c("Cd19", "Cd79a", "Ms4a1", "Cd79b"), reduction = "umap", colors_use = viridis_light_high)
+# Fibroblasts
+FeaturePlot_scCustom(obj, features = c("Pdgfra", "Col1a1", "Dcn", "Lum"), reduction = "umap", colors_use = viridis_light_high)
+# Endothelial Cells
+FeaturePlot_scCustom(obj, features = c("Pecam1", "Cdh5", "Kdr", "Flt1"), reduction = "umap", colors_use = viridis_light_high)
+# Neurons
+FeaturePlot_scCustom(obj, features = c("Map2", "Tubb3", "Rbfox3", "Syt1"), reduction = "umap", colors_use = viridis_light_high)
+```
+
+## Quick thoughts
+It seems that the end point samples were dominated by neurons, with barely any immune genes detected. 
+
 
 ## Session Info
 ```{r session-info}
