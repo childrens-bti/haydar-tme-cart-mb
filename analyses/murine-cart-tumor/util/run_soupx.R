@@ -24,27 +24,30 @@ run_soupx <- function(input_dir, sample_name, guide_genes, use_clustering = TRUE
   sobj <- FindNeighbors(sobj, dims = 1:20)
   sobj <- FindClusters(sobj)
   
+  # ---- Align SoupX cells to Seurat-kept cells ----
   keep <- intersect(colnames(sc$toc), colnames(sobj))
-  stopifnot(length(keep) > 0)
+  if (length(keep) == 0) stop("No overlapping cells between SoupX toc and Seurat object.")
   
   # subset SoupX matrices
   sc$toc <- sc$toc[, keep, drop = FALSE]
   sc$tod <- sc$tod[, keep, drop = FALSE]
+  # rebuild metaData so rownames match colnames(toc)
+  sc$metaData <- data.frame(row.names = colnames(sc$toc))
   
-  # subset SoupX metadata to match (if present)
-  if (!is.null(sc$metaData) && nrow(sc$metaData) > 0) {
-    sc$metaData <- sc$metaData[keep, , drop = FALSE]
-  }
-  
-  # now set clusters (must be named by cell barcodes)
+  # Set clusters as a named character vector covering ALL toc columns
   cl <- as.character(sobj$seurat_clusters)
   names(cl) <- colnames(sobj)
-  cl <- cl[keep]
+  cl <- cl[colnames(sc$toc)]
   
+  if (anyNA(cl)) stop("Cluster mapping produced NA values; barcode mismatch persists.")
   sc <- SoupX::setClusters(sc, cl)
   
   # manually estimating contamination fraction using marker genes without clusters
-  useToEst = estimateNonExpressingCells(sc, nonExpressedGeneList = guide_genes, clusters = use_clustering)
+  useToEst <- estimateNonExpressingCells(
+    sc,
+    nonExpressedGeneList = guide_genes,
+    clusters = if (use_clustering) NULL else FALSE
+  )
   sc <- calculateContaminationFraction(sc, nonExpressedGeneList = guide_genes, useToEst = useToEst,
                                        forceAccept = TRUE)
   
