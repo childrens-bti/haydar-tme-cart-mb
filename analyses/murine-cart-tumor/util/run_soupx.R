@@ -6,15 +6,6 @@ run_soupx <- function(input_dir, sample_name, guide_genes, use_clustering = TRUE
   raw_mat <- Read10X(data.dir = file.path(input_dir, sample_name, "raw_bc"))
   filt_mat <- Read10X(data.dir = file.path(input_dir, sample_name, "filtered_bc"))
   
-  # intersect genes
-  common_genes <- intersect(rownames(raw_mat), rownames(filt_mat))
-  # subset and reorder them identically
-  raw_mat  <- raw_mat[common_genes, ]
-  filt_mat <- filt_mat[common_genes, ]
-  
-  # Create a SoupChannel object
-  sc <- SoupChannel(tod = raw_mat, toc = filt_mat)
-  
   # basic seurat workflow from filtered data for clustering
   sobj <- CreateSeuratObject(counts = filt_mat, project = sample_name, min.cells = min_cells, min.features = min_features)
   sobj <- NormalizeData(sobj)
@@ -23,24 +14,17 @@ run_soupx <- function(input_dir, sample_name, guide_genes, use_clustering = TRUE
   sobj <- RunPCA(sobj)
   sobj <- FindNeighbors(sobj, dims = 1:20)
   sobj <- FindClusters(sobj)
+  filt_mat <- GetAssayData(sobj, assay = "RNA", layer = "counts")  # get filtered matrix after cell filtering
   
-  # ---- Align SoupX cells to Seurat-kept cells ----
-  keep <- intersect(colnames(sc$toc), colnames(sobj))
-  if (length(keep) == 0) stop("No overlapping cells between SoupX toc and Seurat object.")
+  # intersect genes
+  common_genes <- intersect(rownames(raw_mat), rownames(filt_mat))
+  # subset and reorder them identically
+  raw_mat  <- raw_mat[common_genes, ]
+  filt_mat <- filt_mat[common_genes, ]
   
-  # subset SoupX matrices
-  sc$toc <- sc$toc[, keep, drop = FALSE]
-  sc$tod <- sc$tod[, keep, drop = FALSE]
-  # rebuild metaData so rownames match colnames(toc)
-  sc$metaData <- data.frame(row.names = colnames(sc$toc))
-  
-  # Set clusters as a named character vector covering ALL toc columns
-  cl <- as.character(sobj$seurat_clusters)
-  names(cl) <- colnames(sobj)
-  cl <- cl[colnames(sc$toc)]
-  
-  if (anyNA(cl)) stop("Cluster mapping produced NA values; barcode mismatch persists.")
-  sc <- SoupX::setClusters(sc, cl)
+  # Create a SoupChannel object
+  sc <- SoupChannel(tod = raw_mat, toc = filt_mat)
+  sc <- SoupX::setClusters(sc, sobj$seurat_clusters)
   
   # manually estimating contamination fraction using marker genes without clusters
   useToEst <- estimateNonExpressingCells(
