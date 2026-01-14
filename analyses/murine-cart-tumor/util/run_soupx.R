@@ -24,7 +24,24 @@ run_soupx <- function(input_dir, sample_name, guide_genes, use_clustering = TRUE
   sobj <- FindNeighbors(sobj, dims = 1:20)
   sobj <- FindClusters(sobj)
   
-  sc <- setClusters(sc, sobj$seurat_clusters)
+  keep <- intersect(colnames(sc$toc), colnames(sobj))
+  stopifnot(length(keep) > 0)
+  
+  # subset SoupX matrices
+  sc$toc <- sc$toc[, keep, drop = FALSE]
+  sc$tod <- sc$tod[, keep, drop = FALSE]
+  
+  # subset SoupX metadata to match (if present)
+  if (!is.null(sc$metaData) && nrow(sc$metaData) > 0) {
+    sc$metaData <- sc$metaData[keep, , drop = FALSE]
+  }
+  
+  # now set clusters (must be named by cell barcodes)
+  cl <- as.character(sobj$seurat_clusters)
+  names(cl) <- colnames(sobj)
+  cl <- cl[keep]
+  
+  sc <- SoupX::setClusters(sc, cl)
   
   # manually estimating contamination fraction using marker genes without clusters
   useToEst = estimateNonExpressingCells(sc, nonExpressedGeneList = guide_genes, clusters = use_clustering)
