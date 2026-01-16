@@ -102,9 +102,6 @@ saveRDS(combined_obj, file = file.path(results_dir, "endpoint_combined.rds"))
 
 ## Basic QC metrics
 ```{r visualize-qc-metrics, fig.width=10, fig.height=6, out.width='100%', fig.align='center', message=FALSE, warning=FALSE}
-
-combined_obj <- readRDS(file.path(results_dir, "endpoint_combined.rds"))
-
 # add mitochondrial percentage
 combined_obj[["percent.mt"]] <- PercentageFeatureSet(combined_obj, pattern = "^mt-")
 # Visualize QC metrics
@@ -194,8 +191,6 @@ ElbowPlot(combined_obj, ndims = 50) # use 30 PCs for downstream analysis
 ## CCA integration
 Run CCA-based integration to mitigate sample/batch effects and re-compute neighbors/clusters
 ```{r cca-integration, message=FALSE, warning=FALSE}
-combined_obj <- readRDS(file.path(results_dir, "endpoint_merged.rds"))
-
 integrated_obj <- IntegrateLayers(
   object = combined_obj, method = CCAIntegration,
   orig.reduction = "pca", new.reduction = "integrated.cca",
