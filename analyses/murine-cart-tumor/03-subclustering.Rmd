@@ -21,7 +21,7 @@ library(presto)
 
 # Define directories
 root_dir <- find_root(has_dir(".git"))
-data_dir <- file.path(root_dir, "data", "v2")
+data_dir <- file.path(root_dir, "data", "v3")
 analysis_dir <- file.path(root_dir, "analyses", "murine-cart-tumor")
 results_dir <- file.path(analysis_dir, "results")
 plot_dir <- file.path(analysis_dir, "plots")
@@ -105,49 +105,49 @@ DimPlot(myeloid_obj, reduction = "umap", group.by = "seurat_clusters", split.by 
 saveRDS(myeloid_obj, file.path(results_dir, "cart_myeloid_subclusters.rds"))
 ```
 
-# Lymphoid subclustering
+# NK/T subclustering
 
-## Subset lymphoid cells
+## Subset NK/T cells
 ```{r subset-lymphoid-cells}
-lymphoid_obj <- subset(obj, subset = cell_type %in% c("Lymphoid cells"))
+nkt_obj <- subset(obj, subset = cell_type %in% c("NK/T cells"))
 ```
 
 ## Reprocess lymphoid cells
 ```{r reprocess-lymphoid-cells, verbose=FALSE}
-lymphoid_obj[['RNA']] <- split(lymphoid_obj[['RNA']], lymphoid_obj$sample)
-lymphoid_obj <- NormalizeData(lymphoid_obj)
-lymphoid_obj <- FindVariableFeatures(lymphoid_obj, selection.method = "vst", nfeatures = 2000)
-lymphoid_obj <- ScaleData(lymphoid_obj)
-lymphoid_obj <- RunPCA(lymphoid_obj, npcs = 30)
-ElbowPlot(lymphoid_obj, ndims = 30) # use 20 dims
+nkt_obj[['RNA']] <- split(nkt_obj[['RNA']], nkt_obj$sample)
+nkt_obj <- NormalizeData(nkt_obj)
+nkt_obj <- FindVariableFeatures(nkt_obj, selection.method = "vst", nfeatures = 2000)
+nkt_obj <- ScaleData(nkt_obj)
+nkt_obj <- RunPCA(nkt_obj, npcs = 30)
+ElbowPlot(nkt_obj, ndims = 30) # use 20 dims
 
-lymphoid_obj <- IntegrateLayers(
-  object = lymphoid_obj, method = CCAIntegration,
+nkt_obj <- IntegrateLayers(
+  object = nkt_obj, method = CCAIntegration,
   orig.reduction = "pca", new.reduction = "integrated.cca", verbose=FALSE
 )
-lymphoid_obj [["RNA"]] <- JoinLayers(lymphoid_obj[["RNA"]])
+nkt_obj [["RNA"]] <- JoinLayers(nkt_obj[["RNA"]])
 
-lymphoid_obj <- FindNeighbors(lymphoid_obj, reduction = "integrated.cca", dims = 1:20)
-lymphoid_obj <- FindClusters(lymphoid_obj, resolution = 0.5)
+nkt_obj <- FindNeighbors(nkt_obj, reduction = "integrated.cca", dims = 1:20)
+nkt_obj <- FindClusters(nkt_obj, resolution = 0.5)
 
-lymphoid_obj <- RunUMAP(lymphoid_obj, reduction = "integrated.cca", dims = 1:20)
+nkt_obj <- RunUMAP(nkt_obj, reduction = "integrated.cca", dims = 1:20)
 ```
 
 ## Visualize lymphoid subclusters
 ```{r visualize-lymphoid-subclusters, fig.height=6, fig.width=7}
-DimPlot(lymphoid_obj, reduction = "umap", group.by = "seurat_clusters", label = TRUE, label.size = 4) +
+DimPlot(nkt_obj, reduction = "umap", group.by = "seurat_clusters", label = TRUE, label.size = 4) +
   ggtitle("Subclusters")
 ```
 
 ## Split by condition
 ```{r visualize-lymphoid-subclusters-by-condition, fig.height=6, fig.width=8}
-DimPlot(lymphoid_obj, reduction = "umap", group.by = "seurat_clusters", split.by = "condition", ncol = 3) + 
+DimPlot(nkt_obj, reduction = "umap", group.by = "seurat_clusters", split.by = "condition", ncol = 3) + 
   ggtitle("Lymphoid Subclusters by Condition")
 ```
 
 ## Save lymphoid object
 ```{r save-lymphoid-object}
-saveRDS(lymphoid_obj, file.path(results_dir, "cart_lymphoid_subclusters.rds"))
+saveRDS(nkt_obj, file.path(results_dir, "cart_lymphoid_subclusters.rds"))
 ```
 
 # Dendritic cell subclustering
@@ -168,7 +168,7 @@ ElbowPlot(dc_obj, ndims = 30) # use 20 dims
 
 dc_obj <- IntegrateLayers(
   object = dc_obj, method = CCAIntegration,
-  orig.reduction = "pca", new.reduction = "integrated.cca", verbose=FALSE
+  orig.reduction = "pca", new.reduction = "integrated.cca", k.weight=50, verbose=FALSE
 )
 dc_obj [["RNA"]] <- JoinLayers(dc_obj[["RNA"]])
 
