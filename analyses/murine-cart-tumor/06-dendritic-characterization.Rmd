@@ -26,7 +26,7 @@ library(fgsea)
 
 # Define directories
 root_dir <- find_root(has_dir(".git"))
-data_dir <- file.path(root_dir, "data", "v2")
+data_dir <- file.path(root_dir, "data", "v3")
 analysis_dir <- file.path(root_dir, "analyses", "murine-cart-tumor")
 results_dir <- file.path(analysis_dir, "results")
 plot_dir <- file.path(analysis_dir, "plots")
@@ -48,11 +48,6 @@ set.seed(1234)
 dc_obj <- readRDS(file.path(results_dir, "cart_dc_subclusters.rds"))
 ```
 
-## Re-run clusters in higher resolution
-```{r rerun-clusters, message=FALSE, warning=FALSE}
-dc_obj <- FindNeighbors(dc_obj, reduction = "integrated.cca", dims = 1:20)
-dc_obj <- FindClusters(dc_obj, resolution = 0.5)
-```
 
 ## Visualize dc subclusters
 ```{r visualize-dc-subclusters, fig.height=6, fig.width=12}
@@ -70,43 +65,41 @@ cluster_markers <- FindAllMarkers(dc_obj,
                                   assay = "RNA",
                                   slot = "data",
                                   only.pos = TRUE,
-                                  min.pct = 0.25,
-                                  logfc.threshold = 0.25,
-                                  test.use = "MAST")
+                                  min.pct = 0.5,
+                                  logfc.threshold = 0.5)
 
+write.csv(cluster_markers, file.path(results_dir, "dc_subcluster_markers.csv"), row.names = FALSE)
 ```
 
 ## Visualize marker genes
-```{r visualize-marker-genes, fig.height=12, fig.width=12}
-top_markers <- cluster_markers %>%
+```{r visualize-marker-genes, fig.height=6, fig.width=6}
+top_markers_table <- cluster_markers %>%
   group_by(cluster) %>%
-  top_n(n = 9, wt = avg_log2FC)
+  slice_max(order_by = avg_log2FC, n = 4) %>%
+  ungroup() %>%
+  arrange(cluster, desc(avg_log2FC))
 
-FeaturePlot_scCustom(dc_obj, features = top_markers %>% filter(cluster == 0) %>% pull(gene) , reduction = "umap", pt.size = 0.1, alpha_exp = 0.5, order = FALSE, colors_use = viridis_light_high) + plot_annotation(title = "cDC1")
-
-FeaturePlot_scCustom(dc_obj, features = top_markers %>% filter(cluster == 1) %>% pull(gene) , reduction = "umap", pt.size = 0.1, alpha_exp = 0.5, order = FALSE, colors_use = viridis_light_high) + plot_annotation(title = "cDC2")
-
-FeaturePlot_scCustom(dc_obj, features = top_markers %>% filter(cluster == 2) %>% pull(gene) , reduction = "umap", pt.size = 0.1, alpha_exp = 0.5, order = FALSE, colors_use = viridis_light_high) + plot_annotation(title = "Migratory DC")
-
-FeaturePlot_scCustom(dc_obj, features = top_markers %>% filter(cluster == 3) %>% pull(gene) , reduction = "umap", pt.size = 0.1, alpha_exp = 0.5, order = FALSE, colors_use = viridis_light_high) + plot_annotation(title = "Macrophages")
-
-FeaturePlot_scCustom(dc_obj, features = top_markers %>% filter(cluster == 4) %>% pull(gene) , reduction = "umap", pt.size = 0.1, alpha_exp = 0.5, order = FALSE, colors_use = viridis_light_high) + plot_annotation(title = "T cells")
-
-FeaturePlot_scCustom(dc_obj, features = top_markers %>% filter(cluster == 5) %>% pull(gene) , reduction = "umap", pt.size = 0.1, alpha_exp = 0.5, order = FALSE, colors_use = viridis_light_high) + plot_annotation(title = "Proliferating")
-
-FeaturePlot_scCustom(dc_obj, features = top_markers %>% filter(cluster == 5) %>% pull(gene) , reduction = "umap", pt.size = 0.1, alpha_exp = 0.5, order = FALSE, colors_use = viridis_light_high) + plot_annotation(title = "B cells")
+for (clust in unique(top_markers_table$cluster)) {
+  clust_markers <- top_markers_table %>% filter(cluster == clust) %>% pull(gene)
+  p <- FeaturePlot_scCustom(dc_obj, features = clust_markers, reduction = "umap", pt.size = 0.1, alpha_exp = 0.5, order=FALSE, colors_use = viridis_light_high) + 
+    plot_annotation(title = paste0("Cluster ", clust))
+  print(p)
+}
 ```
 
 ## Reannotate clusters by their expression profiles
 ```{r reannotate-clusters}
 new_cluster_ids <- c(
-  "0" = "cDC1",
-  "1" = "cDC2",
-  "2" = "Migratory DC",
-  "3" = "Macrophages",
-  "4" = "T cells",
-  "5" = "Proliferating",
-  "6" = "B cells"
+  "0" = "Myeloid cells",
+  "1" = "Migratory DC",
+  "2" = "Myeloid cells",
+  "3" = "Inflammatory DC (IL12+)",
+  "4" = "Myeloid cells",
+  "5" = "Migratory DC",
+  "6" = "cDC2", 
+  "7" = "Lymphocytes",
+  "8" = "cDC1",
+  "9" = "Lymphocytes"
 )
 
 dc_obj$dc_subtype <- plyr::mapvalues(
@@ -130,9 +123,8 @@ subtype_markers <- FindAllMarkers(dc_obj,
                                  group.by = "dc_subtype",
                                   slot = "data",
                                   only.pos = TRUE,
-                                  min.pct = 0.25,
-                                  logfc.threshold = 0.25,
-                                  test.use = "MAST")
+                                  min.pct = 0.5,
+                                  logfc.threshold = 0.5)
 
 write.csv(subtype_markers, file.path(results_dir, "dc_subtype_markers.csv"), row.names = FALSE)
 ```
