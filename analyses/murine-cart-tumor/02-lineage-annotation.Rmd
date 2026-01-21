@@ -26,7 +26,7 @@ library(celldex)
 
 # Define directories
 root_dir <- find_root(has_dir(".git"))
-data_dir <- file.path(root_dir, "data", "v2")
+data_dir <- file.path(root_dir, "data", "v3")
 analysis_dir <- file.path(root_dir, "analyses", "murine-cart-tumor")
 results_dir <- file.path(analysis_dir, "results")
 plot_dir <- file.path(analysis_dir, "plots")
@@ -72,17 +72,17 @@ obj$immgen_label <- immgen_annotations$labels
 
 ## Visualize annotations
 ```{r visualize-annotations, fig.height=6, fig.width=12}
-p1 <- DimPlot(obj, group.by = "general_label", label = TRUE, repel = TRUE, reduction = "umap", pt.size = 0.25, alpha = 0.25) + ggtitle("General Mouse Cell Types")
-p2 <- DimPlot(obj, group.by = "immgen_label", label = TRUE, repel = TRUE, reduction = "umap", pt.size = 0.25, alpha = 0.25) + ggtitle("ImmGen Cell Types")
+p1 <- DimPlot(obj, group.by = "general_label", label = TRUE, repel = TRUE, reduction = "umap", pt.size = 0.5, alpha = 0.5) + ggtitle("General Mouse Cell Types")
+p2 <- DimPlot(obj, group.by = "immgen_label", label = TRUE, repel = TRUE, reduction = "umap", pt.size = 0.5, alpha = 0.5) + ggtitle("ImmGen Cell Types")
 p1 + p2
 ```
 
 ## Annotation summary
-```{r annotation-summary-general}
+```{r annotation-summary-general, fig.height=12, fig.width=12}
 SingleR::plotScoreHeatmap(general_annotations)
 SingleR::plotDeltaDistribution(general_annotations)
 ```
-```{r annotation-summary-immgen}
+```{r annotation-summary-immgen, fig.height=12, fig.width=12}
 SingleR::plotScoreHeatmap(immgen_annotations)
 SingleR::plotDeltaDistribution(immgen_annotations)
 ```
@@ -107,7 +107,7 @@ general_annot %>%
     axis.text.y = element_text(size = 10),
     plot.title = element_text(hjust = 0.5, face = "bold")
   ) +
-  labs(x = "Annotation", y = "WNN Cluster",
+  labs(x = "Annotation", y = "Seurat Cluster",
        fill = "Percentage",
        title = "Seurat Cluster – General Annotation Composition Heatmap")
 ```
@@ -131,7 +131,7 @@ general_annot %>%
     axis.text.y = element_text(size = 10),
     plot.title = element_text(hjust = 0.5, face = "bold")
   ) +
-  labs(x = "Annotation", y = "WNN Cluster",
+  labs(x = "Annotation", y = "Seurat Cluster",
        fill = "Percentage",
        title = "Seurat Cluster – Immgen Annotation Composition Heatmap")
 ```
@@ -160,24 +160,38 @@ FeaturePlot_scCustom(obj, features = c("Map2", "Tubb3", "Rbfox3", "Syt1"), reduc
 ```{r manual-annotation}
 new_cluster_ids <- c(
   "0"= "Microglia", 
-  "1"= "Macrophages", 
-  "2"= "Microglia", 
-  "3"= "Microglia",
-  "4"= "Macrophages",
-  "5"= "Lymphoid cells",
-  "6"= "Endothelial cells", 
-  "7"= "Fibroblasts",
+  "1"= "Microglia", 
+  "2"= "Macrophages", 
+  "3"= "Neurons",
+  "4"= "Neurons",
+  "5"= "Macrophages",
+  "6"= "Microglia", 
+  "7"= "NK/T cells",
   "8"= "Microglia",
-  "9"= "Neurons",
-  "10"= "Dendritic cells",
-  "11"= "Macrophages",
-  "12"= "Neutrophils",
-  "13"= "Dendritic cells",
-  "14"= "Epithelial cells",
-  "15"= "Oligodendrocytes",
-  "16"= "Astrocytes",
-  "17"= "Monocytes",
-  "18"= "Fibroblasts"
+  "9"= "Endothelial cells",
+  "10"= "Astrocytes",
+  "11"= "Fibroblasts",
+  "12"= "B cells",
+  "13"= "Neurons",
+  "14"= "Fibroblasts",
+  "15"= "Monocytes",
+  "16"= "Neutrophils",
+  "17"= "Microglia",
+  "18"= "Oligodendrocytes",
+  "19"= "Dendritic cells",
+  "20"= "Macrophages",
+  "21"= "Neurons",
+  "22"= "Macrophages",
+  "23"= "Neurons",
+  "24"= "B cells",
+  "25"= "Dendritic cells",
+  "26"= "Fibroblasts",
+  "27"= "Epithelial cells",
+  "28"= "Epithelial cells",
+  "29"= "NK/T cells",
+  "30"= "Neutrophils",
+  "31"= "Mast cells",
+  "32"= "B cells"
 )
 
 obj$cell_type <- plyr::mapvalues(
@@ -189,10 +203,10 @@ obj$cell_type <- plyr::mapvalues(
 
 ## Visualize manual annotations
 ```{r visualize-manual-annotations, fig.height=6, fig.width=6}
-DimPlot(obj, group.by = "cell_type", size = 0.25, alpha = 0.25, label = TRUE, repel = TRUE, reduction = "umap") + ggtitle("Lineage Annotations")
+DimPlot(obj, group.by = "cell_type", size = 0.5, alpha = 0.5, label = TRUE, repel = TRUE, reduction = "umap") + ggtitle("Lineage Annotations")
 ggsave(filename = file.path(plot_dir, "cart_umap_lineage_annotations.png"), width = 6, height = 6)
 
-DimPlot(obj, group.by = "seurat_clusters", size = 0.25, alpha = 0.25, label = TRUE, repel = TRUE, reduction = "umap") + ggtitle("Seurat Clusters")
+DimPlot(obj, group.by = "seurat_clusters", size = 0.5, alpha = 0.5, label = TRUE, repel = TRUE, reduction = "umap") + ggtitle("Seurat Clusters")
 ggsave(filename = file.path(plot_dir, "cart_umap_clusters.png"), width = 6, height = 6)
 ```
 
@@ -200,11 +214,11 @@ ggsave(filename = file.path(plot_dir, "cart_umap_clusters.png"), width = 6, heig
 ```{r identify-markers}
 cluster_markers <- FindAllMarkers(obj, 
                                  only.pos = TRUE, min.pct = 0.5, logfc.threshold = 0.5, 
-                                 group.by = 'seurat_clusters', assay = 'RNA', test.use = "MAST")
+                                 group.by = 'seurat_clusters', assay = 'RNA')
 
 lineage_markers <- FindAllMarkers(obj, 
                                  only.pos = TRUE, min.pct = 0.5, logfc.threshold = 0.5, 
-                                 group.by = 'cell_type', assay = 'RNA', test.use = "MAST")
+                                 group.by = 'cell_type', assay = 'RNA')
 
 # Save markers
 write.csv(cluster_markers, file = file.path(results_dir, "cart_cluster_markers.csv"), row.names = FALSE)
