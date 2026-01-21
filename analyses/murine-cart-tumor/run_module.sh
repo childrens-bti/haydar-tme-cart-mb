@@ -13,3 +13,7 @@ Rscript -e "rmarkdown::render('03-subclustering.Rmd')"
 Rscript -e "rmarkdown::render('04-myeloid-characterization.Rmd')"
 # Characterization of lymphoid and T cell heterogenity
 Rscript -e "rmarkdown::render('05-lymphoid-characterization.Rmd')"
+# Characterization of dendritic cell heterogenity
+Rscript -e "rmarkdown::render('06-dendritic-characterization.Rmd')"
+# Endpoint samples analysis
+Rscript -e "rmarkdown::render('07-endpoint-samples.Rmd')"
