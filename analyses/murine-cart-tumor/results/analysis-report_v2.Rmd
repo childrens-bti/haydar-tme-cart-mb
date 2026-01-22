@@ -49,7 +49,9 @@ This document summarizes the analysis performed for the **Haydar Lab murine brai
     - With lower confidence due to lower cell numbers, CAR-T treated samples appear to be enriched for IL12+ inflammatory DCs and migratory DCs compared to tumor and STOP samples.
 
 - **Endpoint samples**:
-    - Analysis of endpoint samples largely recapitulated findings from the main dataset, confirming the observed myeloid and T cell subtype compositions across CAR-T design conditions.
+    - Genes normally expressed in CD45+ immune cells are barely detected in these samples
+    - Direct comparison with earlier timepoints is not feasible
+
 
 # Summary of methods used
 ## Main lineages processing & annotation
