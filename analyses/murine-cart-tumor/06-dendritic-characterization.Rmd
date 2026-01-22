@@ -161,7 +161,7 @@ dev.off()
 DimPlot(dc_obj, reduction = "umap", group.by = "dc_subtype", split.by = "condition", ncol = 3) + 
   ggtitle("dc Subclusters by Condition")
 
-ggsave(file.path(plot_dir, "dc_subtypes_by_condition_umap.png"), width = 16, height = 8)
+ggsave(file.path(plot_dir, "dc_subtypes_by_condition.png"), width = 16, height = 8)
 ```
 
 ```{r composition-analysis-sccomp, message=FALSE, warning=FALSE}
