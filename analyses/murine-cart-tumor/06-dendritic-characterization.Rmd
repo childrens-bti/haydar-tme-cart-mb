@@ -317,7 +317,8 @@ hm <- pheatmap::pheatmap(mat = hallmark_z_scores,
                    breaks = breaks,
                    clustering_distance_rows = "correlation",
                   clustering_distance_cols = "correlation",
-                  main = "Hallmark Pathway AUCell Activity across DC Subtypes") 
+                  main = "Hallmark Pathway AUCell Activity across DC Subtypes")
+print(hm)
 dev.off()
 ```
 
