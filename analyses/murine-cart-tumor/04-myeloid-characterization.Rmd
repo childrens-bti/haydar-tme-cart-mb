@@ -467,56 +467,93 @@ AI-assisted summerization of the full marker lists for each myeloid subtype:
 - Key markers: Tmem119, Siglech, Sparc, Sall1 
 - Enriched in tumor and STOP samples
 - Canonical homeostatic microglia maintaining tissue surveillance and baseline immune functions in the brain. These cells express core microglial identity genes and show minimal activation signatures, representing a quiescent resident microglial population.
+- Literature support: 
+  - Butovsky et al., Nat Neurosci. 2014: "Identification of a unique TGF-β–dependent molecular and functional signature in microglia"
+  - Bennett et al., Nat Neurosci. 2016: "New tools for studying microglia in the mouse and human CNS"
+  - Konishi et al., Glia. 2017: "Siglec-H is a microglia-specific marker that discriminates microglia from CNS-associated macrophages and CNS-infiltrating monocytes"
 
 ### Stress-Response Microglia
-- Key markers: Hspa1a/b, Hsp90aa1, Txnip, Klf2
+- Key markers: Hspa1a/b, Hsp90aa1, Txnip
 - Depleted in B7H3 samples
 - Microglia retaining a homeostatic identity but exhibiting a stress-response transcriptional program, marked by heat-shock and oxidative stress genes. Likely reflects microglia responding to tumor-associated stress, hypoxia, or tissue processing rather than a distinct lineage state.
+- Literature support:
+  - Dukay et al., Front. Pharmacol. 2019: Heat-Shock Proteins in Neuroinflammation
+  - Sequeira & Bolton, Endocrinology. 2023: Stressed Microglia: Neuroendocrine–Neuroimmune Interactions in the Stress Response
 
 ### Early Activated Microglia
 - Key markers: Tnf, Il1a, Nfkbia, Junb, Egr1, Icam1, Cd83
 - Similar across conditions
 - Acutely activated microglia characterized by immediate-early gene expression and NFκB signaling. Represents a rapid-response microglial state likely induced by tumor-derived cues or CAR-T–associated inflammatory signals.
+- Literature support: 
+  - Gao et al., Signal Transduction and Targeted Therapy. 2023: Microglia in neurodegenerative diseases: mechanism and potential therapeutic targets
+  - Chen et al., Blood. 2009: Identification of early growth response protein 1 (EGR-1) as a novel target for JUN-induced apoptosis in multiple myeloma
 
 ### Inflammatory Activated Microglia
 - Key markers: Nlrp3, Il1a, Nfkb1, Jak1, Stat3, Trib1, Icam1
 - Similar across conditions
 - A more sustained inflammatory microglial state marked by inflammasome components and cytokine signaling pathways. These cells likely participate in chronic neuroinflammation within the tumor microenvironment.
+- Literature support: 
+  - Xu et al., Cellular & Molecular Immunology. 2025: NLRP3 inflammasome in neuroinflammation and central nervous system diseases
+  - Zheng et al., Stroke and Vascular Neurology. 2022: Novel role of STAT3 in microglia-dependent neuroinflammation after experimental subarachnoid haemorrhage
 
 ### TAM-like Phagocytic Microglia
 - Key markers: Apoe, Cst7, C1qa/b/c, Axl, Cd9, Grn
 - Similar across conditions
 - Microglia adopting a tumor-associated macrophage–like phenotype with enhanced phagocytic and lysosomal activity. This population reflects disease-associated microglia engaged in debris clearance and tumor interaction.
+- Literature support:
+  - Tran et al., Molecular Neurodegeneration. 2025: APOE Christchurch enhances a disease-associated microglial response to plaque but suppresses response to tau pathology
+  - Huang et al., Nat. Immunol. 2021: Microglia use TAM receptors to detect and engulf amyloid beta plaques
+  - Wang et al., iScience. 2024: Microglial apolipoprotein E particles contribute to neuronal dysfunction by impairing neurite growth and synapse integrity and promoting neuronal senescence
 
 ### Angiogenic Tumor-Associated Macrophages (TAMs)
 - Key markers: Vegfa, Thbs1, Tgm2, Plaur, Cd44, Vim
 - Enriched across CAR-T designs
 - Tumor-associated macrophages specialized for angiogenesis and tissue remodeling. These cells likely localize to hypoxic or perivascular tumor regions and contribute to vascular remodeling and tumor progression.
+- Literature support:
+  - Lee et al., Signal Transduction and Targeted Therapy. 2025: Vascular endothelial growth factor signaling in health and disease: from molecular mechanisms to therapeutic perspectives
+  - Cao et al., Am. J. Pathol. 2006: Involvement of endothelial CD44 during in vivo angiogenesis
+  - Kaur et al., Int. J. Mol. Sci. 2021: Functions of thrombospondin-1 in the tumor microenvironment
 
 ### Antigen-Presenting TAMs
 - Key markers: Cd74, H2-Aa, H2-Ab1, Ciita, Ms4a7, Lyz2
 - Enriched across CAR-T designs
 - TAMs with strong antigen-presentation capacity, expressing MHC class II machinery alongside macrophage lineage markers. These cells may serve as intermediaries between innate and adaptive immune responses within the tumor.
+- Literature support:
+  - Polania et al., Immunity. 2025: Antigen presentation by tumor-associated macrophages drives T cells from a progenitor exhaustion state to terminal exhaustion
+  - Muraoka et al., J. Clin. Invest. 2019: Antigen delivery targeted to tumor-associated macrophages overcomes tumor immune resistance
 
 ### Inflammatory TAMs
-- Key markers: C3, Cfb, Clec4e, Vegfa, Tgfbi, Slamf7, Ifitm3
+- Key markers: C3, Cfb, Clec4e, Vegfa, Tgfbi, Slamf7
 - Enriched across CAR-T designs, most strongly in CD8-41BB samples
 - Inflammatory TAMs characterized by complement activation, innate immune receptors, interferon production, and tumor-adaptive outputs. This population likely represents macrophages responding to chronic inflammatory and necrotic signals in the tumor microenvironment.
-
+- Literature support:
+  - Ma et al., Trends in Immunology. 2022: Macrophage diversity in cancer revisited in the era of single-cell omics
+  - Peng et al., Theranostics. 2022: TGFBI secreted by tumor-associated macrophages promotes glioblastoma stem cell-driven tumor growth via integrin αvβ5-Src-Stat3 signaling
+  - Suzuki et al., J. Thorac. Oncol. 2025: Tumor-Derived Complement Factor B Drives Tumor Growth and Anti-PD-1 Resistance in STK11-Mutant Lung Adenocarcinoma
+  
 ### Lipid-associated TAMs
 - Key markers: Fabp4, Fabp5, Lpl, Gpnmb, Acp5, Atp6v0d2
 - Enriched across CAR-T designs
 - Macrophages specialized for lipid metabolism and phagocytosis, resembling lipid-associated or foamy macrophages. These cells may arise in response to cell death and lipid-rich debris within tumors.
+- Literature support:
+  - Timperi et al., Cancer Research. 2022: Lipid-Associated Macrophages Are Induced by Cancer-Associated Fibroblasts and Mediate Immune Suppression in Breast Cancer
+  - Yalcin et al., Acta Neuropathologica Communications. 2024: Tumor-associated microglia/macrophages utilize GPNMB to promote tumor growth and alter immune cell infiltration in glioma
 
 ### Perivascular Macrophages
 - Key markers: Mrc1, Cd163, F13a1, Stab1, Pf4, Dab2
 - Depleted across CAR-T designs
 - Macrophages associated with the vasculature, displaying immunoregulatory and tissue-supportive features. These cells are often linked to blood–brain barrier maintenance and immune suppression in tumors.
+- Literature support:
+  - Zhan et al., Cell Death and Disease. 2025: Perivascular macrophages in the central nervous system: insights into their roles in health and disease
+  - Wen et al., Brain. 2024: Brain perivascular macrophages: current understanding and future prospects
 
 ### Perivascular Macrophages (Chemokine producing)
 - Key markers: Ccl2, Ccl7, Cxcl2, Mrc1, Cd163, Pf4
 - Depleted across CAR-T designs
 - A chemokine-enriched subset of perivascular macrophages that actively recruit additional immune cells. This population may amplify myeloid infiltration and inflammation, particularly under CAR-T–induced immune pressure.
+- Literature support:
+  - Kim et al., Blood Advances. 2024: Increased CCL2/CCR2 axis promotes tumor progression by increasing M2 macrophages in MYC/BCL2 double-expressor DLBCL
+  - Nie et al., Cell Death & Disease. 2024: The role of CXCL2-mediated crosstalk between tumor cells and macrophages in Fusobacterium nucleatum-promoted oral squamous cell carcinoma progression
 
 ### Antigen-Presenting Monocytes
 - Key markers: Ciita, Cd74, H2-Aa, H2-Ab1, H2-Eb1, Lsp1
