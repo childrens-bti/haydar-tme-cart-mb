@@ -52,11 +52,13 @@ obj <- readRDS(file.path(results_dir, "cart_myeloid_subtypes.rds"))
 obj_cd28 <- subset(obj, subset = condition %in% c("CD28-41BB"))
 obj_41bb <- subset(obj, subset = condition %in% c("41BB-L"))
 obj_stop <- subset(obj, subset = condition %in% c("STOP"))
+obj_b7h3 <- subset(obj, subset = condition %in% c("B7H3"))
+obj_cd8 <- subset(obj, subset = condition %in% c("CD8-41BB"))
 ```
 
 ## Seurat reprocessing and integration for each subsetted object
 ```{r seurat-reprocess}
-objs <- list(CD28 = obj_cd28, L41BB = obj_41bb, STOP = obj_stop)
+objs <- list(CD28 = obj_cd28, L41BB = obj_41bb, STOP = obj_stop, B7H3 = obj_b7h3, CD8 = obj_cd8)
 
 reprocess_sample <- function(sub_obj) {
   
@@ -92,4 +94,10 @@ ggsave(file.path(plot_dir, "umap_41bb_myeloid_subtypes.png"), width=10, height=6
 
 DimPlot(objs$STOP, reduction = "umap", group.by = "myeloid_subtype") + ggtitle("STOP")
 ggsave(file.path(plot_dir, "umap_stop_myeloid_subtypes.png"), width=10, height=6)
+
+DimPlot(objs$B7H3, reduction = "umap", group.by = "myeloid_subtype") + ggtitle("B7H3")
+ggsave(file.path(plot_dir, "umap_b7h3_myeloid_subtypes.png"), width=10, height=6)
+
+DimPlot(objs$CD8, reduction = "umap", group.by = "myeloid_subtype") + ggtitle("CD8-41BB")
+ggsave(file.path(plot_dir, "umap_cd8_myeloid_subtypes.png"), width=10, height=6)
 ```
