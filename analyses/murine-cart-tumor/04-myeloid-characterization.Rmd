@@ -26,7 +26,7 @@ library(fgsea)
 
 # Define directories
 root_dir <- find_root(has_dir(".git"))
-data_dir <- file.path(root_dir, "data", "v2")
+data_dir <- file.path(root_dir, "data", "v3")
 analysis_dir <- file.path(root_dir, "analyses", "murine-cart-tumor")
 results_dir <- file.path(analysis_dir, "results")
 plot_dir <- file.path(analysis_dir, "plots")
@@ -45,13 +45,7 @@ set.seed(1234)
 ## Load Data
 ```{r load-data}
 # Load Seurat object
-myeloid_obj <- readRDS(file.path(results_dir, "cart_myeloid_subtypes.rds"))
-```
-
-## Re-run clusters in higher resolution
-```{r rerun-clusters, message=FALSE, warning=FALSE}
-myeloid_obj <- FindNeighbors(myeloid_obj, reduction = "integrated.cca", dims = 1:20)
-myeloid_obj <- FindClusters(myeloid_obj, resolution = 0.7)
+myeloid_obj <- readRDS(file.path(results_dir, "cart_myeloid_subclusters.rds"))
 ```
 
 ## Visualize myeloid subclusters
@@ -70,55 +64,57 @@ cluster_markers <- FindAllMarkers(myeloid_obj,
                                   assay = "RNA",
                                   slot = "data",
                                   only.pos = TRUE,
-                                  min.pct = 0.25,
-                                  logfc.threshold = 0.25,
-                                  test.use = "MAST")
+                                  min.pct = 0.5,
+                                  logfc.threshold = 0.5)
 
 write.csv(cluster_markers, file.path(results_dir, "myeloid_subcluster_markers.csv"), row.names = FALSE)
 ```
 
 ```{r microglia-markers, fig.height=6, fig.width=6}
-FeaturePlot_scCustom(myeloid_obj, features = c("Sparc", "Hexb", "Csf1r", "Tmem119"), reduction = "umap", pt.size = 0.1, alpha_exp = 0.5, colors_use = viridis_light_high) + plot_annotation(title = "Microglia Core")
+FeaturePlot_scCustom(myeloid_obj, features = c("Sparc", "Hexb", "Csf1r", "Tmem119"), reduction = "umap", pt.size = 0.1, alpha_exp = 0.5, colors_use = viridis_light_high, order = FALSE) + plot_annotation(title = "Microglia Core")
 
-FeaturePlot_scCustom(myeloid_obj, features = c("Il1a", "Tnf", "Ccl3", "Cd83"), reduction = "umap", pt.size = 0.1, alpha_exp = 0.5, colors_use = viridis_light_high) + plot_annotation(title = "Activated microglia")
+FeaturePlot_scCustom(myeloid_obj, features = c("Il1a", "Tnf", "Ccl3", "Cd83"), reduction = "umap", pt.size = 0.1, alpha_exp = 0.5, colors_use = viridis_light_high, order = FALSE) + plot_annotation(title = "Activated microglia")
 
-FeaturePlot_scCustom(myeloid_obj, features = c("Apoe", "Tyrobp", "C1qa", "Lpl"), reduction = "umap", pt.size = 0.1, alpha_exp = 0.5, colors_use = viridis_light_high) + plot_annotation(title = "Phagocytic microglia")
+FeaturePlot_scCustom(myeloid_obj, features = c("Apoe", "Tyrobp", "C1qa", "Lpl"), reduction = "umap", pt.size = 0.1, alpha_exp = 0.5, colors_use = viridis_light_high, order = FALSE) + plot_annotation(title = "Phagocytic microglia")
 
-FeaturePlot_scCustom(myeloid_obj, features = c("Ifit3", "Isg15", "Rsad2", "Irf7"), reduction = "umap", pt.size = 0.1, alpha_exp = 0.5, colors_use = viridis_light_high) + plot_annotation(title = "Interferon microglia")
+FeaturePlot_scCustom(myeloid_obj, features = c("Ifit3", "Isg15", "Rsad2", "Irf7"), reduction = "umap", pt.size = 0.1, alpha_exp = 0.5, colors_use = viridis_light_high, order = FALSE) + plot_annotation(title = "Interferon microglia")
 
-FeaturePlot_scCustom(myeloid_obj, features = c("Hspa1a", "Hspa1b", "Dnaja1", "Hsp90aa1"), reduction = "umap", pt.size = 0.1, alpha_exp = 0.5, colors_use = viridis_light_high) + plot_annotation(title = "Stress response")
+FeaturePlot_scCustom(myeloid_obj, features = c("Hspa1a", "Hspa1b", "Dnaja1", "Hsp90aa1"), reduction = "umap", pt.size = 0.1, alpha_exp = 0.5, colors_use = viridis_light_high, order = FALSE) + plot_annotation(title = "Stress response")
 ```
 
 ```{r macrophage-markers, fig.height=6, fig.width=6}
-FeaturePlot_scCustom(myeloid_obj, features = c("Lyz2", "Ms4a7", "Cd14", "Ctss"), reduction = "umap", pt.size = 0.1, alpha_exp = 0.5, colors_use = viridis_light_high) + plot_annotation(title = "Macrophage Core")
+FeaturePlot_scCustom(myeloid_obj, features = c("Lyz2", "Ms4a7", "Cd14", "Ctss"), reduction = "umap", pt.size = 0.1, alpha_exp = 0.5, colors_use = viridis_light_high, order = FALSE) + plot_annotation(title = "Macrophage Core")
 
-FeaturePlot_scCustom(myeloid_obj, features = c("Gpnmb", "Fabp5", "Plin2", "Lipa"), reduction = "umap", pt.size = 0.1, alpha_exp = 0.5, colors_use = viridis_light_high) + plot_annotation(title = "Lipid-associated TAM")
+FeaturePlot_scCustom(myeloid_obj, features = c("Gpnmb", "Fabp5", "Plin2", "Lipa"), reduction = "umap", pt.size = 0.1, alpha_exp = 0.5, colors_use = viridis_light_high, order = FALSE) + plot_annotation(title = "Lipid-associated TAM")
 
-FeaturePlot_scCustom(myeloid_obj, features = c("Cd74", "H2-Eb1", "H2-Ab1", "Ccr2"), reduction = "umap", pt.size = 0.1, alpha_exp = 0.5, colors_use = viridis_light_high) + plot_annotation(title = "Antigen presentation")
+FeaturePlot_scCustom(myeloid_obj, features = c("Cd74", "H2-Eb1", "H2-Ab1", "Ccr2"), reduction = "umap", pt.size = 0.1, alpha_exp = 0.5, colors_use = viridis_light_high, order = FALSE) + plot_annotation(title = "Antigen presentation")
 
-FeaturePlot_scCustom(myeloid_obj, features = c("Mrc1", "Dab2", "Gas6", "Cd163"), reduction = "umap", pt.size = 0.1, alpha_exp = 0.5, colors_use = viridis_light_high) + plot_annotation(title = "Perivascular macrophages")
+FeaturePlot_scCustom(myeloid_obj, features = c("Mrc1", "Dab2", "Gas6", "Cd163"), reduction = "umap", pt.size = 0.1, alpha_exp = 0.5, colors_use = viridis_light_high, order = FALSE) + plot_annotation(title = "Perivascular macrophages")
 
-FeaturePlot_scCustom(myeloid_obj, features = c("Plac8", "Msrb1", "S100a4", "Alox5ap"), reduction = "umap", pt.size = 0.1, alpha_exp = 0.5, colors_use = viridis_light_high) + plot_annotation(title = "Monocytes")
+FeaturePlot_scCustom(myeloid_obj, features = c("Plac8", "Msrb1", "S100a4", "Alox5ap"), reduction = "umap", pt.size = 0.1, alpha_exp = 0.5, colors_use = viridis_light_high, order = FALSE) + plot_annotation(title = "Monocytes")
+
+FeaturePlot_scCustom(myeloid_obj, features = c("Ifit2", "Ifit3", "Rsad2", "Isg15"), reduction = "umap", pt.size = 0.1, alpha_exp = 0.5, colors_use = viridis_light_high, order = FALSE) + plot_annotation(title = "Interferon-producing macrophages")
 ```
 
 ## Reannotate clusters by their expression profiles
 ```{r reannotate-clusters}
 new_cluster_ids <- c(
-  "0" = "Homeostatic/stress-response microglia",
-  "4" = "Homeostatic/stress-response microglia",
-  "5" = "Homeostatic/stress-response microglia",
-  "2" = "Activated microglia",
-  "7" = "Activated microglia",
-  "11" = "Activated microglia",
-  "1" = "Phagocytic microglia",
-  "3" = "Lipid-associated macrophages",
-  "8" = "Lipid-associated macrophages",
-  "9" = "Lipid-associated macrophages",
-  "6" = "Antigen-presenting macrophages",
-  "10" = "Perivascular macrophages",
-  "12" = "Interferon-responsive macrophages",
-  "13" = "Monocytes",
-  "14" = "Neurons"
+  "0" = "Early activated microglia",
+  "1" = "TAM-like phagocytic microglia",
+  "2" = "Stress-response microglia",
+  "3" = "Stress-response microglia",
+  "4" = "Inflammatory activated microglia",
+  "5" = "Angiogenic TAMs",
+  "6" = "Antigen-presenting TAMs",
+  "7" = "Homeostatic microglia",
+  "8" = "Perivascular macrophages",
+  "9" = "Lipid-associated TAMs",
+  "10" = "Perivascular macrophages (chemokine-producing)",
+  "11" = "Antigen-presenting monocytes",
+  "12" = "Inflammatory TAMs",
+  "13" = "Homeostatic microglia",
+  "14" = "cDC1",
+  "15" = "Inflammatory monocytes"
 )
 
 myeloid_obj$myeloid_subtype <- plyr::mapvalues(
@@ -128,14 +124,11 @@ myeloid_obj$myeloid_subtype <- plyr::mapvalues(
 )
 ```
 
-```{r umap-visualization, fig.height=6, fig.width=16}
-p1 <- DimPlot(myeloid_obj, reduction = "umap", group.by = "seurat_clusters") + 
-  ggtitle("Seurat Clustering")
-p2 <- DimPlot(myeloid_obj, reduction = "umap", group.by = "myeloid_subtype") + 
+```{r umap-visualization, fig.height=6, fig.width=9}
+DimPlot(myeloid_obj, reduction = "umap", group.by = "myeloid_subtype") + 
   ggtitle("Myeloid Subtypes")
 
-p1 + p2
-ggsave(file.path(plot_dir, "myeloid_subtypes_umap.png"), width = 16, height = 6)
+ggsave(file.path(plot_dir, "myeloid_subtypes_umap.png"), width = 9, height = 6)
 ```
 
 ## Marker genes on subsets
@@ -145,9 +138,8 @@ subtype_markers <- FindAllMarkers(myeloid_obj,
                                  group.by = "myeloid_subtype",
                                   slot = "data",
                                   only.pos = TRUE,
-                                  min.pct = 0.25,
-                                  logfc.threshold = 0.25,
-                                  test.use = "MAST")
+                                  min.pct = 0.5,
+                                  logfc.threshold = 0.5)
 
 write.csv(subtype_markers, file.path(results_dir, "myeloid_subtype_markers.csv"), row.names = FALSE)
 ```
@@ -162,7 +154,7 @@ top_markers_table <- subtype_markers %>%
 
 for (clust in unique(top_markers_table$cluster)) {
   clust_markers <- top_markers_table %>% filter(cluster == clust) %>% pull(gene)
-  p <- FeaturePlot_scCustom(myeloid_obj, features = clust_markers, reduction = "umap", pt.size = 0.1, alpha_exp = 0.5, colors_use = viridis_light_high) + 
+  p <- FeaturePlot_scCustom(myeloid_obj, features = clust_markers, reduction = "umap", pt.size = 0.1, alpha_exp = 0.5, colors_use = viridis_light_high, order = FALSE) + 
     plot_annotation(title = paste0("Cluster ", clust))
   print(p)
 }
@@ -196,7 +188,7 @@ dev.off()
 
 ## Composition analysis using sccomp
 
-```{r visualize-split-umap, fig.height=8, fig.width=16}
+```{r visualize-split-umap, fig.height=6, fig.width=14}
 DimPlot(myeloid_obj, reduction = "umap", group.by = "myeloid_subtype", split.by = "condition", ncol = 3) + 
   ggtitle("Myeloid Subclusters by Condition")
 
@@ -258,7 +250,7 @@ ggplot(prop_df, aes(x = condition, y = prop, fill = myeloid_subtype)) +
   ylab("Proportion") +
   theme_classic()
 
-ggsave(file.path(plot_dir, "myeloid_subtype_proportions_barplot.png"), width = 9, height = 6)
+ggsave(file.path(plot_dir, "myeloid_subtype_proportions_barplot.png"), width = 12, height = 6)
 
 ## dotplot of proportions
 ggplot(prop_df, aes(x = condition, y = myeloid_subtype, size = prop, color = prop)) +
@@ -269,7 +261,7 @@ ggplot(prop_df, aes(x = condition, y = myeloid_subtype, size = prop, color = pro
   ylab("Cluster") + 
   xlab("Condition")
 
-ggsave(file.path(plot_dir, "myeloid_subtype_proportions_dotplot.png"), width = 9, height = 6)
+ggsave(file.path(plot_dir, "myeloid_subtype_proportions_dotplot.png"), width = 12, height = 6)
 ```
 
 # Gene set enrichment analysis
@@ -305,7 +297,7 @@ cells_rankings <- AUCell_buildRankings(GetAssayData(myeloid_obj, assay = "RNA", 
 hallmark_AUC <- AUCell_calcAUC(msigdb_hallmark, cells_rankings)
 ```
 
-```{r visualize-hallmark-activity, fig.height=20, fig.width=16}
+```{r visualize-hallmark-activity, fig.height=20, fig.width=18}
 # add hallmark scores to seurat object
 hallmark_scores_df <- as.data.frame(t(getAUC(hallmark_AUC)))
 myeloid_obj <- AddMetaData(myeloid_obj, metadata = hallmark_scores_df)
@@ -325,7 +317,7 @@ FeaturePlot_scCustom(myeloid_obj, features = hallmark_pathways_to_plot, reductio
 
 
 VlnPlot_scCustom(myeloid_obj, features = hallmark_pathways_to_plot, group.by = "myeloid_subtype",
-                 pt.size = 0, log = FALSE, colors_use = viridis::viridis(9)) + 
+                 pt.size = 0, log = FALSE, colors_use = viridis::viridis(14)) + 
   plot_annotation(title = "Hallmark Pathway Activity by Myeloid Subtype")
 ```
 
@@ -365,6 +357,7 @@ dev.off()
 # get foldchanges for each gene per cluster
 clusters <- levels(myeloid_obj$myeloid_subtype)
 fc_list <- lapply(clusters, function(cl){
+  print(cl)
   df <- FoldChange(
     object = myeloid_obj,
     group.by = "myeloid_subtype",
@@ -413,14 +406,14 @@ write.csv(fgsea_res_hallmark_sig, file.path(results_dir, "myeloid_subtype_hallma
 
 ## Visualize select significant genesets
 ```{r visualize-gsea-results, fig.height=8, fig.width=12}
-c0_ranks <- make_rank_vector(fc_list[["Activated microglia"]])
-c7_ranks <- make_rank_vector(fc_list[["Interferon-responsive macrophages"]])
+inflam_TAM_ranks <- make_rank_vector(fc_list[["Inflammatory TAMs"]])
+phag_microglia_ranks <- make_rank_vector(fc_list[["TAM-like phagocytic microglia"]])
 
-fgsea::plotEnrichment(msigdb_hallmark[["HALLMARK_TNFA_SIGNALING_VIA_NFKB"]], c0_ranks) +
-  ggtitle("Activated microglia: TNFA Signaling via NFKB")
+fgsea::plotEnrichment(msigdb_hallmark[["HALLMARK_OXIDATIVE_PHOSPHORYLATION"]], phag_microglia_ranks) +
+  ggtitle("TAM-like phagocytic microglia: Oxidative Phosphorylation")
 
-fgsea::plotEnrichment(msigdb_hallmark[["HALLMARK_INTERFERON_GAMMA_RESPONSE"]], c7_ranks) +
-  ggtitle("Interferon-responsive macrophages: Interferon Gamma Response")
+fgsea::plotEnrichment(msigdb_hallmark[["HALLMARK_INTERFERON_GAMMA_RESPONSE"]], inflam_TAM_ranks) +
+  ggtitle("Inflammatory TAMs: Interferon Gamma Response")
 ```
 
 ## GSEA on C5 GO gene sets
@@ -470,50 +463,109 @@ write.csv(fgsea_res_c7_sig, file.path(results_dir, "myeloid_subtype_c7_gsea_resu
 # Summary of the myeloid subtypes
 AI-assisted summerization of the full marker lists for each myeloid subtype:
 
-### Homeostatic / Stress-Response Microglia
-- Key markers: Tmem119, Siglech, Sparc, Hspa1a/b, Hsp90aa1, Txnip
+### Homeostatic  Microglia
+- Key markers: Tmem119, Siglech, Sparc, Sall1 
 - Enriched in tumor and STOP samples
-- A core microglial population maintaining tissue surveillance, enriched for canonical homeostatic genes (Tmem119, Siglech, Sparc) but showing a mild stress-response program marked by heat-shock proteins (Hspa1a/b, Hsp90aa1). Reflects stable microglia experiencing environmental or handling-related cellular stress.
+- Canonical homeostatic microglia maintaining tissue surveillance and baseline immune functions in the brain. These cells express core microglial identity genes and show minimal activation signatures, representing a quiescent resident microglial population.
+- Literature support: 
+  - Butovsky et al., Nat Neurosci. 2014: "Identification of a unique TGF-β–dependent molecular and functional signature in microglia"
+  - Bennett et al., Nat Neurosci. 2016: "New tools for studying microglia in the mouse and human CNS"
+  - Konishi et al., Glia. 2017: "Siglec-H is a microglia-specific marker that discriminates microglia from CNS-associated macrophages and CNS-infiltrating monocytes"
 
+### Stress-Response Microglia
+- Key markers: Hspa1a/b, Hsp90aa1, Txnip
+- Depleted in B7H3 samples
+- Microglia retaining a homeostatic identity but exhibiting a stress-response transcriptional program, marked by heat-shock and oxidative stress genes. Likely reflects microglia responding to tumor-associated stress, hypoxia, or tissue processing rather than a distinct lineage state.
+- Literature support:
+  - Dukay et al., Front. Pharmacol. 2019: Heat-Shock Proteins in Neuroinflammation
+  - Sequeira & Bolton, Endocrinology. 2023: Stressed Microglia: Neuroendocrine–Neuroimmune Interactions in the Stress Response
 
-### Activated microglia
-- Key markers: Il1a, Tnf, Ccl3, Egr1, Atf3
-- Enriched in tumor and STOP samples
-- This population represents danger-sensing, cytokine-producing, immune-interactive microglia with strong NF-κB/AP-1 activity and maintained microglial identity. It aligns with injury-induced, tumor-associated, or cytokine-exposed activated microglia.
+### Early Activated Microglia
+- Key markers: Tnf, Il1a, Nfkbia, Junb, Egr1, Icam1, Cd83
+- Similar across conditions
+- Acutely activated microglia characterized by immediate-early gene expression and NFκB signaling. Represents a rapid-response microglial state likely induced by tumor-derived cues or CAR-T–associated inflammatory signals.
+- Literature support: 
+  - Gao et al., Signal Transduction and Targeted Therapy. 2023: Microglia in neurodegenerative diseases: mechanism and potential therapeutic targets
+  - Chen et al., Blood. 2009: Identification of early growth response protein 1 (EGR-1) as a novel target for JUN-induced apoptosis in multiple myeloma
 
-### Phagocytic microglia
-- Key markers: Apoe, Trem2, C1qa, Tyrobp, Cst7
-- Slightly enriched in CD28-41BB samples
-- This population represents actively engulfing, lipid-processing phagocytic microglia with strong lysosomal and lipid-catabolic machinery. Their profile is consistent with DAM/LAM microglia responding to debris, dying cells, myelin, or tumor-derived material.
+### Inflammatory Activated Microglia
+- Key markers: Nlrp3, Il1a, Nfkb1, Jak1, Stat3, Trib1, Icam1
+- Similar across conditions
+- A more sustained inflammatory microglial state marked by inflammasome components and cytokine signaling pathways. These cells likely participate in chronic neuroinflammation within the tumor microenvironment.
+- Literature support: 
+  - Xu et al., Cellular & Molecular Immunology. 2025: NLRP3 inflammasome in neuroinflammation and central nervous system diseases
+  - Zheng et al., Stroke and Vascular Neurology. 2022: Novel role of STAT3 in microglia-dependent neuroinflammation after experimental subarachnoid haemorrhage
 
-### Lipid-associated macrophages
-- Key markers: Gpnmb, Fabp5, Lipa, Lgals3
-- Enriched in B7H3, 41BBL, and CD28-41BB samples
-- A highly lipid-scavenging, lysosome-expanded, Trem2-Tyrobp–driven macrophage population analogous to LAM/TAM signatures in cancer. These cells manage lipid-rich debris, remodel extracellular matrix, buffer oxidative stress, and maintain persistent low-grade antigen presentation.
+### TAM-like Phagocytic Microglia
+- Key markers: Apoe, Cst7, C1qa/b/c, Axl, Cd9, Grn
+- Similar across conditions
+- Microglia adopting a tumor-associated macrophage–like phenotype with enhanced phagocytic and lysosomal activity. This population reflects disease-associated microglia engaged in debris clearance and tumor interaction.
+- Literature support:
+  - Tran et al., Molecular Neurodegeneration. 2025: APOE Christchurch enhances a disease-associated microglial response to plaque but suppresses response to tau pathology
+  - Huang et al., Nat. Immunol. 2021: Microglia use TAM receptors to detect and engulf amyloid beta plaques
+  - Wang et al., iScience. 2024: Microglial apolipoprotein E particles contribute to neuronal dysfunction by impairing neurite growth and synapse integrity and promoting neuronal senescence
 
-### Antigen presenting macrophages
-- Key markers: H2-Aa, H2-Ab1, Cd74, Vim, Srgn
-- Enriched in CD8-41BB samples
-- A highly activated, MHC-II–intense antigen-presenting macrophage population enriched for inflammatory cytokines and migration machinery.
+### Angiogenic Tumor-Associated Macrophages (TAMs)
+- Key markers: Vegfa, Thbs1, Tgm2, Plaur, Cd44, Vim
+- Enriched across CAR-T designs
+- Tumor-associated macrophages specialized for angiogenesis and tissue remodeling. These cells likely localize to hypoxic or perivascular tumor regions and contribute to vascular remodeling and tumor progression.
+- Literature support:
+  - Lee et al., Signal Transduction and Targeted Therapy. 2025: Vascular endothelial growth factor signaling in health and disease: from molecular mechanisms to therapeutic perspectives
+  - Cao et al., Am. J. Pathol. 2006: Involvement of endothelial CD44 during in vivo angiogenesis
+  - Kaur et al., Int. J. Mol. Sci. 2021: Functions of thrombospondin-1 in the tumor microenvironment
 
-### Interferon-responsive macrophages
-- Key markers: Ifit2, Ifit3, Rsad2, Isg15, Irf7
-- Enriched in B7H3 samples
-- Highly antiviral, type I interferon–driven macrophages expressing strong ISG modules (Ifit/Isg15/Oasl/Rsad2), chemokines (Cxcl9/10), antigen-presentation machinery, and nucleic-acid sensors. Represents macrophages engaged in innate immune amplification, viral-mimicry sensing, or tumor-associated interferon signaling.
+### Antigen-Presenting TAMs
+- Key markers: Cd74, H2-Aa, H2-Ab1, Ciita, Ms4a7, Lyz2
+- Enriched across CAR-T designs
+- TAMs with strong antigen-presentation capacity, expressing MHC class II machinery alongside macrophage lineage markers. These cells may serve as intermediaries between innate and adaptive immune responses within the tumor.
+- Literature support:
+  - Polania et al., Immunity. 2025: Antigen presentation by tumor-associated macrophages drives T cells from a progenitor exhaustion state to terminal exhaustion
+  - Muraoka et al., J. Clin. Invest. 2019: Antigen delivery targeted to tumor-associated macrophages overcomes tumor immune resistance
 
-### Perivascular macrophages
-- Key markers: Mrc1, Dab2, Gas6, Cd163, Pf4
-- Depleted in B7H3 and 41BB-L samples
-- A population specializing in endothelial interaction, chemokine-mediated leukocyte recruitment, oxidative-stress buffering, and vascular remodeling. These cells form a vessel-associated, tissue-resident macrophage compartment with a balanced inflammatory and tolerogenic signature.
+### Inflammatory TAMs
+- Key markers: C3, Cfb, Clec4e, Vegfa, Tgfbi, Slamf7
+- Enriched across CAR-T designs, most strongly in CD8-41BB samples
+- Inflammatory TAMs characterized by complement activation, innate immune receptors, interferon production, and tumor-adaptive outputs. This population likely represents macrophages responding to chronic inflammatory and necrotic signals in the tumor microenvironment.
+- Literature support:
+  - Ma et al., Trends in Immunology. 2022: Macrophage diversity in cancer revisited in the era of single-cell omics
+  - Peng et al., Theranostics. 2022: TGFBI secreted by tumor-associated macrophages promotes glioblastoma stem cell-driven tumor growth via integrin αvβ5-Src-Stat3 signaling
+  - Suzuki et al., J. Thorac. Oncol. 2025: Tumor-Derived Complement Factor B Drives Tumor Growth and Anti-PD-1 Resistance in STK11-Mutant Lung Adenocarcinoma
+  
+### Lipid-associated TAMs
+- Key markers: Fabp4, Fabp5, Lpl, Gpnmb, Acp5, Atp6v0d2
+- Enriched across CAR-T designs
+- Macrophages specialized for lipid metabolism and phagocytosis, resembling lipid-associated or foamy macrophages. These cells may arise in response to cell death and lipid-rich debris within tumors.
+- Literature support:
+  - Timperi et al., Cancer Research. 2022: Lipid-Associated Macrophages Are Induced by Cancer-Associated Fibroblasts and Mediate Immune Suppression in Breast Cancer
+  - Yalcin et al., Acta Neuropathologica Communications. 2024: Tumor-associated microglia/macrophages utilize GPNMB to promote tumor growth and alter immune cell infiltration in glioma
 
-### Monocytes: 
-- Key markers: Plac8, Ccr2, S100a4, Alox5ap
-- Enriched in B7H3 samples
-- Represents the major infiltrating monocyte pool that seeds the macrophage and inflammatory myeloid states within the tissue.
+### Perivascular Macrophages
+- Key markers: Mrc1, Cd163, F13a1, Stab1, Pf4, Dab2
+- Depleted across CAR-T designs
+- Macrophages associated with the vasculature, displaying immunoregulatory and tissue-supportive features. These cells are often linked to blood–brain barrier maintenance and immune suppression in tumors.
+- Literature support:
+  - Zhan et al., Cell Death and Disease. 2025: Perivascular macrophages in the central nervous system: insights into their roles in health and disease
+  - Wen et al., Brain. 2024: Brain perivascular macrophages: current understanding and future prospects
 
-### Neurons:
-- Key markers: Ryr1, Syt7, Ank1, Itpr1
-- Contamination
+### Perivascular Macrophages (Chemokine producing)
+- Key markers: Ccl2, Ccl7, Cxcl2, Mrc1, Cd163, Pf4
+- Depleted across CAR-T designs
+- A chemokine-enriched subset of perivascular macrophages that actively recruit additional immune cells. This population may amplify myeloid infiltration and inflammation, particularly under CAR-T–induced immune pressure.
+- Literature support:
+  - Kim et al., Blood Advances. 2024: Increased CCL2/CCR2 axis promotes tumor progression by increasing M2 macrophages in MYC/BCL2 double-expressor DLBCL
+  - Nie et al., Cell Death & Disease. 2024: The role of CXCL2-mediated crosstalk between tumor cells and macrophages in Fusobacterium nucleatum-promoted oral squamous cell carcinoma progression
+
+### Antigen-Presenting Monocytes
+- Key markers: Ciita, Cd74, H2-Aa, H2-Ab1, H2-Eb1, Lsp1
+- Peripheral monocytes exhibiting a strong antigen-presentation program. These cells likely represent monocytes transitioning toward macrophage differentiation within the tumor while retaining a distinct APC-like activation state.
+
+### Inflammatory Monocytes
+- Key markers: Ccr2, S100a8, S100a9, Plac8
+- Recruited inflammatory monocytes characterized by chemokine receptor expression and interferon- or stress-associated programs. These cells represent newly infiltrating peripheral myeloid cells responding to tumor and CAR-T–associated inflammation.
+
+### cDC1 (Cross-Presenting Dendritic Cells)
+- Key markers: Xcr1, Clec9a, Wdfy4, Itgae, Btla
+- Contamination 
 
 ## Save final myeloid object
 ```{r save-final-object}
