@@ -384,7 +384,7 @@ msigdb_c7 <- msigdbr::msigdbr(species = "Mus musculus", category = "C7") %>%
   deframe()
 ```
 
-## Hallmark gene set activity by myeloid subcluster
+## Hallmark gene set activity by lymphoid subcluster
 ```{r hallmark-activity, message=FALSE, warning=FALSE}
 # AUCell on hallmark genesets
 cells_rankings <- AUCell_buildRankings(GetAssayData(lymphoid_obj, assay = "RNA", slot = "data"), nCores = 4, plotStats = TRUE)
