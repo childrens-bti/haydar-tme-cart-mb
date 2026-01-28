@@ -26,7 +26,7 @@ library(SingleR)
 
 # Define directories
 root_dir <- find_root(has_dir(".git"))
-data_dir <- file.path(root_dir, "data", "v2")
+data_dir <- file.path(root_dir, "data", "v3")
 analysis_dir <- file.path(root_dir, "analyses", "murine-cart-tumor")
 results_dir <- file.path(analysis_dir, "results")
 plot_dir <- file.path(analysis_dir, "plots")
@@ -121,7 +121,6 @@ wrap_plots(plots, ncol = 3)
 
 ## Perform adaptive QC filtering
 ```{r adaptive-qc-filtering}
-
 # Before filtering
 before_filtering <- table(combined_obj$sample)
 
@@ -204,11 +203,11 @@ integrated_obj[["RNA"]] <- JoinLayers(integrated_obj[["RNA"]])
 ## Clustering and UMAP of integrated object
 ```{r cluster-and-umap-integrated}
 # clustering
-integrated_obj <- FindNeighbors(integrated_obj, reduction = "integrated.cca", dims = 1:20)
+integrated_obj <- FindNeighbors(integrated_obj, reduction = "integrated.cca", dims = 1:30)
 integrated_obj <- FindClusters(integrated_obj, resolution = 0.5)
 
 # umap
-integrated_obj <- RunUMAP(integrated_obj, reduction = "integrated.cca", dims = 1:20)
+integrated_obj <- RunUMAP(integrated_obj, reduction = "integrated.cca", dims = 1:30)
 ```
 
 ## Visualize UMAP of integrated object
