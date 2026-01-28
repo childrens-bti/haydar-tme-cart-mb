@@ -421,6 +421,36 @@ write.csv(fgsea_res_c7_sig, file.path(results_dir, "dc_subtype_c7_gsea_results.c
 saveRDS(dc_obj, file.path(results_dir, "cart_dc_subtypes.rds"))
 ```
 
+# Summary of the DC subtypes
+AI-assisted summerization of the full marker lists for each DC subtype.
+
+### cDC1
+- Key markers: Xcr1, Clec9a, Wdfy4, Mycl, Itgae (CD103)
+- Specialized cross-presenting DCs optimized for antigen presentation to CD8⁺ T cells. Support cytotoxic T-cell priming and anti-tumor immunity.
+- Literature support:
+  - Böttcher et al., Nat. Rev. Immunol. 2018: The role of conventional type 1 dendritic cells (cDC1) in cancer immune control
+  - Heger et al., Proc. Natl. Acad. Sci. U.S.A. 2023: XCR1 expression distinguishes human conventional dendritic cell type 1 with full effector functions from their immediate precursors
+
+### cDC2
+- Key markers: Ciita, H2-Ab1, H2-Oa, Mgl2, Il1b
+- APCs with strong antigen presentation machinery and inflammatory bias. May represent cDC2-leaning cells responding to local inflammatory cues.
+- Literature support:
+  - Saito et al., Cancers (Basel) 2022: The role of type-2 conventional dendritic cells in the regulation of tumor immunity
+  - Cook et al., Nat. Commun. 2025: Mgl2⁺ cDC2s coordinate fungal allergic airway type 2, but not type 17, inflammation in mice
+
+### Migratory DC
+- Key markers: Ccr7, Cd80, Fscn1, Ccl22, Il15ra
+- Mature DCs undergoing activation and migration toward lymphoid niches. Exhibit enhanced co-stimulatory capacity and are poised to initiate adaptive immune responses.
+- Literature support:
+  - Liu et al., Cellular & Molecular Immunology. 2021: Dendritic cell migration in inflammation and immunity
+  - Hong et al., Front. Pharmacol. 2022: New insights of CCR7 signaling in dendritic cell migration
+
+### Inflammatory DC (IL12+)
+- Key markers: Il12b, Ly75 (DEC205), Fscn1, Scin
+- Highly activated DCs with pro-inflammatory cytokine output, particularly IL-12. Likely promote Th1 polarization and cytotoxic immune responses.
+- Literature support:
+  - Heufler et al., Eur. J. Immunol. 1996: Interleukin-12 is produced by dendritic cells and mediates T helper 1 development as well as interferon-gamma production by T helper 1 cells
+
 ## Session Info
 ```{r session-info}
 sessionInfo()
