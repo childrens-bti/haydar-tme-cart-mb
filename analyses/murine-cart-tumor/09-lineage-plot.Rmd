@@ -1,0 +1,105 @@
+---
+title: "09-lineage-plot"
+author: "Bicna Song"
+date: "`r Sys.Date()`"
+output: 
+  html_document:
+  toc: TRUE
+---
+
+## Setup
+```{r load-packages, message=FALSE, warning=FALSE}
+# Load libraries
+library(rprojroot)
+library(dplyr)
+library(Seurat)
+library(ggplot2)
+library(scales)   # for percent_format()
+
+# Define directories
+root_dir <- find_root(has_dir(".git"))
+data_dir <- file.path(root_dir, "data", "v4")
+analysis_dir <- file.path(root_dir, "analyses", "murine-cart-tumor")
+results_dir <- file.path(analysis_dir, "results")
+plot_dir <- file.path(analysis_dir, "plots")
+
+# Source custom theme
+source(file.path(root_dir, "figures", "theme.R"))
+```
+
+## Load data
+```{r load-seurat-object}
+obj <- readRDS(file.path(data_dir, "cart_annotated.rds"))
+```
+
+## Visualize top markers per lineage by dot plot
+```{r visualize-top-markers-dotplot, fig.height=16, fig.width=8}
+lineage_markers <- read.csv(file.path(results_dir, "cart_lineage_markers.csv"))
+
+top10_markers <- lineage_markers %>%
+  group_by(cluster) %>%
+  top_n(n = 10, wt = avg_log2FC)
+
+# separate dot plot for each cluster, save in one pdf file
+pdf(file = file.path(plot_dir, "cart_dotplot_top_lineage_markers.pdf"), width = 11, height = 6)
+
+for (lineage in unique(top10_markers$cluster)) {
+  
+  markers <- top10_markers %>%
+    filter(cluster == lineage) %>%
+    pull(gene)
+  
+  p <- DotPlot(
+    obj,
+    features = markers,
+    group.by = "cell_type",
+    assay = "RNA"
+  ) +
+    ggtitle(paste("Top Markers for", lineage)) +
+    RotatedAxis() +
+    theme_Publication() +
+    theme(panel.background = element_rect(fill = "white"),
+          plot.background  = element_rect(fill = "white"),
+          panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank())
+  
+  print(p)
+}
+
+dev.off()
+```
+
+## Lineage stacked barplot
+```{r lineage-stacked-barplot}
+meta <- as.data.frame(obj@meta.data)
+prop_df <- meta %>%
+  dplyr::count(condition, cell_type) %>%
+  group_by(condition) %>%
+  mutate(prop = n / sum(n))
+
+ggplot(prop_df, aes(x = condition, y = prop, fill = cell_type)) +
+  geom_bar(stat = "identity") +
+  theme_Publication() +
+  theme(panel.background = element_rect(fill = "white"),
+        plot.background  = element_rect(fill = "white"),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        axis.text.x = element_text(angle = 45, hjust = 1)) +
+  scale_fill_manual(
+    values = DiscretePalette(n = length(unique(prop_df$cell_type)))
+  ) +
+  labs(fill = NULL) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  ylab("Proportion") +
+  xlab("Condition") +
+  scale_y_continuous(labels = scales::percent_format())
+
+ggsave(filename = file.path(plot_dir, "cart_stacked_barplot_lineage_proportions.png"), width = 8, height = 5)
+```
+
+## Session info
+```{r session-info}
+sessionInfo()
+```
+
+
