@@ -1,0 +1,289 @@
+---
+title: "01-tlr-analysis"
+author: "Sam Chen"
+date: "`r Sys.Date()`"
+output: 
+  html_document:
+    toc: TRUE
+---
+## Setup
+
+```{r load-packages, message=FALSE, warning=FALSE}
+# Load libraries
+library(rprojroot)
+library(dplyr)
+library(Seurat)
+library(patchwork)
+library(ggplot2)
+library(tidyverse)
+library(SeuratObject)
+library(UCell)
+library(pheatmap)
+
+# Define directories
+root_dir <- find_root(has_dir(".git"))
+data_dir <- file.path(root_dir, "data", "v4")
+analysis_dir <- file.path(root_dir, "analyses", "tlr-analysis")
+results_dir <- file.path(analysis_dir, "results")
+plot_dir <- file.path(analysis_dir, "plots")
+
+# Source custom theme
+source(file.path(root_dir, "figures", "theme.R"))
+
+# set random seed
+set.seed(1234)
+```
+
+## Load data
+```{r load-seurat-object}
+obj <- readRDS(file.path(data_dir, "cart_myeloid_subtypes.rds"))
+```
+
+## Define TLR gene sets
+```{r define-tlr-genes}
+# ---- Receptors ----
+receptors <- c(
+  "Tlr7","Tlr8"
+)
+
+# ---- Core Signaling Cascade ----
+core_signaling_cascade <- c(
+  "Myd88","Irak1","Irak2","Irak4","Traf6","Traf3",
+  "Tab1","Tab2","Tab3","Map3k7","Ikbkb","Ikbkg",
+  "Chuk","Tbk1","Ikbke"
+)
+
+# ---- IRF / Interferon Transcription Factors ----
+irf_interferon_tfs <- c(
+  "Irf1","Irf3","Irf5","Irf7","Irf8","Irf9",
+  "Stat1","Stat2"
+)
+
+# ---- Type I Interferon / ISGs ----
+typeI_ifn_isgs <- c(
+  "Isg15","Isg20","Ifit1","Ifit2","Ifit3","Ifi27","Ifi35","Ifi44","Ifi44l","Oas1a",
+  "Oas2","Oas3","Oasl1","Rsad2","Bst2","Xaf1","Usp18","Ifih1","Plscr1","Samhd1"
+) # Warning: The following features are not present in the object: Ifit5, Ifi6, Mx1, Mx2, Ddx58
+
+# ---- GBP Antimicrobial / IFN-Induced ----
+gbp_antimicrobial <- c(
+  "Gbp2","Gbp3","Gbp4","Gbp5"
+) # Warning: The following features are not present in the object: Gbp1
+
+# ---- NF-kB / Inflammatory Cytokines ----
+nfkb_inflammatory_cytokines <- c(
+  "Tnf","Il1a","Il1b","Il6","Il12a","Il12b",
+  "Il18","Nfkbia","Nfkbib","Nfkbiz","Rela","Relb",
+  "Nfkb1","Nfkb2"
+)
+
+# ---- Chemokines ----
+chemokines <- c(
+  "Ccl2","Ccl3","Ccl4","Ccl5","Cxcl1","Cxcl9",
+  "Cxcl10"
+) # Warning: The following features are not present in the object: Cxcl11
+
+# ---- Antigen Presentation / Co-stimulation ----
+antigen_presentation_costimulation <- c(
+  "Cd40","Cd80","Cd86","Ciita","H2-Aa","H2-Ab1",
+  "H2-Eb1","H2-DMa","H2-DMb1"
+)
+
+# ---- Myeloid Activation / Polarization ----
+myeloid_activation_polarization <- c(
+  "Axl","Batf2","Ido1","Socs1","Socs3","Cd274"
+) # Warning: The following features are not present in the object: Lilrb4
+
+# ---- Inflammasome / Innate Amplification ----
+inflammasome_innate_amplification <- c(
+  "Nlrp3","Pycard","Casp1"
+)
+
+# ---- Antiviral / RNA Sensing Crosstalk ----
+antiviral_rna_sensing_crosstalk <- c(
+  "Ddx60","Dhx58"
+)
+
+# ---- Additional Myeloid Response / Activation Markers ----
+additional_myeloid_response_activation <- c(
+  "Fcgr1","Fcgr2b","Fcgr3","Cd69","Ccr7","Ccr2"
+)
+```
+
+## Calculate module scores
+```{r calculate-module-scores}
+# Combine all gene sets into a list
+tlr_gene_sets <- list(
+  Receptors = receptors,
+  Core_Signaling_Cascade = core_signaling_cascade,
+  IRF_Interferon_TFs = irf_interferon_tfs,
+  TypeI_IFN_ISGs = typeI_ifn_isgs,
+  GBP_Antimicrobial = gbp_antimicrobial,
+  NFkB_Inflammatory_Cytokines = nfkb_inflammatory_cytokines,
+  Chemokines = chemokines,
+  Antigen_Presentation_CoStimulation = antigen_presentation_costimulation,
+  Myeloid_Activation_Polarization = myeloid_activation_polarization,
+  Inflammasome_Innate_Amplification = inflammasome_innate_amplification,
+  Antiviral_RNA_Sensing_Crosstalk = antiviral_rna_sensing_crosstalk,
+  Additional_Myeloid_Response_Activation = additional_myeloid_response_activation
+)
+# Calculate module scores for each gene set using UCell
+obj <- AddModuleScore_UCell(
+  obj,
+  features = tlr_gene_sets,
+  name = ""
+)
+```
+
+## UMAP of all myeloid cells
+```{r umap-myeloid, fig.width=12, fig.height=8}
+DimPlot(obj, reduction = "umap", group.by = "myeloid_subtype") + 
+  plot_annotation(title = "UMAP of Myeloid Cells") &
+  theme_Publication()
+```
+
+## UMAP visualization of module scores
+```{r umap-module-scores, fig.width=15, fig.height=16}
+# Create UMAP plots for each module score
+FeaturePlot(
+  obj,
+  features = names(tlr_gene_sets),
+  ncol = 3,
+  reduction = "umap",
+  cols =  c("lightgrey", "#E65100"),
+  order = TRUE,
+  max.cutoff = "q95",
+  raster.dpi = c(500, 500),
+  pt.size = 1.5
+)  &
+  theme_Publication() &
+  plot_annotation(title = "TLR Pathway Module Scores")
+
+ggsave(
+  filename = file.path(plot_dir, "tlr_umap_module_scores.png"),
+  width = 15,
+  height = 16,
+  units = "in",
+  dpi = 300
+)
+```
+```{r umap-module-scores-split-by-condition, fig.width=15, fig.height=8}
+features <- names(tlr_gene_sets)
+pdf(file.path(plot_dir, "tlr_umap_module_scores_by_condition.pdf"), width = 15, height = 8)
+for (f in features) {
+
+  plist <- FeaturePlot(
+    obj,
+    features = f,
+    reduction = "umap",
+    split.by = "condition",
+    cols = c("lightgrey", "#E65100"),
+    order = TRUE,
+    max.cutoff = "q95",
+    raster.dpi = c(500, 500),
+    raster = TRUE, 
+    pt.size = 1.5,
+    combine = FALSE
+  )
+
+  conds <- levels(factor(obj$condition))
+  plist <- Map(function(p, lab) {
+    p + ggtitle(lab) + theme(plot.title = element_text(hjust = 0.5, size = 12))
+  }, plist, conds)
+
+  p <- wrap_plots(plist, ncol = 3) +
+    plot_annotation(title = f) &
+    theme_Publication()
+
+  print(p)
+}
+
+dev.off()
+```
+
+## Violin plots
+```{r violin-module-scores, fig.width=18, fig.height=8}
+pdf(file.path(plot_dir, "tlr_violin_module_scores_by_condition.pdf"), width = 18, height = 8)
+for (f in features){
+  p <- VlnPlot(
+    obj,
+    features = f,
+    group.by = "myeloid_subtype",
+    split.by = "condition",
+    cols = c("#7570B3", "#E7298A", "#1B9E77", "#D95F02", "#BDBDBD", "#66A61E"),
+    pt.size = 0) &
+    theme_Publication() &
+    theme(
+      axis.text.x = element_text(
+        angle = 45,
+        hjust = 1,
+        vjust = 1
+      )
+    )
+  
+  print(p)
+}
+dev.off()
+```
+
+
+## Heatmaps of module scores per myeloid subtype and conditions
+``` {r heatmap-module-scores, fig.width=10, fig.height=13}
+modules <- names(tlr_gene_sets) 
+group_cols <- c("myeloid_subtype", "condition")
+
+df <- obj@meta.data %>%
+  select(all_of(group_cols), all_of(modules)) %>%
+  group_by(across(all_of(group_cols))) %>%
+  summarise(across(all_of(modules), ~ mean(.x, na.rm = TRUE)), .groups = "drop") 
+
+mat <- df %>%
+  select(all_of(modules)) %>%
+  as.matrix()
+rownames(mat) <- paste(df$myeloid_subtype, df$condition, sep = "_")
+storage.mode(mat) <- "double"
+stopifnot(is.matrix(mat), is.numeric(mat))
+
+annotation_row <- df %>%
+  select(myeloid_subtype, condition) %>% as.data.frame()
+rownames(annotation_row) <- rownames(mat)
+
+# set colors 
+cols14 <- scales::hue_pal()(14)
+myeloid_subtype_colors <- setNames(cols14[1:length(unique(df$myeloid_subtype))], unique(df$myeloid_subtype))
+ann_colors <- list(
+  myeloid_subtype = myeloid_subtype_colors,
+  condition = c(
+    "STOP" = "#BDBDBD",
+    "CD28-41BB" = "#1B9E77",
+    "CD8-41BB" = "#D95F02",
+    "41BB-L" = "#7570B3",
+    "B7H3" = "#E7298A",
+    "tumor" = "#66A61E"
+  )
+)
+
+parts <- do.call(rbind, strsplit(rownames(mat), "_"))
+subtype <- parts[,1]
+
+mat_z <- scale(mat)
+
+pheatmap(
+  mat_z,
+  annotation_row = annotation_row,
+  annotation_colors = ann_colors,
+  gaps_row = which(subtype[-1] != subtype[-length(subtype)]),
+  breaks = seq(-2, 2, length.out = 101),
+  cluster_rows = FALSE,
+  cluster_cols = FALSE,
+  border_color = NA,
+  show_rownames = FALSE,
+  filename = file.path(plot_dir, "tlr_module_score_heatmap.pdf"),
+  width = 10,
+  height = 13
+)
+```
+
+```{r sessionInfo}
+sessionInfo()
+```
