@@ -56,6 +56,7 @@ murine-cart-tumor/
 │   ├── dc_subtypes_by_condition.png
 │   ├── dc_subtypes_umap.png
 │   ├── myeloid_dotplot_subcluster_markers.pdf
+│   ├── myeloid_dotplot_subtype_markers.pdf
 │   ├── myeloid_dotplot_treatment_markers.pdf
 │   ├── myeloid_subtype_composition_sccomp.png
 │   ├── myeloid_subtype_hallmark_auc_heatmap.pdf
