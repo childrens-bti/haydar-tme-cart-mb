@@ -14,6 +14,7 @@
 6. `06-dendritic-characterization.Rmd`: Same as myeloid, but for dendritic cells.
 7. `07-endpoint-samples-analysis.Rmd`: Focused analysis on endpoint samples to serve as validation for trends observed in samples from earlier timepoints.
 8. `08-grant-umaps.Rmd`: Generates UMAP plots for inclusion in Haydar grant figures.
+9. `09-lineage-plot.Rmd`: Generates dot plot of top lineage markers and stacked barplot of lineage proportions across conditions.
 
 ## Analysis module directory structure
 ```
@@ -34,10 +35,14 @@ murine-cart-tumor/
 ├── 07-endpoint-samples-analysis.html
 ├── 08-grant-umaps.Rmd
 ├── 08-grant-umaps.html
+├── 09-lineage-plot.Rmd
+├── 09-lineage-plot.html
 ├── README.md
 ├── plots
 │   ├── cart_dotplot_lineage_proportions.png
+│   ├── cart_dotplot_top_lineage_markers.pdf
 │   ├── cart_heatmap_top_lineage_markers.pdf
+│   ├── cart_stacked_barplot_lineage_proportions.png
 │   ├── cart_umap_clusters.png
 │   ├── cart_umap_lineage_annotations.png
 │   ├── dc_subtype_composition_sccomp.png
