@@ -1548,9 +1548,12 @@ tumor/STOP)<br />
 </li>
 <li>GSEA tables: <code>GSEA_*.csv</code></li>
 </ul>
-<p>Plots are written to <code>plot_dir</code> as PDF files:<br />
-- Volcano plots: <code>volcano_*.pdf</code><br />
-- GSEA dot plots: <code>gsea_dot_*.pdf</code></p>
+<p>Plots are written to <code>plot_dir</code> as PDF files:</p>
+<ul>
+<li>Volcano plots: <code>volcano_*.pdf</code><br />
+</li>
+<li>GSEA dot plots: <code>gsea_dot_*.pdf</code></li>
+</ul>
 <p>Note: <code>fgsea</code> returns list-columns (e.g.,
 <code>leadingEdge</code>). These are serialized (semicolon-separated)
 before writing CSV.</p>
@@ -1785,8 +1788,8 @@ run_celllevel_fgsea &lt;- function(seu,
     arrange(pval)
   
   # Save tables
-  write.csv(de, file.path(results_dir, paste0(&quot;DE_&quot;, out_prefix, &quot;.csv&quot;)), row.names = FALSE)
-  write_fgsea_csv(gsea, file.path(results_dir, paste0(&quot;GSEA_&quot;, out_prefix, &quot;_hallmark.csv&quot;)))
+  write.csv(de, file.path(results_dir, paste0(&quot;myeloid_DE_&quot;, out_prefix, &quot;.csv&quot;)), row.names = FALSE)
+  write_fgsea_csv(gsea, file.path(results_dir, paste0(&quot;myeloid_GSEA_&quot;, out_prefix, &quot;_hallmark.csv&quot;)))
   
   de_volcano &lt;- de %&gt;%
     filter(pmax(pct.1, pct.2) &gt;= 0.05)
@@ -1802,7 +1805,7 @@ run_celllevel_fgsea &lt;- function(seu,
     lfc_cutoff = volcano_lfc_cutoff,
     label_top_n = 15
   )
-  ggsave(file.path(plot_dir, paste0(&quot;volcano_&quot;, out_prefix, &quot;.pdf&quot;)),
+  ggsave(file.path(plot_dir, paste0(&quot;myeloid_volcano_&quot;, out_prefix, &quot;.pdf&quot;)),
          pvol, width = 10, height = 7)
   
   # GSEA dotplot (activated vs suppressed)
@@ -1814,7 +1817,7 @@ run_celllevel_fgsea &lt;- function(seu,
   )
   
   if (!is.null(pgsea)) {
-    ggsave(file.path(plot_dir, paste0(&quot;gsea_dot_&quot;, out_prefix, &quot;.pdf&quot;)),
+    ggsave(file.path(plot_dir, paste0(&quot;myeloid_gsea_dot_&quot;, out_prefix, &quot;.pdf&quot;)),
            pgsea, width = 8, height = 6)
   }
   
@@ -1852,8 +1855,8 @@ run_pseudobulk_fgsea &lt;- function(pb_counts, coldata, cond2_levels,
   
   # Save DE table
   write.csv(res_df,
-            file.path(results_dir, paste0(&quot;DESeq2_&quot;, out_prefix, &quot;.csv&quot;)),
-            row.names = FALSE)
+          file.path(results_dir, paste0(&quot;myeloid_DESeq2_&quot;, out_prefix, &quot;.csv&quot;)),
+          row.names = FALSE)
   
   # fgsea ranks: DESeq2 Wald stat
   ranks &lt;- setNames(res_df$stat, res_df$gene)
@@ -1869,7 +1872,7 @@ run_pseudobulk_fgsea &lt;- function(pb_counts, coldata, cond2_levels,
     arrange(pval)
   
   write_fgsea_csv(gsea,
-                  file.path(results_dir, paste0(&quot;GSEA_&quot;, out_prefix, &quot;_hallmark.csv&quot;)))
+                file.path(results_dir, paste0(&quot;myeloid_GSEA_&quot;, out_prefix, &quot;_hallmark.csv&quot;)))
   
   # Volcano plot
   pvol &lt;- plot_volcano(
@@ -1882,7 +1885,7 @@ run_pseudobulk_fgsea &lt;- function(pb_counts, coldata, cond2_levels,
     lfc_cutoff = volcano_lfc_cutoff,
     label_top_n = 15
   )
-  ggsave(file.path(plot_dir, paste0(&quot;volcano_&quot;, out_prefix, &quot;.pdf&quot;)),
+  ggsave(file.path(plot_dir, paste0(&quot;myeloid_volcano_&quot;, out_prefix, &quot;.pdf&quot;)),
          pvol, width = 10, height = 7)
   
   # GSEA dotplot: only if significant pathways exist
@@ -1895,7 +1898,7 @@ run_pseudobulk_fgsea &lt;- function(pb_counts, coldata, cond2_levels,
   )
   
   if (!is.null(pgsea)) {
-    ggsave(file.path(plot_dir, paste0(&quot;gsea_dot_&quot;, out_prefix, &quot;.pdf&quot;)),
+    ggsave(file.path(plot_dir, paste0(&quot;myeloid_gsea_dot_&quot;, out_prefix, &quot;.pdf&quot;)),
            pgsea, width = 8, height = 6)
   }
   
@@ -2090,7 +2093,7 @@ for (car in cars_to_compare) {
 ## 4:   199</code></pre>
 <pre class="r"><code>gsea_cell_each_df &lt;- bind_rows(gsea_cell_each)
 write_fgsea_csv(gsea_cell_each_df,
-                file.path(results_dir, &quot;GSEA_41BB-L_vs_eachCAR_hallmark.csv&quot;))</code></pre>
+                file.path(results_dir, &quot;myeloid_GSEA_41BB-L_vs_eachCAR_hallmark.csv&quot;))</code></pre>
 </div>
 </div>
 <div id="part-ii-pseudobulk-gsea-sample-level-counts-deseq2-fgsea" class="section level2">
@@ -2505,7 +2508,7 @@ for (car in cars_to_compare) {
 ## 10:   152</code></pre>
 <pre class="r"><code>gsea_pb_each_df &lt;- bind_rows(gsea_pb_each)
 write_fgsea_csv(gsea_pb_each_df,
-                file.path(results_dir, &quot;GSEA_pseudobulk_41BB-L_vs_eachCAR_hallmark.csv&quot;))</code></pre>
+                file.path(results_dir, &quot;myeloid_GSEA_pseudobulk_41BB-L_vs_eachCAR_hallmark.csv&quot;))</code></pre>
 <pre class="r"><code>sessionInfo()</code></pre>
 <pre><code>## R version 4.4.0 (2024-04-24)
 ## Platform: x86_64-pc-linux-gnu
