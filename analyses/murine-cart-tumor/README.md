@@ -13,8 +13,9 @@
 5. `05-lymphoid-characterization.Rmd`: Same as myeloid, but also performed a further round of cell filtering for T cells as there are still strong contamination from other lineages.
 6. `06-dendritic-characterization.Rmd`: Same as myeloid, but for dendritic cells.
 7. `07-endpoint-samples-analysis.Rmd`: Focused analysis on endpoint samples to serve as validation for trends observed in samples from earlier timepoints.
-8. `08-grant-umaps.Rmd`: Generates UMAP plots for inclusion in Haydar grant figures.
-9. `09-lineage-plot.Rmd`: Generates dot plot of top lineage markers and stacked barplot of lineage proportions across conditions.
+8. `08-grant-umaps.Rmd`: generates UMAP plots for inclusion in Haydar grant figures.
+9. `09-lineage-plot.Rmd`: generates dot plot of top lineage markers and stacked barplot of lineage proportions across conditions.
+10. `10-myeloid-differential.Rmd`: performs differential expression analysis in myeloid cells by subcluster and treatment condition, annotates marker genes with Hallmark pathways, and generates dot plots for visualization.
 
 ## Analysis module directory structure
 ```
@@ -37,6 +38,8 @@ murine-cart-tumor/
 ├── 08-grant-umaps.html
 ├── 09-lineage-plot.Rmd
 ├── 09-lineage-plot.html
+├── 10-myeloid-differential.Rmd
+├── 10-myeloid-differential.html
 ├── README.md
 ├── plots
 │   ├── cart_dotplot_lineage_proportions.png
@@ -52,6 +55,9 @@ murine-cart-tumor/
 │   ├── dc_subtype_proportions_dotplot.png
 │   ├── dc_subtypes_by_condition.png
 │   ├── dc_subtypes_umap.png
+│   ├── myeloid_dotplot_subcluster_markers.pdf
+│   ├── myeloid_dotplot_subtype_markers.pdf
+│   ├── myeloid_dotplot_treatment_markers.pdf
 │   ├── myeloid_subtype_composition_sccomp.png
 │   ├── myeloid_subtype_hallmark_auc_heatmap.pdf
 │   ├── myeloid_subtype_heatmap_top_markers.pdf
@@ -104,6 +110,7 @@ murine-cart-tumor/
 │   ├── myeloid_subtype_c7_gsea_results.csv
 │   ├── myeloid_subtype_hallmark_gsea_results.csv
 │   ├── myeloid_subtype_markers.csv
+│   ├── myeloid_treatment_markers.csv
 │   ├── nkt_subcluster_markers.csv
 │   ├── tcell_subtype_c5_gsea_results.csv
 │   ├── tcell_subtype_c7_gsea_results.csv

@@ -21,3 +21,5 @@ Rscript -e "rmarkdown::render('07-endpoint-samples.Rmd')"
 Rscript -e "rmarkdown::render('08-grant-umaps.Rmd')"
 # Generate lineage marker dot plots and lineage proportion stacked barplots
 Rscript -e "rmarkdown::render('09-lineage-plot.Rmd')"
+# Performs differential expression analysis in myeloid cells and generates pathway-annotated dot plots.
+Rscript -e "rmarkdown::render('10-myeloid-differential.Rmd')"

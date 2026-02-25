@@ -1,0 +1,395 @@
+---
+title: "10-myeloid-differential.Rmd"
+author: "Bicna Song"
+date: "`r Sys.Date()`"
+output: 
+  html_document:
+  toc: TRUE
+---
+  
+## Setup
+```{r load-packages, message=FALSE, warning=FALSE}
+# Load libraries
+library(rprojroot)
+library(dplyr)
+library(Seurat)
+library(patchwork)
+library(ggplot2)
+library(tidyverse)
+library(SeuratObject)
+library(scCustomize)
+library(AUCell)
+library(msigdbr)
+library(pheatmap)
+library(cowplot)
+
+# Define directories
+root_dir <- find_root(has_dir(".git"))
+data_dir <- file.path(root_dir, "data", "v4")
+analysis_dir <- file.path(root_dir, "analyses", "murine-cart-tumor")
+results_dir <- file.path(analysis_dir, "results")
+plot_dir <- file.path(analysis_dir, "plots")
+
+# Source custom theme
+source(file.path(root_dir, "figures", "theme.R"))
+
+# set random seed
+set.seed(1234)
+```
+
+## Load Data
+```{r load-data}
+# Load Seurat object
+myeloid_obj <- readRDS(file.path(results_dir, "cart_myeloid_subtypes.rds"))
+```
+
+## Visualize top markers per subcluster by dot plot
+```{r visualize-subcluster-markers-dotplot, fig.height=16, fig.width=8, warning=FALSE}
+myeloid_subcluster_markers <- read.csv(file.path(results_dir, "myeloid_subcluster_markers.csv"))
+
+myeloid_subcluster_markers <- myeloid_subcluster_markers %>%
+  filter(p_val_adj < 0.05)
+
+top10_markers <- myeloid_subcluster_markers %>%
+  group_by(cluster) %>%
+  top_n(n = 10, wt = avg_log2FC)
+
+hallmark <- msigdbr(species = "Mus musculus", category = "H")
+
+category_df <- top10_markers %>%
+  inner_join(
+    hallmark %>% select(gs_name, gene_symbol),
+    by = c("gene" = "gene_symbol")
+  ) %>%
+  dplyr::rename(category = gs_name)
+
+category_df_clean <- category_df %>%
+  distinct(gene, category, .keep_all = TRUE) %>%
+  group_by(gene) %>%
+  dplyr::slice(1) %>%
+  ungroup()
+
+category_df_clean <- category_df_clean %>%
+  arrange(category, gene)
+
+# remove categories that have only one gene (don't plot these)
+category_counts <- category_df_clean %>%
+  group_by(category) %>%
+  tally(name = "n_genes")
+
+categories_to_keep <- category_counts %>%
+  filter(n_genes > 1) %>%
+  pull(category)
+
+category_df_clean <- category_df_clean %>%
+  filter(category %in% categories_to_keep)
+
+gene_order <- unique(category_df_clean$gene)
+
+anyDuplicated(gene_order)
+
+# ---- safer gene positions per category ----
+gene_pos_df <- category_df_clean %>%
+  mutate(pos = match(gene, gene_order)) %>%
+  filter(!is.na(pos))
+
+category_bounds <- gene_pos_df %>%
+  group_by(category) %>%
+  summarize(
+    start = min(pos),
+    end   = max(pos),
+    mid   = (start + end) / 2,
+    .groups = "drop"
+  )
+
+# Create category labels dataframe
+category_labels <- category_bounds %>%
+  mutate(category_clean = str_remove(category, "HALLMARK_"))
+
+# ---- main dotplot (remove manual bottom margin hack) ----
+p_main <- DotPlot(
+  myeloid_obj,
+  features = gene_order,
+  cols = "RdYlBu",
+  group.by = "seurat_clusters",
+  assay = "RNA"
+) +
+  theme_Publication() +
+  theme(
+    axis.title.x = element_blank(),
+    axis.text.x  = element_text(angle = 90, vjust = 0.5, hjust = 1),
+    panel.background = element_rect(fill = "white"),
+    plot.background  = element_rect(fill = "white"),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank()
+  ) +
+  ylab("Cluster") +
+  geom_vline(
+    data = category_bounds,
+    aes(xintercept = end + 0.5),
+    linetype = "dotted",
+    color = "black",
+    size = 0.4,
+    inherit.aes = FALSE
+  )
+
+p_main <- p_main +
+  theme(
+    plot.margin = margin(t = 10, r = 10, b = 80, l = 10)  # give space for gene labels
+  )
+
+# ---- bottom strip: ONLY category labels, aligned to gene positions ----
+p_cat <- ggplot(category_labels, aes(x = mid, y = 1, label = category_clean)) +
+  geom_text(angle = 90, hjust = 0, vjust = 0.5, size = 3.5, fontface = "bold") +
+  # match DotPlot's x coordinate system (genes are 1..length(features))
+  scale_x_continuous(limits = c(1, length(gene_order)), expand = c(0, 0)) +
+  coord_cartesian(clip = "off") +
+  theme_void() +
+  theme(
+    plot.margin = margin(t = 30, r = 10, b = 10, l = 10)
+  )
+
+# ---- stack them: categories UNDER gene labels ----
+p_final <- p_main / p_cat + plot_layout(heights = c(12, 5))
+
+pdf(file = file.path(plot_dir, "myeloid_dotplot_subcluster_markers.pdf"),
+    width = 20, height = 12)
+print(p_final)
+dev.off()
+
+```
+
+## Visualize top markers per subtype by dot plot
+```{r visualize-subtype-markers-dotplot, fig.height=16, fig.width=8, warning=FALSE}
+myeloid_subtype_markers <- read.csv(file.path(results_dir, "myeloid_subtype_markers.csv"))
+
+myeloid_subtype_markers <- myeloid_subtype_markers %>%
+  filter(p_val_adj < 0.05)
+
+top10_markers <- myeloid_subtype_markers %>%
+  group_by(cluster) %>%
+  top_n(n = 10, wt = avg_log2FC)
+
+category_df <- top10_markers %>%
+  inner_join(
+    hallmark %>% select(gs_name, gene_symbol),
+    by = c("gene" = "gene_symbol")
+  ) %>%
+  dplyr::rename(category = gs_name)
+
+category_df_clean <- category_df %>%
+  distinct(gene, category, .keep_all = TRUE) %>%
+  group_by(gene) %>%
+  dplyr::slice(1) %>%
+  ungroup()
+
+category_df_clean <- category_df_clean %>%
+  arrange(category, gene)
+
+# remove categories that have only one gene (don't plot these)
+category_counts <- category_df_clean %>%
+  group_by(category) %>%
+  tally(name = "n_genes")
+
+categories_to_keep <- category_counts %>%
+  filter(n_genes > 1) %>%
+  pull(category)
+
+category_df_clean <- category_df_clean %>%
+  filter(category %in% categories_to_keep)
+
+gene_order <- unique(category_df_clean$gene)
+
+anyDuplicated(gene_order)
+
+# ---- safer gene positions per category ----
+gene_pos_df <- category_df_clean %>%
+  mutate(pos = match(gene, gene_order)) %>%
+  filter(!is.na(pos))
+
+category_bounds <- gene_pos_df %>%
+  group_by(category) %>%
+  summarize(
+    start = min(pos),
+    end   = max(pos),
+    mid   = (start + end) / 2,
+    .groups = "drop"
+  )
+
+# Create category labels dataframe
+category_labels <- category_bounds %>%
+  mutate(category_clean = str_remove(category, "HALLMARK_"))
+
+# ---- main dotplot (remove manual bottom margin hack) ----
+p_main <- DotPlot(
+  myeloid_obj,
+  features = gene_order,
+  cols = "RdYlBu",
+  group.by = "myeloid_subtype",
+  assay = "RNA"
+) +
+  theme_Publication() +
+  theme(
+    axis.title.x = element_blank(),
+    axis.text.x  = element_text(angle = 90, vjust = 0.5, hjust = 1),
+    panel.background = element_rect(fill = "white"),
+    plot.background  = element_rect(fill = "white"),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank()
+  ) +
+  ylab(NULL) +
+  geom_vline(
+    data = category_bounds,
+    aes(xintercept = end + 0.5),
+    linetype = "dotted",
+    color = "black",
+    size = 0.4,
+    inherit.aes = FALSE
+  )
+
+p_main <- p_main +
+  theme(
+    plot.margin = margin(t = 10, r = 10, b = 80, l = 10)  # give space for gene labels
+  )
+
+# ---- bottom strip: ONLY category labels, aligned to gene positions ----
+p_cat <- ggplot(category_labels, aes(x = mid, y = 1, label = category_clean)) +
+  geom_text(angle = 90, hjust = 0, vjust = 0.5, size = 3.5, fontface = "bold") +
+  # match DotPlot's x coordinate system (genes are 1..length(features))
+  scale_x_continuous(limits = c(1, length(gene_order)), expand = c(0, 0)) +
+  coord_cartesian(clip = "off") +
+  theme_void() +
+  theme(
+    plot.margin = margin(t = 30, r = 10, b = 10, l = 10)
+  )
+
+# ---- stack them: categories UNDER gene labels ----
+p_final <- p_main / p_cat + plot_layout(heights = c(12, 5))
+
+pdf(file = file.path(plot_dir, "myeloid_dotplot_subtype_markers.pdf"),
+    width = 20, height = 12)
+print(p_final)
+dev.off()
+
+```
+
+## Marker genes on treatment groups
+```{r subset-treatment-markers, message=FALSE, warning=FALSE}
+myeloid_treatment_markers <- FindAllMarkers(myeloid_obj,
+                                            assay = "RNA",
+                                            group.by = "condition",
+                                            slot = "data",
+                                            only.pos = TRUE,
+                                            min.pct = 0.5,
+                                            logfc.threshold = 0.5)
+
+myeloid_treatment_markers <- myeloid_treatment_markers %>%
+  filter(p_val_adj < 0.05)
+
+write.csv(myeloid_treatment_markers, file.path(results_dir, "myeloid_treatment_markers.csv"), row.names = FALSE)
+```
+
+## Visualize top markers per treatment by dot plot
+```{r visualize-treatment-markers-dotplot, fig.height=16, fig.width=8, warning=FALSE}
+myeloid_treatment_markers <- read.csv(file.path(results_dir, "myeloid_treatment_markers.csv"))
+
+category_df <- myeloid_treatment_markers %>%
+  inner_join(
+    hallmark %>% select(gs_name, gene_symbol),
+    by = c("gene" = "gene_symbol")
+  ) %>%
+  dplyr::rename(category = gs_name)
+
+category_df_clean <- category_df %>%
+  distinct(gene, category, .keep_all = TRUE) %>%   
+  group_by(gene) %>%
+  dplyr::slice(1) %>%
+  ungroup()
+
+category_df_clean <- category_df_clean %>%
+  arrange(category, gene)
+
+# remove categories that have only one gene (don't plot these)
+category_counts <- category_df_clean %>%
+  group_by(category) %>%
+  tally(name = "n_genes")
+
+categories_to_keep <- category_counts %>%
+  filter(n_genes > 1) %>%
+  pull(category)
+
+category_df_clean <- category_df_clean %>%
+  filter(category %in% categories_to_keep)
+
+gene_order <- unique(category_df_clean$gene)
+
+anyDuplicated(gene_order)
+
+# ---- safer gene positions per category ----
+gene_pos_df <- category_df_clean %>%
+  mutate(pos = match(gene, gene_order)) %>%
+  filter(!is.na(pos))
+
+category_bounds <- gene_pos_df %>%
+  group_by(category) %>%
+  summarize(
+    start = min(pos),
+    end   = max(pos),
+    mid   = (start + end) / 2,
+    .groups = "drop"
+  )
+
+# Create category labels dataframe
+category_labels <- category_bounds %>%
+  mutate(category_clean = str_remove(category, "HALLMARK_"))
+
+# ---- main dotplot (remove manual bottom margin hack) ----
+p_main <- DotPlot(
+  myeloid_obj,
+  features = gene_order,
+  cols = "RdYlBu",
+  group.by = "condition",
+  assay = "RNA"
+) +
+  theme_Publication() +
+  theme(
+    axis.title.x = element_blank(),
+    axis.text.x  = element_text(angle = 90, vjust = 0.5, hjust = 1),
+    panel.background = element_rect(fill = "white"),
+    plot.background  = element_rect(fill = "white"),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank()
+  ) +
+  ylab(NULL) +
+  geom_vline(
+    data = category_bounds,
+    aes(xintercept = end + 0.5),
+    linetype = "dotted",
+    color = "black",
+    size = 0.4,
+    inherit.aes = FALSE
+  )
+
+# ---- bottom strip: ONLY category labels, aligned to gene positions ----
+p_cat <- ggplot(category_labels, aes(x = mid, y = 1, label = category_clean)) +
+  geom_text(angle = 90, hjust = 0, vjust = 0.5, size = 3.5, fontface = "bold") +
+  # match DotPlot's x coordinate system (genes are 1..length(features))
+  scale_x_continuous(limits = c(1, length(gene_order)), expand = c(0, 0)) +
+  coord_cartesian(clip = "off") +
+  theme_void() +
+  theme(
+    plot.margin = margin(t = 10, r = 10, b = 10, l = 10)
+  )
+
+# ---- stack them: categories UNDER gene labels ----
+p_final <- p_main / p_cat + plot_layout(heights = c(12, 5))
+
+pdf(file = file.path(plot_dir, "myeloid_dotplot_treatment_markers.pdf"),
+    width = 18, height = 12)
+print(p_final)
+dev.off()
+```
+
+```{r}
+sessionInfo()
+```
