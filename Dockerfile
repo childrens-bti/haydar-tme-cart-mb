@@ -75,7 +75,7 @@ RUN R -e "remotes::install_github('thomasp85/patchwork')"
 RUN R -e 'remotes::install_github("chris-mcginnis-ucsf/DoubletFinder")'
 RUN R -e 'remotes::install_github("immunogenomics/presto")'
 RUN R -e 'remotes::install_github("MangiolaLaboratory/sccomp")'
-RUN R -e 'remotes::install_github("sqjin/CellChat")'
+RUN R -e 'remotes::install_github("jinworks/CellChat")'
 
 ## finish sccomp installation
 RUN R -e 'install.packages("cmdstanr", repos = c("https://stan-dev.r-universe.dev/", getOption("repos")))'
