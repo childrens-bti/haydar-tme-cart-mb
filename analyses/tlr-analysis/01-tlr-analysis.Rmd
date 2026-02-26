@@ -284,6 +284,23 @@ pheatmap(
 )
 ```
 
+```{r heatmap-with-clustering}
+pheatmap(
+  mat_z,
+  annotation_row = annotation_row,
+  annotation_colors = ann_colors,
+  gaps_row = which(subtype[-1] != subtype[-length(subtype)]),
+  breaks = seq(-2, 2, length.out = 101),
+  cluster_rows = TRUE,
+  cluster_cols = FALSE,
+  border_color = NA,
+  show_rownames = FALSE,
+  filename = file.path(plot_dir, "tlr_module_score_clustered_heatmap.pdf"),
+  width = 10,
+  height = 13
+)
+```
+
 ```{r sessionInfo}
 sessionInfo()
 ```

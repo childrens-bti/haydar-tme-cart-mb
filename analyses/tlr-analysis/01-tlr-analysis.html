@@ -11,7 +11,7 @@
 
 <meta name="author" content="Sam Chen" />
 
-<meta name="date" content="2026-02-23" />
+<meta name="date" content="2026-02-26" />
 
 <title>01-tlr-analysis</title>
 
@@ -352,7 +352,7 @@ display: none;
 
 <h1 class="title toc-ignore">01-tlr-analysis</h1>
 <h4 class="author">Sam Chen</h4>
-<h4 class="date">2026-02-23</h4>
+<h4 class="date">2026-02-26</h4>
 
 </div>
 
@@ -695,6 +695,20 @@ pheatmap(
   border_color = NA,
   show_rownames = FALSE,
   filename = file.path(plot_dir, &quot;tlr_module_score_heatmap.pdf&quot;),
+  width = 10,
+  height = 13
+)</code></pre>
+<pre class="r"><code>pheatmap(
+  mat_z,
+  annotation_row = annotation_row,
+  annotation_colors = ann_colors,
+  gaps_row = which(subtype[-1] != subtype[-length(subtype)]),
+  breaks = seq(-2, 2, length.out = 101),
+  cluster_rows = TRUE,
+  cluster_cols = FALSE,
+  border_color = NA,
+  show_rownames = FALSE,
+  filename = file.path(plot_dir, &quot;tlr_module_score_clustered_heatmap.pdf&quot;),
   width = 10,
   height = 13
 )</code></pre>
