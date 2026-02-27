@@ -143,6 +143,15 @@ write_fgsea_csv <- function(df, out_path) {
   write.csv(df2, out_path, row.names = FALSE)
 }
 
+# Format contrast name for plot titles
+format_contrast_title <- function(out_prefix) {
+  out_prefix %>%
+    str_remove("^pseudobulk_") %>%
+    str_replace_all("_vs_", " vs ") %>%
+    str_replace_all("otherCAR", "other CARs") %>%
+    str_replace_all("allCAR", "all CARs")
+}
+
 # Volcano plot
 plot_volcano <- function(df,
                          gene_col = "gene",
@@ -304,13 +313,15 @@ run_pseudobulk_fgsea <- function(pb_counts,
     gsea,
     file.path(results_dir, paste0(subtype_label, "_GSEA_", out_prefix, "_hallmark.csv"))
   )
+  
+  plot_title <- format_contrast_title(out_prefix)
 
   pvol <- plot_volcano(
     df = res_df,
     gene_col = "gene",
     lfc_col = "log2FoldChange",
     p_col = "pvalue",
-    title = out_prefix,
+    title = plot_title,
     p_cutoff = volcano_p_cutoff,
     lfc_cutoff = volcano_lfc_cutoff,
     label_top_n = 10
@@ -322,7 +333,7 @@ run_pseudobulk_fgsea <- function(pb_counts,
 
   pgsea <- plot_gsea_dot(
     gsea_df = gsea,
-    title = paste0("GSEA: ", out_prefix),
+    title = paste0("GSEA: ", plot_title),
     p_cutoff = gsea_p_cutoff,
     top_n = 10,
     use_p = "pval"

@@ -1642,6 +1642,15 @@ write_fgsea_csv &lt;- function(df, out_path) {
   write.csv(df2, out_path, row.names = FALSE)
 }
 
+# Format contrast name for plot titles
+format_contrast_title &lt;- function(out_prefix) {
+  out_prefix %&gt;%
+    str_remove(&quot;^pseudobulk_&quot;) %&gt;%
+    str_replace_all(&quot;_vs_&quot;, &quot; vs &quot;) %&gt;%
+    str_replace_all(&quot;otherCAR&quot;, &quot;other CARs&quot;) %&gt;%
+    str_replace_all(&quot;allCAR&quot;, &quot;all CARs&quot;)
+}
+
 # Volcano plot
 plot_volcano &lt;- function(df,
                          gene_col = &quot;gene&quot;,
@@ -1803,13 +1812,15 @@ run_pseudobulk_fgsea &lt;- function(pb_counts,
     gsea,
     file.path(results_dir, paste0(subtype_label, &quot;_GSEA_&quot;, out_prefix, &quot;_hallmark.csv&quot;))
   )
+  
+  plot_title &lt;- format_contrast_title(out_prefix)
 
   pvol &lt;- plot_volcano(
     df = res_df,
     gene_col = &quot;gene&quot;,
     lfc_col = &quot;log2FoldChange&quot;,
     p_col = &quot;pvalue&quot;,
-    title = out_prefix,
+    title = plot_title,
     p_cutoff = volcano_p_cutoff,
     lfc_cutoff = volcano_lfc_cutoff,
     label_top_n = 10
@@ -1821,7 +1832,7 @@ run_pseudobulk_fgsea &lt;- function(pb_counts,
 
   pgsea &lt;- plot_gsea_dot(
     gsea_df = gsea,
-    title = paste0(&quot;GSEA: &quot;, out_prefix),
+    title = paste0(&quot;GSEA: &quot;, plot_title),
     p_cutoff = gsea_p_cutoff,
     top_n = 10,
     use_p = &quot;pval&quot;
