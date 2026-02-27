@@ -24,4 +24,4 @@ Rscript -e "rmarkdown::render('09-lineage-plot.Rmd')"
 # Perform differential expression analysis in myeloid cells and generates pathway-annotated dot plots
 Rscript -e "rmarkdown::render('10-myeloid-differential.Rmd')"
 # Run Hallmark GSEA for the specified subtype (defaults to myeloid) and generate volcano/GSEA plots
-Rscript -e "rmarkdown::render('11-subtype-gsea.Rmd')"
+Rscript -e "rmarkdown::render('11-subtype-pseudobulk-gsea.Rmd')"
