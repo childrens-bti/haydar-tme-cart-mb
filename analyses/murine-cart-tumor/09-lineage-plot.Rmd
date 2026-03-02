@@ -32,40 +32,43 @@ source(file.path(root_dir, "figures", "theme.R"))
 obj <- readRDS(file.path(data_dir, "cart_annotated.rds"))
 ```
 
-## Visualize top markers per lineage by dot plot
-```{r visualize-top-markers-dotplot, fig.height=16, fig.width=8}
+## Visualize top 3 markers per lineage in a single dot plot
+```{r visualize-top-markers-dotplot}
 lineage_markers <- read.csv(file.path(results_dir, "cart_lineage_markers.csv"))
 
-top10_markers <- lineage_markers %>%
+# Select top 3 markers per lineage based on avg_log2FC
+top3_markers <- lineage_markers %>%
   group_by(cluster) %>%
-  top_n(n = 10, wt = avg_log2FC)
+  slice_max(order_by = avg_log2FC, n = 3)
 
-# separate dot plot for each cluster, save in one pdf file
-pdf(file = file.path(plot_dir, "cart_dotplot_top_lineage_markers.pdf"), width = 11, height = 6)
+# Preserve ordering by lineage
+top3_markers <- top3_markers %>%
+  arrange(cluster, desc(avg_log2FC))
 
-for (lineage in unique(top10_markers$cluster)) {
-  
-  markers <- top10_markers %>%
-    filter(cluster == lineage) %>%
-    pull(gene)
-  
-  p <- DotPlot(
-    obj,
-    features = markers,
-    group.by = "cell_type",
-    assay = "RNA"
-  ) +
-    ggtitle(paste("Top Markers for", lineage)) +
-    RotatedAxis() +
-    theme_Publication() +
-    theme(panel.background = element_rect(fill = "white"),
-          plot.background  = element_rect(fill = "white"),
-          panel.grid.major = element_blank(),
-          panel.grid.minor = element_blank())
-  
-  print(p)
-}
+features_to_plot <- top3_markers$gene
 
+pdf(file = file.path(plot_dir, "cart_dotplot_top_lineage_markers.pdf"),
+    width = 14, height = 6)
+
+p <- DotPlot(
+  obj,
+  features = features_to_plot,
+  cols = "RdYlBu",
+  group.by = "cell_type",
+  assay = "RNA"
+) +
+  ggtitle("Top 3 Markers per Lineage") +
+  RotatedAxis() +
+  theme_Publication() +
+  theme(axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+        axis.text.x  = element_text(angle = 90, vjust = 0.5, hjust = 1),
+        panel.background = element_rect(fill = "white"),
+        plot.background  = element_rect(fill = "white"),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank())
+
+print(p)
 dev.off()
 ```
 
