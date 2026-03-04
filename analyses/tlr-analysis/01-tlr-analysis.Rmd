@@ -1,6 +1,6 @@
 ---
 title: "01-tlr-analysis"
-author: "Sam Chen"
+author: "Sam Chen, Bicna Song"
 date: "`r Sys.Date()`"
 output: 
   html_document:
@@ -19,6 +19,7 @@ library(tidyverse)
 library(SeuratObject)
 library(UCell)
 library(pheatmap)
+library(patchwork)
 
 # Define directories
 root_dir <- find_root(has_dir(".git"))
@@ -138,38 +139,52 @@ obj <- AddModuleScore_UCell(
 ## UMAP of all myeloid cells
 ```{r umap-myeloid, fig.width=12, fig.height=8}
 DimPlot(obj, reduction = "umap", group.by = "myeloid_subtype") + 
-  plot_annotation(title = "UMAP of Myeloid Cells") &
-  theme_Publication()
+  plot_annotation(title = "UMAP of Myeloid Cells")
 ```
 
 ## UMAP visualization of module scores
 ```{r umap-module-scores, fig.width=15, fig.height=16}
-# Create UMAP plots for each module score
-FeaturePlot(
+# Clean feature names for display
+clean_features <- gsub("_", " ", names(tlr_gene_sets))
+
+# Create UMAP plots
+p <- FeaturePlot(
   obj,
   features = names(tlr_gene_sets),
   ncol = 3,
   reduction = "umap",
-  cols =  c("lightgrey", "#E65100"),
+  cols = c("lightgrey", "#E65100"),
   order = TRUE,
   max.cutoff = "q95",
-  raster.dpi = c(500, 500),
   pt.size = 1.5
-)  &
-  theme_Publication() &
-  plot_annotation(title = "TLR Pathway Module Scores")
+) &
+  theme(
+    plot.title = element_text(size = 14, face = "bold", hjust = 0.5)
+  )
+
+# Replace titles manually
+for (i in seq_along(p)) {
+  p[[i]] <- p[[i]] + ggtitle(clean_features[i])
+}
+
+print(p)
 
 ggsave(
-  filename = file.path(plot_dir, "tlr_umap_module_scores.png"),
+  filename = file.path(plot_dir, "tlr_umap_module_scores.pdf"),
+  plot = p,
   width = 15,
   height = 16,
-  units = "in",
-  dpi = 300
+  units = "in"
 )
 ```
-```{r umap-module-scores-split-by-condition, fig.width=15, fig.height=8}
+
+```{r umap-module-scores-split-by-condition}
 features <- names(tlr_gene_sets)
-pdf(file.path(plot_dir, "tlr_umap_module_scores_by_condition.pdf"), width = 15, height = 8)
+conditions <- levels(factor(obj$condition))
+
+pdf(file.path(plot_dir, "tlr_umap_module_scores_by_condition.pdf"),
+    width = 15, height = 8)
+
 for (f in features) {
 
   plist <- FeaturePlot(
@@ -180,20 +195,39 @@ for (f in features) {
     cols = c("lightgrey", "#E65100"),
     order = TRUE,
     max.cutoff = "q95",
-    raster.dpi = c(500, 500),
-    raster = TRUE, 
-    pt.size = 1.5,
+    raster = TRUE,
+    pt.size = 1.2,
     combine = FALSE
   )
 
-  conds <- levels(factor(obj$condition))
-  plist <- Map(function(p, lab) {
-    p + ggtitle(lab) + theme(plot.title = element_text(hjust = 0.5, size = 12))
-  }, plist, conds)
+  # Replace panel titles with condition names
+  plist <- Map(function(p, cond) {
+    p +
+      ggtitle(cond) +
+      theme_classic() +
+      theme(
+        plot.title = element_text(
+          hjust = 0.5,
+          size = 14,
+          face = "bold"
+        ),
+        axis.title = element_text(size = 12),
+        axis.text = element_text(size = 10),
+        axis.line.y.right = element_blank(),
+        axis.title.y.right = element_blank(),
+        axis.text.y.right  = element_blank(),
+        axis.ticks.y.right = element_blank()
+      )
+  }, plist, conditions)
 
   p <- wrap_plots(plist, ncol = 3) +
-    plot_annotation(title = f) &
-    theme_Publication()
+    plot_annotation(
+      title = gsub("_", " ", f),
+      theme = theme(
+        plot.title = element_text(size = 20, face = "bold", hjust = 0.5),
+        plot.margin = margin(10, 20, 10, 20)
+      )
+    )
 
   print(p)
 }
@@ -202,57 +236,80 @@ dev.off()
 ```
 
 ## Violin plots
-```{r violin-module-scores, fig.width=18, fig.height=8}
-pdf(file.path(plot_dir, "tlr_violin_module_scores_by_condition.pdf"), width = 18, height = 8)
+```{r violin-module-scores}
+pdf(file.path(plot_dir, "tlr_violin_module_scores_by_condition.pdf"),
+    width = 18, height = 8)
+
 for (f in features){
+
+  clean_title <- gsub("_", " ", f)
+
   p <- VlnPlot(
     obj,
     features = f,
     group.by = "myeloid_subtype",
     split.by = "condition",
     cols = c("#7570B3", "#E7298A", "#1B9E77", "#D95F02", "#BDBDBD", "#66A61E"),
-    pt.size = 0) &
-    theme_Publication() &
+    pt.size = 0
+  ) &
+    ggtitle(clean_title) &
     theme(
       axis.text.x = element_text(
         angle = 45,
         hjust = 1,
         vjust = 1
-      )
+      ),
+      axis.title.x = element_blank(),
+      plot.title = element_text(size = 20, face = "bold", hjust = 0.5),
+      plot.margin = margin(10, 20, 10, 20)
     )
-  
+
   print(p)
 }
+
 dev.off()
 ```
 
-
-## Heatmaps of module scores per myeloid subtype and conditions
+## Heatmaps of module scores per conditions
 ``` {r heatmap-module-scores, fig.width=10, fig.height=13}
 modules <- names(tlr_gene_sets) 
-group_cols <- c("myeloid_subtype", "condition")
 
+# Aggregate only by condition
 df <- obj@meta.data %>%
-  select(all_of(group_cols), all_of(modules)) %>%
-  group_by(across(all_of(group_cols))) %>%
-  summarise(across(all_of(modules), ~ mean(.x, na.rm = TRUE)), .groups = "drop") 
+  select(condition, all_of(modules)) %>%
+  group_by(condition) %>%
+  summarise(across(all_of(modules), ~ mean(.x, na.rm = TRUE)), .groups = "drop")
 
+# Create matrix
 mat <- df %>%
   select(all_of(modules)) %>%
   as.matrix()
-rownames(mat) <- paste(df$myeloid_subtype, df$condition, sep = "_")
+
+rownames(mat) <- df$condition
 storage.mode(mat) <- "double"
-stopifnot(is.matrix(mat), is.numeric(mat))
 
-annotation_row <- df %>%
-  select(myeloid_subtype, condition) %>% as.data.frame()
-rownames(annotation_row) <- rownames(mat)
+# Z-score across conditions
+mat_z <- scale(mat)
 
-# set colors 
-cols14 <- scales::hue_pal()(14)
-myeloid_subtype_colors <- setNames(cols14[1:length(unique(df$myeloid_subtype))], unique(df$myeloid_subtype))
+# Transpose so:
+# Rows = modules
+# Columns = conditions
+mat_t <- t(mat_z)
+
+# Clean module names
+rownames(mat_t) <- gsub("_", " ", rownames(mat_t))
+
+# Keep biologically meaningful condition order
+condition_order <- c("STOP", "tumor", "41BB-L", "B7H3", "CD28-41BB", "CD8-41BB")
+mat_t <- mat_t[, condition_order]
+
+# Annotation for columns
+annotation_col <- data.frame(
+  condition = colnames(mat_t)
+)
+rownames(annotation_col) <- colnames(mat_t)
+
 ann_colors <- list(
-  myeloid_subtype = myeloid_subtype_colors,
   condition = c(
     "STOP" = "#BDBDBD",
     "CD28-41BB" = "#1B9E77",
@@ -263,44 +320,29 @@ ann_colors <- list(
   )
 )
 
-parts <- do.call(rbind, strsplit(rownames(mat), "_"))
-subtype <- parts[,1]
-
-mat_z <- scale(mat)
-
 pheatmap(
-  mat_z,
-  annotation_row = annotation_row,
+  mat_t,
+  annotation_col = annotation_col,
   annotation_colors = ann_colors,
-  gaps_row = which(subtype[-1] != subtype[-length(subtype)]),
-  breaks = seq(-2, 2, length.out = 101),
-  cluster_rows = FALSE,
-  cluster_cols = FALSE,
-  border_color = NA,
-  show_rownames = FALSE,
-  filename = file.path(plot_dir, "tlr_module_score_heatmap.pdf"),
-  width = 10,
-  height = 13
-)
-```
-
-```{r heatmap-with-clustering}
-pheatmap(
-  mat_z,
-  annotation_row = annotation_row,
-  annotation_colors = ann_colors,
-  gaps_row = which(subtype[-1] != subtype[-length(subtype)]),
-  breaks = seq(-2, 2, length.out = 101),
   cluster_rows = TRUE,
-  cluster_cols = FALSE,
+  cluster_cols = TRUE,
+  breaks = seq(-2, 2, length.out = 101),
   border_color = NA,
-  show_rownames = FALSE,
+  fontsize_row = 11,
+  fontsize_col = 12,
+  angle_col = 45,
+  show_rownames = T,
+  show_colnames = F,
+  legend = TRUE,
+  legend_breaks = c(-2, -1, 0, 1, 2),
+  legend_labels = c("-2", "-1", "0", "1", "2"),
   filename = file.path(plot_dir, "tlr_module_score_clustered_heatmap.pdf"),
-  width = 10,
-  height = 13
+  width = 9,
+  height = 7
 )
 ```
 
 ```{r sessionInfo}
 sessionInfo()
 ```
+
