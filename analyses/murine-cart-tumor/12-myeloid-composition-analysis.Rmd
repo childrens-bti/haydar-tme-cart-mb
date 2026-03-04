@@ -72,12 +72,67 @@ sccomp_result =
     verbose = FALSE
   ) |> 
   sccomp_test()
+
+# Save sccomp result
+write.table(
+  sccomp_result,
+  file = file.path(results_dir, "sccomp_41BBL_baseline_results.tsv"),
+  sep = "\t",
+  quote = FALSE,
+  row.names = FALSE
+)
 ```
 
 ```{r visualize-sccomp-results, fig.height=6, fig.width=12}
 sccomp_result |> 
   plot_1D_intervals()
-ggsave(file.path(plot_dir, "myeloid_subtype_composition_sccomp_41BBL_baseline.png"), width = 12, height = 6)
+ggsave(file.path(plot_dir, "myeloid_subtype_composition_sccomp_41BBL_baseline.pdf"), width = 14, height = 6)
+```
+
+## Subtypes Not Significantly Altered vs 41BB-L (All Conditions)
+
+```{r}
+## Identify myeloid subtypes that are NOT significantly different 
+## from 41BB-L across ALL treatment conditions
+not_sig_subtypes <- sccomp_result %>%
+  dplyr::filter(parameter != "(Intercept)") %>%
+  dplyr::group_by(cell_group) %>%
+  dplyr::summarise(any_sig = any(c_FDR < 0.05)) %>%
+  dplyr::filter(!any_sig) %>%
+  dplyr::pull(cell_group)
+
+print(not_sig_subtypes)
+
+cat("\nSummary:\n")
+cat(length(not_sig_subtypes), 
+    "myeloid subtype(s) show no significant compositional change relative to 41BB-L across all conditions.\n")
+```
+
+## Subtypes Not Significantly Altered vs 41BB-L (CAR Constructs Only)
+
+```{r}
+## Restrict analysis to CAR constructs only (exclude STOP and tumor)
+res_cars_only <- sccomp_result %>%
+  dplyr::filter(
+    parameter %in% c(
+      "conditionB7H3",
+      "conditionCD28-41BB",
+      "conditionCD8-41BB"
+    )
+  )
+
+## Identify subtypes not significantly different across CAR constructs
+not_sig_subtypes_cars <- res_cars_only %>%
+  dplyr::group_by(cell_group) %>%
+  dplyr::summarise(any_sig = any(c_FDR < 0.05)) %>%
+  dplyr::filter(!any_sig) %>%
+  dplyr::pull(cell_group)
+
+print(not_sig_subtypes_cars)
+
+cat("\nCAR-only Summary:\n")
+cat(length(not_sig_subtypes_cars),
+    "myeloid subtype(s) show no significant compositional change relative to 41BB-L among CAR constructs only.\n")
 ```
 
 ## Myeloid stacked barplot
@@ -86,6 +141,15 @@ prop_df <- myeloid_obj@meta.data %>%
   count(condition, myeloid_subtype) %>%
   group_by(condition) %>%
   mutate(prop = n / sum(n))
+
+# Save proportions
+write.table(
+  prop_df,
+  file = file.path(results_dir, "myeloid_subtype_proportions.tsv"),
+  sep = "\t",
+  quote = FALSE,
+  row.names = FALSE
+)
 
 ggplot(prop_df, aes(x = condition, y = prop, fill = myeloid_subtype)) +
   geom_bar(stat = "identity") +

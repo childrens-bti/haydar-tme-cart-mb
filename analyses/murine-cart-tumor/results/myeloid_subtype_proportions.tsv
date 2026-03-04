@@ -1,0 +1,85 @@
+condition	myeloid_subtype	n	prop
+41BB-L	Early activated microglia	2233	0.130447482182498
+41BB-L	TAM-like phagocytic microglia	1643	0.0959808388830471
+41BB-L	Stress-response microglia	3876	0.226428321065545
+41BB-L	Inflammatory activated microglia	1736	0.101413716555672
+41BB-L	Angiogenic TAMs	1787	0.104393036569693
+41BB-L	Antigen-presenting TAMs	1478	0.086341862367099
+41BB-L	Homeostatic microglia	1470	0.0858745180511742
+41BB-L	Perivascular macrophages	428	0.0250029209019745
+41BB-L	Lipid-associated TAMs	897	0.0524009814230634
+41BB-L	Perivascular macrophages (chemokine-producing)	424	0.0247692487440122
+41BB-L	Antigen-presenting monocytes	370	0.02161467461152
+41BB-L	Inflammatory TAMs	302	0.0176422479261596
+41BB-L	cDC1	282	0.0164738871363477
+41BB-L	Inflammatory monocytes	192	0.0112162635821942
+B7H3	Early activated microglia	1957	0.094113686640377
+B7H3	TAM-like phagocytic microglia	2750	0.13224968740983
+B7H3	Stress-response microglia	3256	0.156583629893238
+B7H3	Inflammatory activated microglia	1545	0.0743002789266135
+B7H3	Angiogenic TAMs	3026	0.145522746946234
+B7H3	Antigen-presenting TAMs	2841	0.13662594979321
+B7H3	Homeostatic microglia	1535	0.0738193709723959
+B7H3	Perivascular macrophages	392	0.0188515918053285
+B7H3	Lipid-associated TAMs	1185	0.0569875925747812
+B7H3	Perivascular macrophages (chemokine-producing)	335	0.0161104164662884
+B7H3	Antigen-presenting monocytes	718	0.034529191112821
+B7H3	Inflammatory TAMs	527	0.0253438491872656
+B7H3	cDC1	541	0.0260171203231701
+B7H3	Inflammatory monocytes	186	0.00894488794844667
+CD28-41BB	Early activated microglia	3002	0.136009423704241
+CD28-41BB	TAM-like phagocytic microglia	3074	0.139271475172164
+CD28-41BB	Stress-response microglia	5253	0.237993838347227
+CD28-41BB	Inflammatory activated microglia	2418	0.109550561797753
+CD28-41BB	Angiogenic TAMs	1770	0.0801920985864444
+CD28-41BB	Antigen-presenting TAMs	1544	0.0699528814787967
+CD28-41BB	Homeostatic microglia	1705	0.0772471910112359
+CD28-41BB	Perivascular macrophages	1140	0.0516491482421167
+CD28-41BB	Lipid-associated TAMs	730	0.0330735773831098
+CD28-41BB	Perivascular macrophages (chemokine-producing)	579	0.0262323305545487
+CD28-41BB	Antigen-presenting monocytes	339	0.0153588256614715
+CD28-41BB	Inflammatory TAMs	113	0.00511960855382385
+CD28-41BB	cDC1	183	0.00829104748097137
+CD28-41BB	Inflammatory monocytes	222	0.0100579920260964
+CD8-41BB	Early activated microglia	2307	0.133894370284388
+CD8-41BB	TAM-like phagocytic microglia	1613	0.0936157864190366
+CD8-41BB	Stress-response microglia	3693	0.214335461404527
+CD8-41BB	Inflammatory activated microglia	2088	0.121183981427742
+CD8-41BB	Angiogenic TAMs	1798	0.104352872896111
+CD8-41BB	Antigen-presenting TAMs	1277	0.0741149158444573
+CD8-41BB	Homeostatic microglia	525	0.03047011027278
+CD8-41BB	Perivascular macrophages	630	0.036564132327336
+CD8-41BB	Lipid-associated TAMs	314	0.0182240278583865
+CD8-41BB	Perivascular macrophages (chemokine-producing)	517	0.0300058038305281
+CD8-41BB	Antigen-presenting monocytes	537	0.0311665699361579
+CD8-41BB	Inflammatory TAMs	1215	0.0705165409170052
+CD8-41BB	cDC1	366	0.0212420197330238
+CD8-41BB	Inflammatory monocytes	350	0.02031340684852
+STOP	Early activated microglia	2035	0.134866459009875
+STOP	TAM-like phagocytic microglia	1875	0.124262707932931
+STOP	Stress-response microglia	4271	0.28305388031016
+STOP	Inflammatory activated microglia	1364	0.0903969779309431
+STOP	Angiogenic TAMs	1378	0.0913248061501756
+STOP	Antigen-presenting TAMs	682	0.0451984889654715
+STOP	Homeostatic microglia	1504	0.0996752601232686
+STOP	Perivascular macrophages	455	0.030154417125058
+STOP	Lipid-associated TAMs	246	0.0163032672808006
+STOP	Perivascular macrophages (chemokine-producing)	434	0.0287626747962092
+STOP	Antigen-presenting monocytes	351	0.0232619789250447
+STOP	Inflammatory TAMs	139	0.00921200874809464
+STOP	cDC1	171	0.0113327589634833
+STOP	Inflammatory monocytes	184	0.012194313738485
+tumor	Early activated microglia	1851	0.160565579458709
+tumor	TAM-like phagocytic microglia	1357	0.117713393476752
+tumor	Stress-response microglia	3252	0.282095766828591
+tumor	Inflammatory activated microglia	1004	0.0870922970159611
+tumor	Angiogenic TAMs	396	0.0343511450381679
+tumor	Antigen-presenting TAMs	568	0.0492713393476752
+tumor	Homeostatic microglia	1327	0.115111034004164
+tumor	Perivascular macrophages	724	0.0628036086051353
+tumor	Lipid-associated TAMs	153	0.0132720333102012
+tumor	Perivascular macrophages (chemokine-producing)	569	0.0493580846634282
+tumor	Antigen-presenting monocytes	160	0.0138792505204719
+tumor	Inflammatory TAMs	3	0.000260235947258848
+tumor	cDC1	72	0.00624566273421235
+tumor	Inflammatory monocytes	92	0.00798056904927134
