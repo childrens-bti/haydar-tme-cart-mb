@@ -1,0 +1,177 @@
+---
+title: "12-myeloid-composition-analysis"
+author: "Bicna Song"
+date: "`r Sys.Date()`"
+output: 
+  html_document:
+    toc: TRUE
+---
+
+## Setup
+```{r load-packages, message=FALSE, warning=FALSE}
+# Load libraries
+library(rprojroot)
+library(dplyr)
+library(Seurat)
+library(patchwork)
+library(ggplot2)
+library(tidyverse)
+library(SeuratObject)
+library(scCustomize)
+library(AUCell)
+library(msigdbr)
+library(sccomp)
+library(pheatmap)
+library(fgsea)
+
+# Define directories
+root_dir <- find_root(has_dir(".git"))
+data_dir <- file.path(root_dir, "data", "v4")
+analysis_dir <- file.path(root_dir, "analyses", "murine-cart-tumor")
+results_dir <- file.path(analysis_dir, "results")
+plot_dir <- file.path(analysis_dir, "plots")
+
+# Source custom theme
+source(file.path(root_dir, "figures", "theme.R"))
+
+# set random seed
+set.seed(1234)
+```
+
+## Load Data
+```{r load-data}
+# Load Seurat object
+myeloid_obj <- readRDS(file.path(data_dir, "cart_myeloid_subtypes.rds"))
+```
+
+## Composition analysis using sccomp
+## 41BB-L is set as the reference condition
+```{r composition-analysis-sccomp, message=FALSE, warning=FALSE}
+# 41BB-L (first level) is used as the baseline reference
+sccomp_input <- myeloid_obj@meta.data |>
+  tibble::rownames_to_column("cell") |>
+  dplyr::select(
+    cell,
+    sample = sample,
+    cell_group = myeloid_subtype,
+    condition
+  ) %>% mutate(condition = factor(condition,
+               levels = c('41BB-L', 'B7H3', 'CD28-41BB', 'CD8-41BB', 'STOP', 'tumor'))) %>%  
+  as_tibble()
+
+cat("Reference condition for sccomp:", levels(sccomp_input$condition)[1], "\n")
+
+sccomp_result = 
+  sccomp_input |>
+  sccomp_estimate( 
+    formula_composition = ~ condition, 
+    .sample = sample, 
+    .cell_group = cell_group,
+    bimodal_mean_variability_association  = TRUE,
+    cores = 4,
+    verbose = FALSE
+  ) |> 
+  sccomp_test()
+
+# Save sccomp result
+write.table(
+  sccomp_result,
+  file = file.path(results_dir, "sccomp_41BBL_baseline_results.tsv"),
+  sep = "\t",
+  quote = FALSE,
+  row.names = FALSE
+)
+```
+
+```{r visualize-sccomp-results, fig.height=6, fig.width=12}
+sccomp_result |> 
+  plot_1D_intervals()
+ggsave(file.path(plot_dir, "myeloid_subtype_composition_sccomp_41BBL_baseline.pdf"), width = 14, height = 6)
+```
+
+## Subtypes Not Significantly Altered vs 41BB-L (All Conditions)
+
+```{r}
+## Identify myeloid subtypes that are NOT significantly different 
+## from 41BB-L across ALL treatment conditions
+not_sig_subtypes <- sccomp_result %>%
+  dplyr::filter(parameter != "(Intercept)") %>%
+  dplyr::group_by(cell_group) %>%
+  dplyr::summarise(any_sig = any(c_FDR < 0.05)) %>%
+  dplyr::filter(!any_sig) %>%
+  dplyr::pull(cell_group)
+
+print(not_sig_subtypes)
+
+cat("\nSummary:\n")
+cat(length(not_sig_subtypes), 
+    "myeloid subtype(s) show no significant compositional change relative to 41BB-L across all conditions.\n")
+```
+
+## Subtypes Not Significantly Altered vs 41BB-L (CAR Constructs Only)
+
+```{r}
+## Restrict analysis to CAR constructs only (exclude STOP and tumor)
+res_cars_only <- sccomp_result %>%
+  dplyr::filter(
+    parameter %in% c(
+      "conditionB7H3",
+      "conditionCD28-41BB",
+      "conditionCD8-41BB"
+    )
+  )
+
+## Identify subtypes not significantly different across CAR constructs
+not_sig_subtypes_cars <- res_cars_only %>%
+  dplyr::group_by(cell_group) %>%
+  dplyr::summarise(any_sig = any(c_FDR < 0.05)) %>%
+  dplyr::filter(!any_sig) %>%
+  dplyr::pull(cell_group)
+
+print(not_sig_subtypes_cars)
+
+cat("\nCAR-only Summary:\n")
+cat(length(not_sig_subtypes_cars),
+    "myeloid subtype(s) show no significant compositional change relative to 41BB-L among CAR constructs only.\n")
+```
+
+## Myeloid stacked barplot
+```{r myeloid-stacked-barplot}
+prop_df <- myeloid_obj@meta.data %>%
+  count(condition, myeloid_subtype) %>%
+  group_by(condition) %>%
+  mutate(prop = n / sum(n))
+
+# Save proportions
+write.table(
+  prop_df,
+  file = file.path(results_dir, "myeloid_subtype_proportions.tsv"),
+  sep = "\t",
+  quote = FALSE,
+  row.names = FALSE
+)
+
+ggplot(prop_df, aes(x = condition, y = prop, fill = myeloid_subtype)) +
+  geom_bar(stat = "identity") +
+  theme_Publication() +
+  theme(panel.background = element_rect(fill = "white"),
+        plot.background  = element_rect(fill = "white"),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        axis.text.x = element_text(angle = 45, hjust = 1)) +
+  scale_fill_manual(
+    values = DiscretePalette(n = length(unique(prop_df$myeloid_subtype)))
+  ) +
+  labs(fill = NULL) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  ylab("Proportion") +
+  xlab("Condition") +
+  scale_y_continuous(labels = scales::percent_format())
+
+ggsave(filename = file.path(plot_dir, "myeloid_subtype_proportions_stacked_barplot.png"), width = 8, height = 5)
+```
+
+```{r session-info}
+sessionInfo()
+```
+  
