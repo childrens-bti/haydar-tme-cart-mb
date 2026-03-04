@@ -1,0 +1,507 @@
+---
+title: "11-subtype-pseudobulk-gsea.Rmd"
+author: "Bicna Song"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: TRUE
+    toc_float: TRUE
+params:
+  input_rds: "cart_myeloid_subtypes.rds"
+  subtype_label: "myeloid"
+  condition_levels: !r c("tumor", "STOP", "B7H3", "41BB-L", "CD8-41BB", "CD28-41BB")
+  car_levels: !r c("41BB-L", "B7H3", "CD28-41BB", "CD8-41BB")
+  minSize: 15
+  maxSize: 500
+  volcano_lfc_cutoff: 1
+  volcano_p_cutoff: 0.05
+  gsea_p_cutoff: 0.05
+---
+
+## Overview
+
+This notebook performs **gene set enrichment analysis (GSEA)** for a user-specified cell subtype across treatment conditions using **pseudobulk differential expression** and MSigDB Hallmark gene sets.
+
+The notebook is designed to be **subtype-agnostic**:  
+
+- the input Seurat object is provided through `params$input_rds`  
+- the subtype name used in output files is provided through `params$subtype_label`  
+
+### Workflow
+
+**Pseudobulk DE → fgsea (DESeq2)**  
+
+- Aggregates raw counts per **sample** to create a pseudobulk count matrix (genes × samples).  
+- Runs DESeq2 to obtain a ranked statistic (Wald `stat`) for each contrast.  
+- Runs `fgsea()` on the DESeq2 ranking.  
+- This approach is more sample-aware because it compares **samples**, not individual cells.
+
+### Contrasts computed
+
+For the selected subtype, the script runs:
+
+1. **Each condition vs rest**  
+   - each condition compared against all other conditions
+
+2. **Each condition vs other CARs**  
+   - if the condition is a CAR condition, it is compared against the other CAR conditions  
+   - if the condition is a non-CAR condition (e.g. tumor, STOP), it is compared against all CAR conditions
+
+### Outputs
+
+Results are written to `results_dir` as CSV files:  
+
+- `<subtype>_DESeq2_*.csv` (pseudobulk DESeq2 DE)  
+- `<subtype>_GSEA_*.csv` (fgsea results)  
+
+Plots are written to `plot_dir` as PDF files:
+
+- `<subtype>_volcano_*.pdf`  
+- `<subtype>_gsea_dot_*.pdf`  
+
+Note: `fgsea` returns list-columns (e.g., `leadingEdge`). These are serialized (semicolon-separated) before writing CSV files.  
+
+## Setup
+
+```{r load-packages, message=FALSE, warning=FALSE}
+# Load libraries
+library(rprojroot)
+library(dplyr)
+library(tibble)
+library(Seurat)
+library(SeuratObject)
+library(ggplot2)
+library(msigdbr)
+library(fgsea)
+library(Matrix)
+library(DESeq2)
+library(stringr)
+library(EnhancedVolcano)
+library(purrr)
+
+# Define directories
+root_dir <- find_root(has_dir(".git"))
+data_dir <- file.path(root_dir, "data", "v4")
+analysis_dir <- file.path(root_dir, "analyses", "murine-cart-tumor")
+results_dir <- file.path(analysis_dir, "results")
+plot_dir <- file.path(analysis_dir, "plots")
+
+# Source custom theme
+source(file.path(root_dir, "figures", "theme.R"))
+
+# set random seed
+set.seed(1234)
+```
+
+## Load data and define identities
+
+```{r load-data}
+subtype_label <- params$subtype_label
+
+obj <- readRDS(file.path(data_dir, params$input_rds))
+
+# Make condition a factor with explicit order so contrasts are stable/reproducible
+condition_levels <- intersect(params$condition_levels, unique(as.character(obj$condition)))
+
+obj$condition <- factor(obj$condition, levels = condition_levels)
+Idents(obj) <- "condition"
+
+all_conditions <- levels(obj$condition)
+car_levels <- intersect(params$car_levels, all_conditions)
+
+cat("Subtype label:", subtype_label, "\n")
+cat("Input object:", params$input_rds, "\n")
+cat("Conditions:", paste(all_conditions, collapse = ", "), "\n")
+cat("CAR conditions:", paste(car_levels, collapse = ", "), "\n")
+
+table(obj$condition)
+```
+
+## Load MSigDB Hallmark gene sets
+
+```{r load-msigdb-hallmark}
+hallmark_pathways <- msigdbr(species = "Mus musculus", category = "H") %>%
+  dplyr::select(gs_name, gene_symbol) %>%
+  split(x = .$gene_symbol, f = .$gs_name)
+
+length(hallmark_pathways)
+```
+
+## Helper functions
+
+```{r helper-functions}
+# Write fgsea results to CSV
+write_fgsea_csv <- function(df, out_path) {
+  df2 <- df %>%
+    mutate(
+      leadingEdge = if ("leadingEdge" %in% colnames(df)) {
+        vapply(leadingEdge, function(x) paste(x, collapse = ";"), character(1))
+      } else {
+        NA_character_
+      }
+    )
+  write.csv(df2, out_path, row.names = FALSE)
+}
+
+# Format contrast name for plot titles
+format_contrast_title <- function(out_prefix) {
+  out_prefix %>%
+    str_remove("^pseudobulk_") %>%
+    str_replace_all("_vs_", " vs ") %>%
+    str_replace_all("otherCAR", "other CARs") %>%
+    str_replace_all("allCAR", "all CARs")
+}
+
+# Volcano plot
+plot_volcano <- function(df,
+                         gene_col = "gene",
+                         lfc_col,
+                         p_col,
+                         title,
+                         subtitle = "",
+                         caption = NULL,
+                         p_cutoff = 0.05,
+                         lfc_cutoff = 1,
+                         label_top_n = 10) {
+  stopifnot(all(c(gene_col, lfc_col, p_col) %in% colnames(df)))
+
+  df2 <- df %>%
+    mutate(.p = .data[[p_col]], .lfc = .data[[lfc_col]]) %>%
+    filter(is.finite(.p), is.finite(.lfc), !is.na(.p), !is.na(.lfc))
+
+  label_df <- df2 %>%
+    filter(.p <= p_cutoff, abs(.lfc) >= lfc_cutoff) %>%
+    arrange(.p) %>%
+    slice_head(n = label_top_n)
+
+  lab_vec <- ifelse(df2[[gene_col]] %in% label_df[[gene_col]], df2[[gene_col]], "")
+
+  if (is.null(caption)) {
+    caption <- paste0("total = ", nrow(df2), " genes")
+  }
+
+  EnhancedVolcano::EnhancedVolcano(
+    df2,
+    lab = lab_vec,
+    x = lfc_col,
+    y = p_col,
+    title = title,
+    subtitle = subtitle,
+    caption = caption,
+    pCutoff = p_cutoff,
+    FCcutoff = lfc_cutoff,
+    legendPosition = "bottom",
+    pointSize = 1.5,
+    colAlpha = 0.8,
+    labSize = 3,
+    drawConnectors = TRUE,
+    widthConnectors = 0.4,
+    colConnectors = "black",
+    max.overlaps = Inf
+  )
+}
+
+# GSEA dotplot (activated vs suppressed)
+plot_gsea_dot <- function(gsea_df,
+                          title = NULL,
+                          p_cutoff = 0.05,
+                          top_n = 10,
+                          use_p = c("pval", "padj")) {
+  use_p <- match.arg(use_p)
+  stopifnot(all(c("pathway", "NES", use_p, "size") %in% colnames(gsea_df)))
+
+  df <- gsea_df %>%
+    mutate(
+      p = .data[[use_p]],
+      direction = ifelse(NES >= 0, "activated", "suppressed"),
+      Count = if ("leadingEdge" %in% colnames(gsea_df)) lengths(leadingEdge) else NA_integer_,
+      GeneRatio = if ("leadingEdge" %in% colnames(gsea_df)) (lengths(leadingEdge) / size) else NA_real_,
+      pathway_clean = str_remove(pathway, "^HALLMARK_")
+    ) %>%
+    filter(is.finite(NES), is.finite(p))
+
+  df2 <- df %>%
+    filter(p <= p_cutoff) %>%
+    group_by(direction) %>%
+    arrange(p) %>%
+    slice_head(n = top_n) %>%
+    ungroup()
+
+  if (nrow(df2) == 0) {
+    message("No pathways with ", use_p, " <= ", p_cutoff, " for ", title, ".")
+    return(NULL)
+  }
+
+  df2 <- df2 %>%
+    group_by(direction) %>%
+    mutate(pathway_clean = factor(pathway_clean, levels = rev(unique(pathway_clean)))) %>%
+    ungroup()
+
+  ggplot(df2, aes(x = GeneRatio, y = pathway_clean)) +
+    geom_point(aes(size = Count, color = p), alpha = 0.9) +
+    facet_grid(. ~ direction, scales = "free_y", space = "free_y") +
+    scale_color_gradient(low = "red", high = "blue", trans = "reverse") +
+    labs(
+      x = "GeneRatio",
+      y = NULL,
+      size = "Count",
+      color = use_p,
+      title = title
+    ) +
+    guides(
+      size = guide_legend(order = 1),
+      color = guide_colorbar(order = 2)
+    ) +
+    theme_bw() +
+    theme(
+      strip.background = element_rect(fill = "grey90", color = NA),
+      strip.text = element_text(face = "bold"),
+      panel.grid.minor = element_blank()
+    )
+}
+
+# Run pseudobulk DESeq2 + fgsea for one contrast
+run_pseudobulk_fgsea <- function(pb_counts,
+                                 coldata,
+                                 cond2_levels,
+                                 hallmark_pathways,
+                                 out_prefix,
+                                 subtype_label,
+                                 results_dir,
+                                 plot_dir,
+                                 minSize = 15,
+                                 maxSize = 500,
+                                 volcano_lfc_cutoff = 1,
+                                 volcano_p_cutoff = 0.05,
+                                 gsea_p_cutoff = 0.05) {
+  coldata$cond2 <- factor(coldata$cond2, levels = cond2_levels)
+
+  dds <- DESeqDataSetFromMatrix(
+    countData = round(pb_counts),
+    colData = coldata,
+    design = ~ cond2
+  )
+
+  dds <- DESeq(dds)
+
+  res <- results(dds, contrast = c("cond2", cond2_levels[2], cond2_levels[1]))
+
+  res_df <- as.data.frame(res) %>%
+    tibble::rownames_to_column("gene") %>%
+    filter(!is.na(stat), is.finite(stat)) %>%
+    arrange(padj)
+
+  write.csv(
+    res_df,
+    file.path(results_dir, paste0(subtype_label, "_DESeq2_", out_prefix, ".csv")),
+    row.names = FALSE
+  )
+
+  ranks <- setNames(res_df$stat, res_df$gene)
+  ranks <- sort(ranks, decreasing = TRUE)
+
+  set.seed(1234)
+  gsea <- fgsea(
+    pathways = hallmark_pathways,
+    stats = ranks,
+    minSize = minSize,
+    maxSize = maxSize
+  ) %>%
+    arrange(pval)
+
+  write_fgsea_csv(
+    gsea,
+    file.path(results_dir, paste0(subtype_label, "_GSEA_", out_prefix, "_hallmark.csv"))
+  )
+  
+  plot_title <- format_contrast_title(out_prefix)
+
+  pvol <- plot_volcano(
+    df = res_df,
+    gene_col = "gene",
+    lfc_col = "log2FoldChange",
+    p_col = "pvalue",
+    title = plot_title,
+    p_cutoff = volcano_p_cutoff,
+    lfc_cutoff = volcano_lfc_cutoff,
+    label_top_n = 10
+  )
+  ggsave(
+    file.path(plot_dir, paste0(subtype_label, "_volcano_", out_prefix, ".pdf")),
+    pvol, width = 8, height = 6
+  )
+
+  pgsea <- plot_gsea_dot(
+    gsea_df = gsea,
+    title = paste0("GSEA: ", plot_title),
+    p_cutoff = gsea_p_cutoff,
+    top_n = 10,
+    use_p = "pval"
+  )
+
+  if (!is.null(pgsea)) {
+    ggsave(
+      file.path(plot_dir, paste0(subtype_label, "_gsea_dot_", out_prefix, ".pdf")),
+      pgsea, width = 8, height = 6
+    )
+  }
+
+  list(de = res_df, gsea = gsea, volcano = pvol, gsea_dot = pgsea)
+}
+
+# Generic pseudobulk contrast wrapper
+run_pseudobulk_contrast <- function(pb_counts,
+                                    coldata,
+                                    case_condition,
+                                    ref_conditions,
+                                    ref_label,
+                                    hallmark_pathways,
+                                    out_prefix,
+                                    subtype_label,
+                                    results_dir,
+                                    plot_dir,
+                                    minSize,
+                                    maxSize,
+                                    volcano_lfc_cutoff,
+                                    volcano_p_cutoff,
+                                    gsea_p_cutoff) {
+  keep_conditions <- c(case_condition, ref_conditions)
+
+  keep_samples <- rownames(coldata)[coldata$condition %in% keep_conditions]
+  coldata_sub <- coldata[keep_samples, , drop = FALSE]
+  pb_sub <- pb_counts[, keep_samples, drop = FALSE]
+
+  coldata_sub$cond2 <- ifelse(coldata_sub$condition == case_condition, case_condition, ref_label)
+
+  run_pseudobulk_fgsea(
+    pb_counts = pb_sub,
+    coldata = coldata_sub,
+    cond2_levels = c(ref_label, case_condition),
+    hallmark_pathways = hallmark_pathways,
+    out_prefix = out_prefix,
+    subtype_label = subtype_label,
+    results_dir = results_dir,
+    plot_dir = plot_dir,
+    minSize = minSize,
+    maxSize = maxSize,
+    volcano_lfc_cutoff = volcano_lfc_cutoff,
+    volcano_p_cutoff = volcano_p_cutoff,
+    gsea_p_cutoff = gsea_p_cutoff
+  )
+}
+```
+
+## Build pseudobulk counts per sample
+This section aggregates raw UMI counts across all cells in the input subtype object belonging to the same sample, yielding a genes × samples count matrix.
+
+```{r build-pseudobulk, message=FALSE, warning=FALSE}
+stopifnot(all(c("sample", "condition") %in% colnames(obj@meta.data)))
+
+counts <- GetAssayData(obj, assay = "RNA", layer = "counts")
+
+meta <- obj@meta.data %>%
+  dplyr::select(sample, condition) %>%
+  mutate(
+    sample = as.character(sample),
+    condition = factor(condition, levels = levels(obj$condition))
+  )
+
+# Aggregate counts by sample (genes x samples)
+pb_counts <- Matrix::t(rowsum(Matrix::t(counts), group = meta$sample))
+
+# Sample-level metadata (one row per sample)
+coldata <- meta %>%
+  as.data.frame() %>%
+  { rownames(.) <- NULL; . } %>%
+  distinct(sample, condition) %>%
+  tibble::column_to_rownames("sample")
+
+# Align matrices
+pb_counts <- pb_counts[, rownames(coldata)]
+
+table(coldata$condition)
+```
+
+## 1) Each condition vs rest
+
+```{r each-condition-vs-rest, message=FALSE, warning=FALSE}
+pb_rest_results <- list()
+
+for (cond in all_conditions) {
+  ref_conditions <- setdiff(all_conditions, cond)
+  out_prefix <- paste0(cond, "_vs_rest")
+
+  cat("\n===== Running each-vs-rest:", cond, "vs rest =====\n")
+
+  pb_rest_results[[cond]] <- run_pseudobulk_contrast(
+    pb_counts = pb_counts,
+    coldata = coldata,
+    case_condition = cond,
+    ref_conditions = ref_conditions,
+    ref_label = "rest",
+    hallmark_pathways = hallmark_pathways,
+    out_prefix = paste0("pseudobulk_", out_prefix),
+    subtype_label = subtype_label,
+    results_dir = results_dir,
+    plot_dir = plot_dir,
+    minSize = params$minSize,
+    maxSize = params$maxSize,
+    volcano_lfc_cutoff = params$volcano_lfc_cutoff,
+    volcano_p_cutoff = params$volcano_p_cutoff,
+    gsea_p_cutoff = params$gsea_p_cutoff
+  )
+}
+```
+
+## 2) Each condition vs other CARs
+
+For CAR conditions:
+
+- compare to the other CAR conditions
+
+For non-CAR conditions:
+
+- compare to all CAR conditions
+
+```{r each-condition-vs-other-cars, message=FALSE, warning=FALSE}
+pb_car_results <- list()
+
+for (cond in all_conditions) {
+
+  if (cond %in% car_levels) {
+    ref_conditions <- setdiff(car_levels, cond)
+    ref_label <- "otherCAR"
+    out_prefix <- paste0(cond, "_vs_otherCAR")
+  } else {
+    ref_conditions <- car_levels
+    ref_label <- "allCAR"
+    out_prefix <- paste0(cond, "_vs_allCAR")
+  }
+
+  if (length(ref_conditions) == 0) next
+
+  cat("\n===== Running condition-vs-CARs:", cond, "=====\n")
+
+  pb_car_results[[cond]] <- run_pseudobulk_contrast(
+    pb_counts = pb_counts,
+    coldata = coldata,
+    case_condition = cond,
+    ref_conditions = ref_conditions,
+    ref_label = ref_label,
+    hallmark_pathways = hallmark_pathways,
+    out_prefix = paste0("pseudobulk_", out_prefix),
+    subtype_label = subtype_label,
+    results_dir = results_dir,
+    plot_dir = plot_dir,
+    minSize = params$minSize,
+    maxSize = params$maxSize,
+    volcano_lfc_cutoff = params$volcano_lfc_cutoff,
+    volcano_p_cutoff = params$volcano_p_cutoff,
+    gsea_p_cutoff = params$gsea_p_cutoff
+  )
+}
+```
+
+```{r session-info}
+sessionInfo()
+```

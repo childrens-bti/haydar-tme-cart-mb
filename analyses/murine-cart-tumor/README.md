@@ -16,6 +16,7 @@
 8. `08-grant-umaps.Rmd`: generates UMAP plots for inclusion in Haydar grant figures.
 9. `09-lineage-plot.Rmd`: generates dot plot of top lineage markers and stacked barplot of lineage proportions across conditions.
 10. `10-myeloid-differential.Rmd`: performs differential expression analysis in myeloid cells by subcluster and treatment condition, annotates marker genes with Hallmark pathways, and generates dot plots for visualization.
+11. `11-subtype-pseudobulk-gsea.Rmd`: performs Hallmark GSEA for a user-specified cell subtype across treatment conditions using a pseudobulk DESeq2 workflow.
 
 ## Analysis module directory structure
 ```
@@ -40,6 +41,8 @@ murine-cart-tumor/
 ├── 09-lineage-plot.html
 ├── 10-myeloid-differential.Rmd
 ├── 10-myeloid-differential.html
+├── 11-subtype-pseudobulk-gsea.Rmd
+├── 11-subtype-pseudobulk-gsea.html
 ├── README.md
 ├── plots
 │   ├── cart_dotplot_lineage_proportions.png
@@ -58,6 +61,18 @@ murine-cart-tumor/
 │   ├── myeloid_dotplot_subcluster_markers.pdf
 │   ├── myeloid_dotplot_subtype_markers.pdf
 │   ├── myeloid_dotplot_treatment_markers.pdf
+│   ├── myeloid_gsea_dot_pseudobulk_41BB-L_vs_otherCAR.pdf
+│   ├── myeloid_gsea_dot_pseudobulk_41BB-L_vs_rest.pdf
+│   ├── myeloid_gsea_dot_pseudobulk_B7H3_vs_otherCAR.pdf
+│   ├── myeloid_gsea_dot_pseudobulk_B7H3_vs_rest.pdf
+│   ├── myeloid_gsea_dot_pseudobulk_CD28-41BB_vs_otherCAR.pdf
+│   ├── myeloid_gsea_dot_pseudobulk_CD28-41BB_vs_rest.pdf
+│   ├── myeloid_gsea_dot_pseudobulk_CD8-41BB_vs_otherCAR.pdf
+│   ├── myeloid_gsea_dot_pseudobulk_CD8-41BB_vs_rest.pdf
+│   ├── myeloid_gsea_dot_pseudobulk_STOP_vs_allCAR.pdf
+│   ├── myeloid_gsea_dot_pseudobulk_STOP_vs_rest.pdf
+│   ├── myeloid_gsea_dot_pseudobulk_tumor_vs_allCAR.pdf
+│   ├── myeloid_gsea_dot_pseudobulk_tumor_vs_rest.pdf
 │   ├── myeloid_subtype_composition_sccomp.png
 │   ├── myeloid_subtype_hallmark_auc_heatmap.pdf
 │   ├── myeloid_subtype_heatmap_top_markers.pdf
@@ -65,6 +80,18 @@ murine-cart-tumor/
 │   ├── myeloid_subtype_proportions_dotplot.png
 │   ├── myeloid_subtypes_by_condition_umap.png
 │   ├── myeloid_subtypes_umap.png
+│   ├── myeloid_volcano_pseudobulk_41BB-L_vs_otherCAR.pdf
+│   ├── myeloid_volcano_pseudobulk_41BB-L_vs_rest.pdf
+│   ├── myeloid_volcano_pseudobulk_B7H3_vs_otherCAR.pdf
+│   ├── myeloid_volcano_pseudobulk_B7H3_vs_rest.pdf
+│   ├── myeloid_volcano_pseudobulk_CD28-41BB_vs_otherCAR.pdf
+│   ├── myeloid_volcano_pseudobulk_CD28-41BB_vs_rest.pdf
+│   ├── myeloid_volcano_pseudobulk_CD8-41BB_vs_otherCAR.pdf
+│   ├── myeloid_volcano_pseudobulk_CD8-41BB_vs_rest.pdf
+│   ├── myeloid_volcano_pseudobulk_STOP_vs_allCAR.pdf
+│   ├── myeloid_volcano_pseudobulk_STOP_vs_rest.pdf
+│   ├── myeloid_volcano_pseudobulk_tumor_vs_allCAR.pdf
+│   ├── myeloid_volcano_pseudobulk_tumor_vs_rest.pdf
 │   ├── tcell_subtype_composition_sccomp_STOP.png
 │   ├── tcell_subtype_composition_sccomp_tumor.png
 │   ├── tcell_subtype_hallmark_auc_heatmap.pdf
@@ -105,6 +132,30 @@ murine-cart-tumor/
 │   ├── endpoint_combined.rds
 │   ├── endpoint_integrated.rds
 │   ├── endpoint_merged.rds
+│   ├── myeloid_DESeq2_pseudobulk_41BB-L_vs_otherCAR.csv
+│   ├── myeloid_DESeq2_pseudobulk_41BB-L_vs_rest.csv
+│   ├── myeloid_DESeq2_pseudobulk_B7H3_vs_otherCAR.csv
+│   ├── myeloid_DESeq2_pseudobulk_B7H3_vs_rest.csv
+│   ├── myeloid_DESeq2_pseudobulk_CD28-41BB_vs_otherCAR.csv
+│   ├── myeloid_DESeq2_pseudobulk_CD28-41BB_vs_rest.csv
+│   ├── myeloid_DESeq2_pseudobulk_CD8-41BB_vs_otherCAR.csv
+│   ├── myeloid_DESeq2_pseudobulk_CD8-41BB_vs_rest.csv
+│   ├── myeloid_DESeq2_pseudobulk_STOP_vs_allCAR.csv
+│   ├── myeloid_DESeq2_pseudobulk_STOP_vs_rest.csv
+│   ├── myeloid_DESeq2_pseudobulk_tumor_vs_allCAR.csv
+│   ├── myeloid_DESeq2_pseudobulk_tumor_vs_rest.csv
+│   ├── myeloid_GSEA_pseudobulk_41BB-L_vs_otherCAR_hallmark.csv
+│   ├── myeloid_GSEA_pseudobulk_41BB-L_vs_rest_hallmark.csv
+│   ├── myeloid_GSEA_pseudobulk_B7H3_vs_otherCAR_hallmark.csv
+│   ├── myeloid_GSEA_pseudobulk_B7H3_vs_rest_hallmark.csv
+│   ├── myeloid_GSEA_pseudobulk_CD28-41BB_vs_otherCAR_hallmark.csv
+│   ├── myeloid_GSEA_pseudobulk_CD28-41BB_vs_rest_hallmark.csv
+│   ├── myeloid_GSEA_pseudobulk_CD8-41BB_vs_otherCAR_hallmark.csv
+│   ├── myeloid_GSEA_pseudobulk_CD8-41BB_vs_rest_hallmark.csv
+│   ├── myeloid_GSEA_pseudobulk_STOP_vs_allCAR_hallmark.csv
+│   ├── myeloid_GSEA_pseudobulk_STOP_vs_rest_hallmark.csv
+│   ├── myeloid_GSEA_pseudobulk_tumor_vs_allCAR_hallmark.csv
+│   ├── myeloid_GSEA_pseudobulk_tumor_vs_rest_hallmark.csv
 │   ├── myeloid_subcluster_markers.csv
 │   ├── myeloid_subtype_c5_gsea_results.csv
 │   ├── myeloid_subtype_c7_gsea_results.csv
