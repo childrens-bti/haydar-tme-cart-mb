@@ -80,6 +80,15 @@ prop_df <- meta %>%
   group_by(condition) %>%
   mutate(prop = n / sum(n))
 
+# Save proportions
+write.table(
+  prop_df,
+  file = file.path(results_dir, "cart_lineage_proportions.tsv"),
+  sep = "\t",
+  quote = FALSE,
+  row.names = FALSE
+)
+
 ggplot(prop_df, aes(x = condition, y = prop, fill = cell_type)) +
   geom_bar(stat = "identity") +
   theme_Publication() +
@@ -97,7 +106,7 @@ ggplot(prop_df, aes(x = condition, y = prop, fill = cell_type)) +
   xlab("Condition") +
   scale_y_continuous(labels = scales::percent_format())
 
-ggsave(filename = file.path(plot_dir, "cart_stacked_barplot_lineage_proportions.png"), width = 8, height = 5)
+ggsave(filename = file.path(plot_dir, "cart_lineage_proportions_stacked_barplot.png"), width = 8, height = 5)
 ```
 
 ## Session info

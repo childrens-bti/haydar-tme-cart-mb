@@ -3,6 +3,15 @@
 set -e
 set -o pipefail
 
+# NOTE:
+# The processed Seurat objects below were already included in the v4 data release
+# and can be used directly for downstream analysis by loading them from data_dir
+# with readRDS():
+#   - cart_annotated.rds
+#   - cart_myeloid_subtypes.rds
+#   - cart_tcell_subtypes.rds
+#   - cart_dc_subtypes.rds
+
 # Run Seurat QC, processing, and integration on CAR-T scRNA-seq libraries
 Rscript -e "rmarkdown::render('01-seurat-processing.Rmd')"
 # Cell lineage annotation analysis and plots
@@ -25,3 +34,4 @@ Rscript -e "rmarkdown::render('09-lineage-plot.Rmd')"
 Rscript -e "rmarkdown::render('10-myeloid-differential.Rmd')"
 # Run Hallmark GSEA for the specified subtype (defaults to myeloid) and generate volcano/GSEA plots
 Rscript -e "rmarkdown::render('11-subtype-pseudobulk-gsea.Rmd')"
+
