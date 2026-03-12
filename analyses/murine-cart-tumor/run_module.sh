@@ -25,13 +25,15 @@ Rscript -e "rmarkdown::render('05-lymphoid-characterization.Rmd')"
 # Characterization of dendritic cell heterogeneity
 Rscript -e "rmarkdown::render('06-dendritic-characterization.Rmd')"
 # Endpoint samples analysis
-Rscript -e "rmarkdown::render('07-endpoint-samples.Rmd')"
+Rscript -e "rmarkdown::render('07-endpoint-samples-analysis.Rmd')"
 # Generate UMAPs for Haydar grant figures
 Rscript -e "rmarkdown::render('08-grant-umaps.Rmd')"
 # Generate lineage marker dot plots and lineage proportion stacked barplots
 Rscript -e "rmarkdown::render('09-lineage-plot.Rmd')"
 # Perform differential expression analysis in myeloid cells and generates pathway-annotated dot plots
-Rscript -e "rmarkdown::render('10-myeloid-differential.Rmd')"
+Rscript -e "rmarkdown::render('10-myeloid-functional-marker-dotplots.Rmd')"
 # Run Hallmark GSEA for the specified subtype (defaults to myeloid) and generate volcano/GSEA plots
 Rscript -e "rmarkdown::render('11-subtype-pseudobulk-gsea.Rmd')"
+# Run myeloid composition analysis
+Rscript -e "rmarkdown::render('12-myeloid-composition-analysis.Rmd')"
 
