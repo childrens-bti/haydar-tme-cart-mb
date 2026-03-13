@@ -181,10 +181,6 @@ obj <- AddModuleScore_UCell(
 saveRDS(obj, file = file.path(results_dir, "tlr_module_scores.rds"))
 ```
 
-```{r}
-obj <- readRDS(file = file.path(results_dir, "tlr_module_scores.rds"))
-```
-
 ## UMAP of all myeloid cells
 ```{r umap-myeloid, fig.width=12, fig.height=8}
 DimPlot(obj, reduction = "umap", group.by = "myeloid_subtype") + 
