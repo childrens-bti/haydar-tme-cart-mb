@@ -15,10 +15,16 @@ tlr-analysis/
 ├── 01-tlr-analysis.html
 ├── README.md
 ├── plots
-│   ├── tlr_module_score_clustered_heatmap.pdf
-│   ├── tlr_umap_module_scores.pdf
-│   ├── tlr_umap_module_scores_by_condition.pdf
-│   └── tlr_violin_module_scores_by_condition.pdf
+│   ├── tlr_module_scores_heatmap_by_condition.pdf
+│   ├── tlr_module_scores_heatmap_by_subtype.pdf
+│   ├── tlr_module_scores_heatmap_by_subtype_condition.pdf
+│   ├── tlr_module_scores_umap.pdf
+│   ├── tlr_module_scores_umap_by_condition.pdf
+│   ├── tlr_module_scores_violin_by_condition.pdf
+│   ├── tlr_module_scores_violin_by_subtype.pdf
+│   └── tlr_module_scores_violin_by_subtype_condition.pdf
+├── results
+│   └── tlr_module_scores.rds
 └── run_module.sh
 ```
 

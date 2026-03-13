@@ -6,6 +6,19 @@ output:
   html_document:
     toc: TRUE
 ---
+
+## Expected output files
+
+- `results/tlr_module_scores.rds`
+- `plots/tlr_module_scores_umap.pdf`
+- `plots/tlr_module_scores_umap_by_condition.pdf`
+- `plots/tlr_module_scores_heatmap_by_condition.pdf`
+- `plots/tlr_module_scores_heatmap_by_subtype.pdf`
+- `plots/tlr_module_scores_heatmap_by_subtype_condition.pdf`
+- `plots/tlr_module_scores_violin_by_condition.pdf`
+- `plots/tlr_module_scores_violin_by_subtype.pdf`
+- `plots/tlr_module_scores_violin_by_subtype_condition.pdf`
+
 ## Setup
 
 ```{r load-packages, message=FALSE, warning=FALSE}
@@ -25,8 +38,11 @@ library(patchwork)
 root_dir <- find_root(has_dir(".git"))
 data_dir <- file.path(root_dir, "data", "v4")
 analysis_dir <- file.path(root_dir, "analyses", "tlr-analysis")
-results_dir <- file.path(analysis_dir, "results")
 plot_dir <- file.path(analysis_dir, "plots")
+results_dir <- file.path(analysis_dir, "results")
+if (!dir.exists(results_dir)) {
+  dir.create(results_dir)
+}
 
 # Source custom theme
 source(file.path(root_dir, "figures", "theme.R"))
@@ -38,6 +54,31 @@ set.seed(1234)
 ## Load data
 ```{r load-seurat-object}
 obj <- readRDS(file.path(data_dir, "cart_myeloid_subtypes.rds"))
+
+# Standardize subtype naming
+obj$myeloid_subtype <- obj$myeloid_subtype %>%
+  stringr::str_replace(
+    "Perivascular macrophages.*",
+    "Perivascular macrophages"
+  )
+
+unique(obj$myeloid_subtype)
+```
+
+```{r define-condition-order}
+# Define condition order and colors once
+condition_levels <- c("41BB-L", "B7H3", "CD8-41BB", "CD28-41BB", "STOP", "tumor")
+
+condition_colors <- c(
+  "41BB-L" = "#7570B3",
+  "B7H3" = "#E7298A",
+  "CD8-41BB" = "#D95F02",
+  "CD28-41BB" = "#1B9E77",
+  "STOP" = "#BDBDBD",
+  "tumor" = "#66A61E"
+)
+
+obj$condition <- factor(obj$condition, levels = condition_levels)
 ```
 
 ## Define TLR gene sets
@@ -136,6 +177,14 @@ obj <- AddModuleScore_UCell(
 )
 ```
 
+```{r save-module-scores}
+saveRDS(obj, file = file.path(results_dir, "tlr_module_scores.rds"))
+```
+
+```{r}
+obj <- readRDS(file = file.path(results_dir, "tlr_module_scores.rds"))
+```
+
 ## UMAP of all myeloid cells
 ```{r umap-myeloid, fig.width=12, fig.height=8}
 DimPlot(obj, reduction = "umap", group.by = "myeloid_subtype") + 
@@ -170,7 +219,7 @@ for (i in seq_along(p)) {
 print(p)
 
 ggsave(
-  filename = file.path(plot_dir, "tlr_umap_module_scores.pdf"),
+  filename = file.path(plot_dir, "tlr_module_scores_umap.pdf"),
   plot = p,
   width = 15,
   height = 16,
@@ -182,7 +231,7 @@ ggsave(
 features <- names(tlr_gene_sets)
 conditions <- levels(factor(obj$condition))
 
-pdf(file.path(plot_dir, "tlr_umap_module_scores_by_condition.pdf"),
+pdf(file.path(plot_dir, "tlr_module_scores_umap_by_condition.pdf"),
     width = 15, height = 8)
 
 for (f in features) {
@@ -235,52 +284,15 @@ for (f in features) {
 dev.off()
 ```
 
-## Violin plots
-```{r violin-module-scores}
-pdf(file.path(plot_dir, "tlr_violin_module_scores_by_condition.pdf"),
-    width = 18, height = 8)
+## Heatmaps of module scores by conditions
+```{r heatmap-module-scores-condition, fig.width=10, fig.height=13}
+modules <- names(tlr_gene_sets)
 
-for (f in features){
-
-  clean_title <- gsub("_", " ", f)
-
-  p <- VlnPlot(
-    obj,
-    features = f,
-    group.by = "myeloid_subtype",
-    split.by = "condition",
-    cols = c("#7570B3", "#E7298A", "#1B9E77", "#D95F02", "#BDBDBD", "#66A61E"),
-    pt.size = 0
-  ) &
-    ggtitle(clean_title) &
-    theme(
-      axis.text.x = element_text(
-        angle = 45,
-        hjust = 1,
-        vjust = 1
-      ),
-      axis.title.x = element_blank(),
-      plot.title = element_text(size = 20, face = "bold", hjust = 0.5),
-      plot.margin = margin(10, 20, 10, 20)
-    )
-
-  print(p)
-}
-
-dev.off()
-```
-
-## Heatmaps of module scores per conditions
-``` {r heatmap-module-scores, fig.width=10, fig.height=13}
-modules <- names(tlr_gene_sets) 
-
-# Aggregate only by condition
 df <- obj@meta.data %>%
   select(condition, all_of(modules)) %>%
   group_by(condition) %>%
   summarise(across(all_of(modules), ~ mean(.x, na.rm = TRUE)), .groups = "drop")
 
-# Create matrix
 mat <- df %>%
   select(all_of(modules)) %>%
   as.matrix()
@@ -288,36 +300,19 @@ mat <- df %>%
 rownames(mat) <- df$condition
 storage.mode(mat) <- "double"
 
-# Z-score across conditions
 mat_z <- scale(mat)
-
-# Transpose so:
-# Rows = modules
-# Columns = conditions
 mat_t <- t(mat_z)
-
-# Clean module names
 rownames(mat_t) <- gsub("_", " ", rownames(mat_t))
 
-# Keep biologically meaningful condition order
-condition_order <- c("STOP", "tumor", "41BB-L", "B7H3", "CD28-41BB", "CD8-41BB")
-mat_t <- mat_t[, condition_order]
+mat_t <- mat_t[, condition_levels]
 
-# Annotation for columns
 annotation_col <- data.frame(
   condition = colnames(mat_t)
 )
 rownames(annotation_col) <- colnames(mat_t)
 
 ann_colors <- list(
-  condition = c(
-    "STOP" = "#BDBDBD",
-    "CD28-41BB" = "#1B9E77",
-    "CD8-41BB" = "#D95F02",
-    "41BB-L" = "#7570B3",
-    "B7H3" = "#E7298A",
-    "tumor" = "#66A61E"
-  )
+  condition = condition_colors
 )
 
 pheatmap(
@@ -331,15 +326,272 @@ pheatmap(
   fontsize_row = 11,
   fontsize_col = 12,
   angle_col = 45,
-  show_rownames = T,
-  show_colnames = F,
+  show_rownames = TRUE,
+  show_colnames = FALSE,
   legend = TRUE,
   legend_breaks = c(-2, -1, 0, 1, 2),
   legend_labels = c("-2", "-1", "0", "1", "2"),
-  filename = file.path(plot_dir, "tlr_module_score_clustered_heatmap.pdf"),
+  filename = file.path(plot_dir, "tlr_module_scores_heatmap_by_condition.pdf"),
   width = 9,
   height = 7
 )
+```
+
+## Heatmaps of module scores by subtype
+```{r heatmap-module-scores-subtype, fig.width=12, fig.height=10}
+obj_sub <- subset(
+  obj,
+  subset = myeloid_subtype != "Inflammatory monocytes"
+)
+
+df <- obj_sub@meta.data %>%
+  select(myeloid_subtype, all_of(modules)) %>%
+  group_by(myeloid_subtype) %>%
+  summarise(across(all_of(modules), ~ mean(.x, na.rm = TRUE)), .groups = "drop") %>%
+  arrange(myeloid_subtype)
+
+mat <- df %>%
+  select(all_of(modules)) %>%
+  as.matrix()
+
+rownames(mat) <- df$myeloid_subtype
+storage.mode(mat) <- "double"
+
+mat_z <- scale(mat)
+mat_t <- t(mat_z)
+rownames(mat_t) <- gsub("_", " ", rownames(mat_t))
+
+annotation_col <- data.frame(
+  subtype = colnames(mat_t)
+)
+rownames(annotation_col) <- colnames(mat_t)
+
+# cluster subtype columns and extract order
+ph_subtype <- pheatmap(
+  mat_t,
+  annotation_col = annotation_col,
+  cluster_rows = TRUE,
+  cluster_cols = TRUE,
+  breaks = seq(-2, 2, length.out = 101),
+  border_color = NA,
+  fontsize_row = 11,
+  fontsize_col = 10,
+  angle_col = 45,
+  show_rownames = TRUE,
+  show_colnames = FALSE,
+  legend = TRUE,
+  legend_breaks = c(-2, -1, 0, 1, 2),
+  legend_labels = c("-2", "-1", "0", "1", "2"),
+  silent = TRUE
+)
+
+# get subtype clustering order from heatmap
+subtype_order <- colnames(mat_t)[ph_subtype$tree_col$order]
+
+# reorder annotation legend using clustering order
+annotation_col$subtype <- factor(annotation_col$subtype, levels = subtype_order)
+
+subtype_colors <- setNames(
+  DiscretePalette(length(subtype_order)),
+  subtype_order
+)
+
+ann_colors <- list(
+  subtype = subtype_colors
+)
+
+# redraw with ordered legend/colors
+ph_subtype <- pheatmap(
+  mat_t[, subtype_order],
+  annotation_col = annotation_col[subtype_order, , drop = FALSE],
+  annotation_colors = ann_colors,
+  cluster_rows = TRUE,
+  cluster_cols = TRUE,
+  breaks = seq(-2, 2, length.out = 101),
+  border_color = NA,
+  fontsize_row = 11,
+  fontsize_col = 10,
+  angle_col = 45,
+  show_rownames = TRUE,
+  show_colnames = FALSE,
+  legend = TRUE,
+  legend_breaks = c(-2, -1, 0, 1, 2),
+  legend_labels = c("-2", "-1", "0", "1", "2"),
+  filename = file.path(plot_dir, "tlr_module_scores_heatmap_by_subtype.pdf"),
+  width = 12,
+  height = 7
+)
+```
+
+## Heatmap of module scores by subtype and condition
+```{r heatmap-module-scores-subtype-condition, fig.width=14, fig.height=10}
+obj_sub$myeloid_subtype <- factor(obj_sub$myeloid_subtype, levels = subtype_order)
+
+df <- obj_sub@meta.data %>%
+  select(myeloid_subtype, condition, all_of(modules)) %>%
+  group_by(myeloid_subtype, condition) %>%
+  summarise(across(all_of(modules), ~ mean(.x, na.rm = TRUE)), .groups = "drop") %>%
+  arrange(myeloid_subtype, condition)
+
+mat <- df %>%
+  select(all_of(modules)) %>%
+  as.matrix()
+
+rownames(mat) <- paste(df$myeloid_subtype, df$condition, sep = " | ")
+storage.mode(mat) <- "double"
+
+mat_z <- scale(mat)
+mat_t <- t(mat_z)
+rownames(mat_t) <- gsub("_", " ", rownames(mat_t))
+
+ordered_cols <- paste(df$myeloid_subtype, df$condition, sep = " | ")
+mat_t <- mat_t[, ordered_cols]
+
+annotation_col <- data.frame(
+  subtype = factor(df$myeloid_subtype, levels = subtype_order),
+  condition = factor(df$condition, levels = condition_levels)
+)
+rownames(annotation_col) <- colnames(mat_t)
+
+subtype_colors <- setNames(
+  DiscretePalette(length(subtype_order)),
+  subtype_order
+)
+
+ann_colors <- list(
+  subtype = subtype_colors,
+  condition = condition_colors
+)
+
+subtype_counts <- table(df$myeloid_subtype)
+gaps_col <- cumsum(subtype_counts)
+
+pheatmap(
+  mat_t,
+  annotation_col = annotation_col,
+  annotation_colors = ann_colors,
+  cluster_rows = TRUE,
+  cluster_cols = FALSE,
+  gaps_col = gaps_col[-length(gaps_col)],
+  breaks = seq(-2, 2, length.out = 101),
+  border_color = NA,
+  fontsize_row = 10,
+  fontsize_col = 8,
+  angle_col = 90,
+  show_rownames = TRUE,
+  show_colnames = FALSE,
+  legend = TRUE,
+  legend_breaks = c(-2, -1, 0, 1, 2),
+  legend_labels = c("-2", "-1", "0", "1", "2"),
+  filename = file.path(plot_dir, "tlr_module_scores_heatmap_by_subtype_condition.pdf"),
+  width = 14,
+  height = 8
+)
+```
+
+## Violin plots by condition
+```{r violin-module-scores-condition, fig.height=8, fig.width=10}
+pdf(file.path(plot_dir, "tlr_module_scores_violin_by_condition.pdf"),
+    width = 6, height = 4)
+
+for (f in features) {
+
+  clean_title <- gsub("_", " ", f)
+
+  p <- VlnPlot(
+    obj,
+    features = f,
+    group.by = "condition",
+    cols = condition_colors,
+    pt.size = 0
+  ) &
+    ggtitle(clean_title) &
+    theme(
+      axis.text.x = element_text(
+        angle = 45,
+        hjust = 1,
+        vjust = 1
+      ),
+      axis.title.x = element_blank(),
+      plot.title = element_text(size = 15, face = "bold", hjust = 0.5),
+      plot.margin = margin(10, 20, 10, 20),
+      legend.position = "none"
+    )
+
+  print(p)
+}
+
+dev.off()
+```
+
+## Violin plots excluding Inflammatory monocytes
+```{r violin-module-scores-subtype, fig.height=8, fig.width=18}
+pdf(file.path(plot_dir, "tlr_module_scores_violin_by_subtype.pdf"),
+    width = 8, height = 6)
+
+for (f in features) {
+
+  clean_title <- gsub("_", " ", f)
+
+  p <- VlnPlot(
+    obj_sub,
+    features = f,
+    group.by = "myeloid_subtype",
+    pt.size = 0
+  ) &
+    ggtitle(clean_title) &
+    theme(
+      axis.text.x = element_text(
+        angle = 45,
+        hjust = 1,
+        vjust = 1,
+        size = 10
+      ),
+      axis.title.x = element_blank(),
+      plot.title = element_text(size = 15, face = "bold", hjust = 0.5),
+      plot.margin = margin(10, 20, 10, 20),
+      legend.position = "none"
+    )
+
+  print(p)
+}
+
+dev.off()
+```
+
+## Violin plots excluding Inflammatory monocytes split by condition
+```{r violin-module-scores-subtype-condition, fig.height=8, fig.width=18}
+pdf(file.path(plot_dir, "tlr_module_scores_violin_by_subtype_condition.pdf"),
+    width = 16, height = 6)
+
+for (f in features) {
+
+  clean_title <- gsub("_", " ", f)
+
+  p <- VlnPlot(
+    obj_sub,
+    features = f,
+    group.by = "myeloid_subtype",
+    split.by = "condition",
+    cols = condition_colors,
+    pt.size = 0
+  ) &
+    ggtitle(clean_title) &
+    theme(
+      axis.text.x = element_text(
+        angle = 45,
+        hjust = 1,
+        vjust = 1
+      ),
+      axis.title.x = element_blank(),
+      plot.title = element_text(size = 15, face = "bold", hjust = 0.5),
+      plot.margin = margin(10, 20, 10, 20)
+    )
+
+  print(p)
+}
+
+dev.off()
 ```
 
 ```{r sessionInfo}
