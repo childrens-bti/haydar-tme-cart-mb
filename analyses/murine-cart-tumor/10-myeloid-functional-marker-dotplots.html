@@ -11,9 +11,9 @@
 
 <meta name="author" content="Bicna Song" />
 
-<meta name="date" content="2026-02-24" />
+<meta name="date" content="2026-03-11" />
 
-<title>10-myeloid-differential.Rmd</title>
+<title>10-myeloid-functional-marker-dotplots.Rmd</title>
 
 <script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
 // be compatible with the behavior of Pandoc < 2.8).
@@ -350,9 +350,9 @@ display: none;
 
 
 
-<h1 class="title toc-ignore">10-myeloid-differential.Rmd</h1>
+<h1 class="title toc-ignore">10-myeloid-functional-marker-dotplots.Rmd</h1>
 <h4 class="author">Bicna Song</h4>
-<h4 class="date">2026-02-24</h4>
+<h4 class="date">2026-03-11</h4>
 
 </div>
 
@@ -389,7 +389,23 @@ set.seed(1234)</code></pre>
 <div id="load-data" class="section level2">
 <h2>Load Data</h2>
 <pre class="r"><code># Load Seurat object
-myeloid_obj &lt;- readRDS(file.path(results_dir, &quot;cart_myeloid_subtypes.rds&quot;))</code></pre>
+myeloid_obj &lt;- readRDS(file.path(data_dir, &quot;cart_myeloid_subtypes.rds&quot;))
+
+# Standardize subtype naming
+myeloid_obj$myeloid_subtype &lt;- myeloid_obj$myeloid_subtype %&gt;%
+  stringr::str_replace(
+    &quot;Perivascular macrophages.*&quot;,
+    &quot;Perivascular macrophages&quot;
+  )
+
+unique(myeloid_obj$myeloid_subtype)</code></pre>
+<pre><code>##  [1] &quot;Perivascular macrophages&quot;         &quot;Early activated microglia&quot;       
+##  [3] &quot;Antigen-presenting TAMs&quot;          &quot;TAM-like phagocytic microglia&quot;   
+##  [5] &quot;Homeostatic microglia&quot;            &quot;Stress-response microglia&quot;       
+##  [7] &quot;Inflammatory activated microglia&quot; &quot;Angiogenic TAMs&quot;                 
+##  [9] &quot;Antigen-presenting monocytes&quot;     &quot;Inflammatory monocytes&quot;          
+## [11] &quot;Lipid-associated TAMs&quot;            &quot;cDC1&quot;                            
+## [13] &quot;Inflammatory TAMs&quot;</code></pre>
 </div>
 <div id="visualize-top-markers-per-subcluster-by-dot-plot" class="section level2">
 <h2>Visualize top markers per subcluster by dot plot</h2>
@@ -418,6 +434,20 @@ category_df_clean &lt;- category_df %&gt;%
   dplyr::slice(1) %&gt;%
   ungroup()
 
+# ---- Remove unwanted Hallmark categories ----
+categories_to_remove &lt;- c(
+  &quot;HALLMARK_ADIPOGENESIS&quot;,
+  &quot;HALLMARK_ALLOGRAFT_REJECTION&quot;,
+  &quot;HALLMARK_ANDROGEN_RESPONSE&quot;,
+  &quot;HALLMARK_APICAL_JUNCTION&quot;,
+  &quot;HALLMARK_CHOLESTEROL_HOMEOSTASIS&quot;,
+  &quot;HALLMARK_COAGULATION&quot;,
+  &quot;HALLMARK_EPITHELIAL_MESENCHYMAL_TRANSITION&quot;
+)
+
+category_df_clean &lt;- category_df_clean %&gt;%
+  filter(!category %in% categories_to_remove)
+
 category_df_clean &lt;- category_df_clean %&gt;%
   arrange(category, gene)
 
@@ -451,9 +481,11 @@ category_bounds &lt;- gene_pos_df %&gt;%
     .groups = &quot;drop&quot;
   )
 
-# Create category labels dataframe
+# Clean category names: remove HALLMARK_ and replace &quot;_&quot; with space
 category_labels &lt;- category_bounds %&gt;%
-  mutate(category_clean = str_remove(category, &quot;HALLMARK_&quot;))
+  mutate(category_clean = category %&gt;%
+           str_remove(&quot;HALLMARK_&quot;) %&gt;%
+           str_replace_all(&quot;_&quot;, &quot;\n&quot;))
 
 # ---- main dotplot (remove manual bottom margin hack) ----
 p_main &lt;- DotPlot(
@@ -466,7 +498,9 @@ p_main &lt;- DotPlot(
   theme_Publication() +
   theme(
     axis.title.x = element_blank(),
+    axis.title.y = element_text(face = &quot;plain&quot;),
     axis.text.x  = element_text(angle = 90, vjust = 0.5, hjust = 1),
+    legend.title = element_text(face = &quot;plain&quot;),
     panel.background = element_rect(fill = &quot;white&quot;),
     plot.background  = element_rect(fill = &quot;white&quot;),
     panel.grid.major = element_blank(),
@@ -487,28 +521,134 @@ p_main &lt;- DotPlot(
 ## The following object is masked from &#39;package:cowplot&#39;:
 ## 
 ##     theme_map</code></pre>
-<pre class="r"><code>p_main &lt;- p_main +
-  theme(
-    plot.margin = margin(t = 10, r = 10, b = 80, l = 10)  # give space for gene labels
-  )
-
-# ---- bottom strip: ONLY category labels, aligned to gene positions ----
-p_cat &lt;- ggplot(category_labels, aes(x = mid, y = 1, label = category_clean)) +
-  geom_text(angle = 90, hjust = 0, vjust = 0.5, size = 3.5, fontface = &quot;bold&quot;) +
-  # match DotPlot&#39;s x coordinate system (genes are 1..length(features))
-  scale_x_continuous(limits = c(1, length(gene_order)), expand = c(0, 0)) +
+<pre class="r"><code># ---- bottom strip: ONLY category labels, aligned to gene positions ----
+p_cat &lt;- ggplot(category_labels, aes(x = mid, y = 0, label = category_clean)) +
+  geom_text(
+    angle = 0,
+    hjust = 0.5,
+    vjust = 1,
+    size = 4,
+    #fontface = &quot;bold&quot;,
+    lineheight = 1.0
+  ) +
+  scale_x_continuous(
+    limits = c(1, length(gene_order)),
+    expand = c(0, 0)
+  ) +
+  scale_y_continuous(
+    limits = c(-0.30, 0.05),
+    expand = c(0, 0)) +
   coord_cartesian(clip = &quot;off&quot;) +
   theme_void() +
   theme(
-    plot.margin = margin(t = 30, r = 10, b = 10, l = 10)
+    plot.margin = margin(t = 0, r = 10, b = 25, l = 10)
   )
 
 # ---- stack them: categories UNDER gene labels ----
-p_final &lt;- p_main / p_cat + plot_layout(heights = c(12, 5))
+p_final &lt;- p_main / p_cat + 
+  plot_layout(heights = c(12, 0.8))
 
 pdf(file = file.path(plot_dir, &quot;myeloid_dotplot_subcluster_markers.pdf&quot;),
-    width = 20, height = 12)
+    width = 20, height = 8)
 print(p_final)
+dev.off()</code></pre>
+<pre><code>## png 
+##   2</code></pre>
+</div>
+<div id="visualize-subcluster-dot-plot-using-manual-gene-list-from-panel-e" class="section level2">
+<h2>Visualize subcluster dot plot using manual gene list from panel
+E</h2>
+<pre class="r"><code>panelE_categories &lt;- list(
+  &quot;Lineage&quot; = c(&quot;Adgre1&quot;, &quot;Itgam&quot;, &quot;Itgax&quot;, &quot;Itga4&quot;, &quot;Aif1&quot;),
+  &quot;Pro-tumorigenic (M1)&quot; = c(
+    &quot;Trem1&quot;, &quot;Arg1&quot;, &quot;Mrc1&quot;, &quot;Il4ra&quot;, &quot;Chil3&quot;, &quot;Ccl6&quot;, &quot;Fn1&quot;, &quot;Il13ra1&quot;, &quot;Ccl24&quot;,
+    &quot;Stat3&quot;, &quot;Egr2&quot;, &quot;Hif1a&quot;, &quot;Socs2&quot;, &quot;Msr1&quot;, &quot;Top2a&quot;, &quot;Sparc&quot;, &quot;Birc5&quot;, &quot;Gpnmb&quot;, &quot;Cxcl10&quot;
+  ),
+  &quot;Anti-tumorigenic (M2)&quot; = c(
+    &quot;Lyz2&quot;, &quot;Il18bp&quot;, &quot;Ms4a7&quot;, &quot;Thbs1&quot;, &quot;Pf4&quot;, &quot;Stat1&quot;, &quot;Ifi27&quot;, &quot;Apoc2&quot;, &quot;Il1b&quot;,
+    &quot;Il1a&quot;, &quot;Ifngr2&quot;, &quot;Cxcl9&quot;, &quot;H2-Eb1&quot;, &quot;H2-Ab1&quot;
+  ),
+  &quot;Differentiation&quot; = c(&quot;Cd3g&quot;, &quot;Cd3d&quot;, &quot;Cd4&quot;, &quot;Cd8a&quot;)
+)
+
+panelE_df &lt;- tibble(
+  category = rep(names(panelE_categories), lengths(panelE_categories)),
+  gene = unlist(panelE_categories)
+)
+
+gene_order_E &lt;- unname(panelE_df$gene)
+
+category_bounds_E &lt;- panelE_df %&gt;%
+  mutate(pos = match(gene, gene_order_E)) %&gt;%
+  group_by(category) %&gt;%
+  summarise(
+    start = min(pos),
+    end   = max(pos),
+    mid   = (start + end) / 2,
+    .groups = &quot;drop&quot;
+  ) %&gt;%
+  arrange(start)
+
+category_vlines_E &lt;- category_bounds_E %&gt;%
+  mutate(xintercept = end + 0.5)
+
+p_main_E &lt;- DotPlot(
+  myeloid_obj,
+  features = gene_order_E,
+  cols = &quot;RdYlBu&quot;,
+  group.by = &quot;seurat_clusters&quot;,
+  assay = &quot;RNA&quot;
+) +
+  theme_Publication() +
+  theme(
+    axis.title.x = element_blank(),
+    axis.title.y = element_text(face = &quot;plain&quot;),
+    axis.text.x  = element_text(angle = 90, vjust = 0.5, hjust = 1),
+    legend.title = element_text(face = &quot;plain&quot;),
+    panel.background = element_rect(fill = &quot;white&quot;),
+    plot.background  = element_rect(fill = &quot;white&quot;),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank()
+  ) +
+  ylab(&quot;Cluster&quot;) +
+  geom_vline(
+    data = category_vlines_E,
+    aes(xintercept = xintercept),
+    linetype = &quot;dotted&quot;,
+    color = &quot;black&quot;,
+    size = 0.4,
+    inherit.aes = FALSE
+  )
+
+p_cat_E &lt;- ggplot(category_bounds_E, aes(x = mid, y = 0, label = category)) +
+  geom_text(
+    angle = 0,
+    hjust = 0.5,
+    vjust = 1,
+    size = 5,
+    #fontface = &quot;bold&quot;,
+    lineheight = 1
+  ) +
+  scale_x_continuous(
+    limits = c(1, length(gene_order_E)),
+    expand = c(0, 0)
+  ) +
+  scale_y_continuous(
+    limits = c(-0.25, 0.05),
+    expand = c(0, 0)
+  ) +
+  coord_cartesian(clip = &quot;off&quot;) +
+  theme_void() +
+  theme(
+    plot.margin = margin(t = 0, r = 10, b = 25, l = 10)
+  )
+
+p_final_E &lt;- p_main_E / p_cat_E +
+  plot_layout(heights = c(12, 0.6))
+
+pdf(file = file.path(plot_dir, &quot;myeloid_dotplot_subcluster_markers_panelE.pdf&quot;),
+    width = 15, height = 5)
+print(p_final_E)
 dev.off()</code></pre>
 <pre><code>## png 
 ##   2</code></pre>
@@ -537,6 +677,20 @@ category_df_clean &lt;- category_df %&gt;%
   dplyr::slice(1) %&gt;%
   ungroup()
 
+# Remove unwanted categories
+categories_to_remove &lt;- c(
+  &quot;HALLMARK_ADIPOGENESIS&quot;,
+  &quot;HALLMARK_ALLOGRAFT_REJECTION&quot;,
+  &quot;HALLMARK_ANDROGEN_RESPONSE&quot;,
+  &quot;HALLMARK_APICAL_JUNCTION&quot;,
+  &quot;HALLMARK_CHOLESTEROL_HOMEOSTASIS&quot;,
+  &quot;HALLMARK_COAGULATION&quot;,
+  &quot;HALLMARK_EPITHELIAL_MESENCHYMAL_TRANSITION&quot;
+)
+
+category_df_clean &lt;- category_df_clean %&gt;%
+  filter(!category %in% categories_to_remove)
+
 category_df_clean &lt;- category_df_clean %&gt;%
   arrange(category, gene)
 
@@ -554,9 +708,7 @@ category_df_clean &lt;- category_df_clean %&gt;%
 
 gene_order &lt;- unique(category_df_clean$gene)
 
-anyDuplicated(gene_order)</code></pre>
-<pre><code>## [1] 0</code></pre>
-<pre class="r"><code># ---- safer gene positions per category ----
+# Category positions
 gene_pos_df &lt;- category_df_clean %&gt;%
   mutate(pos = match(gene, gene_order)) %&gt;%
   filter(!is.na(pos))
@@ -572,58 +724,88 @@ category_bounds &lt;- gene_pos_df %&gt;%
 
 # Create category labels dataframe
 category_labels &lt;- category_bounds %&gt;%
-  mutate(category_clean = str_remove(category, &quot;HALLMARK_&quot;))
+  mutate(
+    category_clean = category %&gt;%
+      str_remove(&quot;HALLMARK_&quot;) %&gt;%
+      str_replace_all(&quot;_&quot;, &quot;\n&quot;)
+  )
 
-# ---- main dotplot (remove manual bottom margin hack) ----
-p_main &lt;- DotPlot(
-  myeloid_obj,
-  features = gene_order,
-  cols = &quot;RdYlBu&quot;,
-  group.by = &quot;myeloid_subtype&quot;,
-  assay = &quot;RNA&quot;
-) +
-  theme_Publication() +
-  theme(
-    axis.title.x = element_blank(),
-    axis.text.x  = element_text(angle = 90, vjust = 0.5, hjust = 1),
-    panel.background = element_rect(fill = &quot;white&quot;),
-    plot.background  = element_rect(fill = &quot;white&quot;),
-    panel.grid.major = element_blank(),
-    panel.grid.minor = element_blank()
+# Reusable plotting function
+make_dotplot &lt;- function(obj, exclude_subtypes = NULL, file_name) {
+  
+  obj_plot &lt;- obj
+  
+  if (!is.null(exclude_subtypes)) {
+    obj_plot &lt;- subset(
+      obj_plot,
+      subset = !myeloid_subtype %in% exclude_subtypes
+    )
+  }
+  
+  p_main &lt;- DotPlot(
+    obj_plot,
+    features = gene_order,
+    cols = &quot;RdYlBu&quot;,
+    group.by = &quot;myeloid_subtype&quot;,
+    assay = &quot;RNA&quot;
   ) +
-  ylab(NULL) +
-  geom_vline(
-    data = category_bounds,
-    aes(xintercept = end + 0.5),
-    linetype = &quot;dotted&quot;,
-    color = &quot;black&quot;,
-    size = 0.4,
-    inherit.aes = FALSE
-  )
+    theme_Publication() +
+    theme(
+      axis.title.x = element_blank(),
+      axis.title.y = element_text(face = &quot;plain&quot;),
+      axis.text.x  = element_text(angle = 90, vjust = 0.5, hjust = 1),
+      legend.title = element_text(face = &quot;plain&quot;),
+      panel.background = element_rect(fill = &quot;white&quot;),
+      plot.background  = element_rect(fill = &quot;white&quot;),
+      panel.grid.major = element_blank(),
+      panel.grid.minor = element_blank()
+    ) +
+    ylab(NULL) +
+    geom_vline(
+      data = category_bounds,
+      aes(xintercept = end + 0.5),
+      linetype = &quot;dotted&quot;,
+      color = &quot;black&quot;,
+      size = 0.4,
+      inherit.aes = FALSE
+    )
+  
+  p_cat &lt;- ggplot(category_labels, aes(x = mid, y = 0, label = category_clean)) +
+    geom_text(
+      angle = 0,
+      hjust = 0.5,
+      vjust = 1,
+      size = 4,
+      #fontface = &quot;bold&quot;,
+      lineheight = 1
+    ) +
+    scale_x_continuous(
+      limits = c(1, length(gene_order)),
+      expand = c(0, 0)
+    ) +
+    scale_y_continuous(
+      limits = c(-0.30, 0.05),
+      expand = c(0, 0)
+    ) +
+    coord_cartesian(clip = &quot;off&quot;) +
+    theme_void() +
+    theme(plot.margin = margin(t = 0, r = 10, b = 25, l = 10))
+  
+  p_final &lt;- p_main / p_cat +
+    plot_layout(heights = c(12, 0.8))
+  
+  pdf(file = file.path(plot_dir, file_name),
+      width = 20, height = 8)
+  print(p_final)
+  dev.off()
+}
 
-p_main &lt;- p_main +
-  theme(
-    plot.margin = margin(t = 10, r = 10, b = 80, l = 10)  # give space for gene labels
-  )
-
-# ---- bottom strip: ONLY category labels, aligned to gene positions ----
-p_cat &lt;- ggplot(category_labels, aes(x = mid, y = 1, label = category_clean)) +
-  geom_text(angle = 90, hjust = 0, vjust = 0.5, size = 3.5, fontface = &quot;bold&quot;) +
-  # match DotPlot&#39;s x coordinate system (genes are 1..length(features))
-  scale_x_continuous(limits = c(1, length(gene_order)), expand = c(0, 0)) +
-  coord_cartesian(clip = &quot;off&quot;) +
-  theme_void() +
-  theme(
-    plot.margin = margin(t = 30, r = 10, b = 10, l = 10)
-  )
-
-# ---- stack them: categories UNDER gene labels ----
-p_final &lt;- p_main / p_cat + plot_layout(heights = c(12, 5))
-
-pdf(file = file.path(plot_dir, &quot;myeloid_dotplot_subtype_markers.pdf&quot;),
-    width = 20, height = 12)
-print(p_final)
-dev.off()</code></pre>
+# Exclude Inflammatory monocytes
+make_dotplot(
+  myeloid_obj,
+  exclude_subtypes = c(&quot;Inflammatory monocytes&quot;),
+  file_name = &quot;myeloid_dotplot_subtype_markers_exclude_inflammatory_monocytes.pdf&quot;
+)</code></pre>
 <pre><code>## png 
 ##   2</code></pre>
 </div>
@@ -659,26 +841,29 @@ category_df_clean &lt;- category_df %&gt;%
   dplyr::slice(1) %&gt;%
   ungroup()
 
+# Remove unwanted categories
+categories_to_remove &lt;- c(
+  &quot;HALLMARK_ADIPOGENESIS&quot;,
+  &quot;HALLMARK_ALLOGRAFT_REJECTION&quot;,
+  &quot;HALLMARK_ANDROGEN_RESPONSE&quot;,
+  &quot;HALLMARK_APICAL_JUNCTION&quot;
+)
+
+category_df_clean &lt;- category_df_clean %&gt;%
+  filter(!category %in% categories_to_remove)
+
 category_df_clean &lt;- category_df_clean %&gt;%
   arrange(category, gene)
 
-# remove categories that have only one gene (don&#39;t plot these)
-category_counts &lt;- category_df_clean %&gt;%
-  group_by(category) %&gt;%
-  tally(name = &quot;n_genes&quot;)
-
-categories_to_keep &lt;- category_counts %&gt;%
-  filter(n_genes &gt; 1) %&gt;%
-  pull(category)
-
+# Remove categories with only 1 gene
 category_df_clean &lt;- category_df_clean %&gt;%
-  filter(category %in% categories_to_keep)
+  group_by(category) %&gt;%
+  filter(n() &gt; 1) %&gt;%
+  ungroup()
 
 gene_order &lt;- unique(category_df_clean$gene)
 
-anyDuplicated(gene_order)</code></pre>
-<pre><code>## [1] 0</code></pre>
-<pre class="r"><code># ---- safer gene positions per category ----
+# Category positions
 gene_pos_df &lt;- category_df_clean %&gt;%
   mutate(pos = match(gene, gene_order)) %&gt;%
   filter(!is.na(pos))
@@ -692,11 +877,15 @@ category_bounds &lt;- gene_pos_df %&gt;%
     .groups = &quot;drop&quot;
   )
 
-# Create category labels dataframe
+# Clean category labels
 category_labels &lt;- category_bounds %&gt;%
-  mutate(category_clean = str_remove(category, &quot;HALLMARK_&quot;))
+  mutate(
+    category_clean = category %&gt;%
+      str_remove(&quot;HALLMARK_&quot;) %&gt;%
+      str_replace_all(&quot;_&quot;, &quot;\n&quot;)
+  )
 
-# ---- main dotplot (remove manual bottom margin hack) ----
+# main dotplot
 p_main &lt;- DotPlot(
   myeloid_obj,
   features = gene_order,
@@ -707,11 +896,21 @@ p_main &lt;- DotPlot(
   theme_Publication() +
   theme(
     axis.title.x = element_blank(),
+    axis.title.y = element_text(face = &quot;plain&quot;),
     axis.text.x  = element_text(angle = 90, vjust = 0.5, hjust = 1),
+    legend.title = element_text(face = &quot;plain&quot;),
     panel.background = element_rect(fill = &quot;white&quot;),
     plot.background  = element_rect(fill = &quot;white&quot;),
     panel.grid.major = element_blank(),
     panel.grid.minor = element_blank()
+  ) +
+  labs(
+    size = &quot;Percent Expressed&quot;,
+    color = &quot;Average Expression&quot;
+  ) +
+  guides(
+    size = guide_legend(order = 1),
+    color = guide_colorbar(order = 2)
   ) +
   ylab(NULL) +
   geom_vline(
@@ -723,23 +922,138 @@ p_main &lt;- DotPlot(
     inherit.aes = FALSE
   )
 
-# ---- bottom strip: ONLY category labels, aligned to gene positions ----
-p_cat &lt;- ggplot(category_labels, aes(x = mid, y = 1, label = category_clean)) +
-  geom_text(angle = 90, hjust = 0, vjust = 0.5, size = 3.5, fontface = &quot;bold&quot;) +
-  # match DotPlot&#39;s x coordinate system (genes are 1..length(features))
-  scale_x_continuous(limits = c(1, length(gene_order)), expand = c(0, 0)) +
+# Category Strip (clean + compact)
+p_cat &lt;- ggplot(category_labels, aes(x = mid, y = 0, label = category_clean)) +
+  geom_text(
+    angle = 0,
+    hjust = 0.5,
+    vjust = 1,
+    size = 4,
+    #fontface = &quot;bold&quot;,
+    lineheight = 1.0
+  ) +
+  scale_x_continuous(
+    limits = c(1, length(gene_order)),
+    expand = c(0, 0)
+  ) +
+  scale_y_continuous(
+    limits = c(-0.30, 0.05),
+    expand = c(0, 0)
+  ) +
   coord_cartesian(clip = &quot;off&quot;) +
   theme_void() +
   theme(
-    plot.margin = margin(t = 10, r = 10, b = 10, l = 10)
+    plot.margin = margin(t = 0, r = 10, b = 25, l = 10)
   )
 
-# ---- stack them: categories UNDER gene labels ----
-p_final &lt;- p_main / p_cat + plot_layout(heights = c(12, 5))
+# Combine
+p_final &lt;- p_main / p_cat +
+  plot_layout(heights = c(12, 1.5))
 
 pdf(file = file.path(plot_dir, &quot;myeloid_dotplot_treatment_markers.pdf&quot;),
-    width = 18, height = 12)
+    width = 15, height = 5)
 print(p_final)
+dev.off()</code></pre>
+<pre><code>## png 
+##   2</code></pre>
+</div>
+<div id="visualize-treatment-dot-plot-using-manual-gene-list-from-panel-f" class="section level2">
+<h2>Visualize treatment dot plot using manual gene list from panel
+F</h2>
+<pre class="r"><code>panelF_categories &lt;- list(
+  &quot;Immunosuppressive&quot; = c(&quot;Cd74&quot;, &quot;Ccl4&quot;, &quot;Cxcl16&quot;, &quot;Lgals3&quot;, &quot;Mif&quot;, &quot;Apoe&quot;, &quot;Id2&quot;, &quot;Stat3&quot;, &quot;Stat6&quot;),
+  &quot;Invasion&quot; = c(&quot;Mt1&quot;, &quot;Ctsb&quot;, &quot;Ctsd&quot;),
+  &quot;Recruitment&quot; = c(&quot;Cxcl10&quot;, &quot;Cxcl9&quot;, &quot;Ccr5&quot;, &quot;Ccl5&quot;),
+  &quot;M1-like&quot; = c(&quot;H2-Ab1&quot;, &quot;H2-Eb1&quot;, &quot;H2-Aa&quot;, &quot;Irf7&quot;, &quot;Il1b&quot;, &quot;Cd86&quot;, &quot;Lyz2&quot;, &quot;Socs1&quot;, &quot;Ifngr2&quot;, &quot;Il18bp&quot;, &quot;Ms4a7&quot;, &quot;Adgre1&quot;),
+  &quot;M2-like&quot; = c(&quot;Msr1&quot;, &quot;Tgfb1&quot;, &quot;Pkm&quot;, &quot;Axl&quot;, &quot;Arg1&quot;, &quot;Mrc1&quot;, &quot;Il4ra&quot;, &quot;Il13ra1&quot;, &quot;Hif1a&quot;)
+)
+
+panelF_df &lt;- tibble(
+  category = rep(names(panelF_categories), lengths(panelF_categories)),
+  gene = unname(unlist(panelF_categories))
+)
+
+gene_order_F &lt;- unname(panelF_df$gene)
+
+category_bounds_F &lt;- panelF_df %&gt;%
+  mutate(pos = match(gene, gene_order_F)) %&gt;%
+  group_by(category) %&gt;%
+  summarise(
+    start = min(pos),
+    end   = max(pos),
+    mid   = (start + end) / 2,
+    .groups = &quot;drop&quot;
+  ) %&gt;%
+  arrange(start)
+
+category_vlines_F &lt;- category_bounds_F %&gt;%
+  mutate(xintercept = end + 0.5)
+
+p_main_F &lt;- DotPlot(
+  myeloid_obj,
+  features = gene_order_F,
+  cols = &quot;RdYlBu&quot;,
+  group.by = &quot;condition&quot;,
+  assay = &quot;RNA&quot;
+) +
+  theme_Publication() +
+  theme(
+    axis.title.x = element_blank(),
+    axis.title.y = element_text(face = &quot;plain&quot;),
+    axis.text.x  = element_text(angle = 90, vjust = 0.5, hjust = 1),
+    legend.title = element_text(face = &quot;plain&quot;),
+    panel.background = element_rect(fill = &quot;white&quot;),
+    plot.background  = element_rect(fill = &quot;white&quot;),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank()
+  ) +
+  labs(
+    size = &quot;Percent Expressed&quot;,
+    color = &quot;Average Expression&quot;
+  ) +
+  guides(
+    size = guide_legend(order = 1),
+    color = guide_colorbar(order = 2)
+  ) +
+  ylab(NULL) +
+  geom_vline(
+    data = category_vlines_F,
+    aes(xintercept = xintercept),
+    linetype = &quot;dotted&quot;,
+    color = &quot;black&quot;,
+    size = 0.4,
+    inherit.aes = FALSE
+  )
+
+p_cat_F &lt;- ggplot(category_bounds_F, aes(x = mid, y = 0, label = category)) +
+  geom_text(
+    angle = 0,
+    hjust = 0.5,
+    vjust = 1,
+    size = 5,
+    #fontface = &quot;bold&quot;,
+    lineheight = 1
+  ) +
+  scale_x_continuous(
+    limits = c(1, length(gene_order_F)),
+    expand = c(0, 0)
+  ) +
+  scale_y_continuous(
+    limits = c(-0.25, 0.05),
+    expand = c(0, 0)
+  ) +
+  coord_cartesian(clip = &quot;off&quot;) +
+  theme_void() +
+  theme(
+    plot.margin = margin(t = 0, r = 10, b = 25, l = 10)
+  )
+
+p_final_F &lt;- p_main_F / p_cat_F +
+  plot_layout(heights = c(12, 0.6))
+
+pdf(file = file.path(plot_dir, &quot;myeloid_dotplot_treatment_markers_panelF.pdf&quot;),
+    width = 15, height = 4)
+print(p_final_F)
 dev.off()</code></pre>
 <pre><code>## png 
 ##   2</code></pre>
@@ -768,45 +1082,45 @@ dev.off()</code></pre>
 ## [8] base     
 ## 
 ## other attached packages:
-##  [1] ggthemes_5.1.0       cowplot_1.2.0        pheatmap_1.0.12     
-##  [4] msigdbr_25.1.1       AUCell_1.28.0        scCustomize_3.2.2   
+##  [1] ggthemes_5.2.0       cowplot_1.2.0        pheatmap_1.0.12     
+##  [4] msigdbr_25.1.1       AUCell_1.28.0        scCustomize_3.2.4   
 ##  [7] lubridate_1.9.3      forcats_1.0.0        stringr_1.5.1       
 ## [10] purrr_1.0.2          readr_2.1.5          tidyr_1.3.1         
-## [13] tibble_3.2.1         tidyverse_2.0.0      ggplot2_4.0.1       
-## [16] patchwork_1.3.2.9000 Seurat_5.3.1         SeuratObject_5.2.0  
-## [19] sp_2.2-0             dplyr_1.1.4          rprojroot_2.1.1     
+## [13] tibble_3.2.1         tidyverse_2.0.0      ggplot2_4.0.2       
+## [16] patchwork_1.3.2.9000 Seurat_5.4.0         SeuratObject_5.3.0  
+## [19] sp_2.2-1             dplyr_1.1.4          rprojroot_2.1.1     
 ## 
 ## loaded via a namespace (and not attached):
-##   [1] RcppAnnoy_0.0.22            splines_4.4.0              
+##   [1] RcppAnnoy_0.0.23            splines_4.4.0              
 ##   [3] later_1.3.2                 R.oo_1.26.0                
 ##   [5] polyclip_1.10-7             janitor_2.2.1              
 ##   [7] graph_1.84.1                XML_3.99-0.16.1            
 ##   [9] fastDummies_1.7.5           lifecycle_1.0.4            
-##  [11] globals_0.18.0              lattice_0.22-6             
+##  [11] globals_0.19.0              lattice_0.22-6             
 ##  [13] MASS_7.3-60.2               magrittr_2.0.3             
-##  [15] limma_3.62.2                plotly_4.11.0              
+##  [15] limma_3.62.2                plotly_4.12.0              
 ##  [17] sass_0.4.9                  rmarkdown_2.27             
-##  [19] jquerylib_0.1.4             yaml_2.3.10                
-##  [21] httpuv_1.6.15               sctransform_0.4.2          
-##  [23] spam_2.11-1                 spatstat.sparse_3.1-0      
-##  [25] reticulate_1.44.1           pbapply_1.7-4              
+##  [19] jquerylib_0.1.4             yaml_2.3.12                
+##  [21] httpuv_1.6.15               sctransform_0.4.3          
+##  [23] spam_2.11-3                 spatstat.sparse_3.1-0      
+##  [25] reticulate_1.45.0           pbapply_1.7-4              
 ##  [27] DBI_1.2.3                   RColorBrewer_1.1-3         
 ##  [29] zlibbioc_1.52.0             abind_1.4-8                
 ##  [31] GenomicRanges_1.58.0        Rtsne_0.17                 
 ##  [33] presto_1.0.0                R.utils_2.12.3             
 ##  [35] BiocGenerics_0.52.0         GenomeInfoDbData_1.2.13    
-##  [37] circlize_0.4.16             IRanges_2.40.1             
+##  [37] circlize_0.4.17             IRanges_2.40.1             
 ##  [39] S4Vectors_0.44.0            ggrepel_0.9.6              
-##  [41] irlba_2.3.5.1               listenv_0.10.0             
-##  [43] spatstat.utils_3.2-0        goftest_1.2-3              
-##  [45] RSpectra_0.16-2             spatstat.random_3.4-2      
-##  [47] annotate_1.84.0             fitdistrplus_1.2-4         
-##  [49] parallelly_1.45.1           DelayedMatrixStats_1.28.1  
+##  [41] irlba_2.3.7                 listenv_0.10.0             
+##  [43] spatstat.utils_3.2-1        goftest_1.2-3              
+##  [45] RSpectra_0.16-2             spatstat.random_3.4-4      
+##  [47] annotate_1.84.0             fitdistrplus_1.2-6         
+##  [49] parallelly_1.46.1           DelayedMatrixStats_1.28.1  
 ##  [51] DelayedArray_0.32.0         codetools_0.2-20           
 ##  [53] tidyselect_1.2.1            shape_1.4.6.1              
 ##  [55] UCSC.utils_1.2.0            farver_2.1.2               
 ##  [57] matrixStats_1.5.0           stats4_4.4.0               
-##  [59] spatstat.explore_3.5-3      jsonlite_2.0.0             
+##  [59] spatstat.explore_3.7-0      jsonlite_2.0.0             
 ##  [61] progressr_0.18.0            ggridges_0.5.7             
 ##  [63] survival_3.7-0              tools_4.4.0                
 ##  [65] ica_1.0-3                   Rcpp_1.0.12                
@@ -814,51 +1128,51 @@ dev.off()</code></pre>
 ##  [69] gridExtra_2.3               xfun_0.44                  
 ##  [71] MatrixGenerics_1.18.1       GenomeInfoDb_1.42.3        
 ##  [73] withr_3.0.2                 fastmap_1.2.0              
-##  [75] fansi_1.0.6                 digest_0.6.35              
-##  [77] timechange_0.3.0            R6_2.6.1                   
-##  [79] mime_0.12                   ggprism_1.0.7              
-##  [81] colorspace_2.1-0            scattermore_1.2            
-##  [83] tensor_1.5.1                spatstat.data_3.1-9        
-##  [85] RSQLite_2.3.7               R.methodsS3_1.8.2          
-##  [87] utf8_1.2.4                  generics_0.1.3             
-##  [89] data.table_1.15.4           S4Arrays_1.6.0             
-##  [91] httr_1.4.7                  htmlwidgets_1.6.4          
-##  [93] uwot_0.2.4                  pkgconfig_2.0.3            
-##  [95] gtable_0.3.6                blob_1.2.4                 
-##  [97] lmtest_0.9-40               S7_0.2.1                   
-##  [99] XVector_0.46.0              htmltools_0.5.8.1          
-## [101] dotCall64_1.2               GSEABase_1.68.0            
-## [103] scales_1.4.0                Biobase_2.66.0             
-## [105] png_0.1-8                   spatstat.univar_3.1-5      
-## [107] snakecase_0.11.1            knitr_1.47                 
-## [109] rstudioapi_0.16.0           tzdb_0.4.0                 
-## [111] reshape2_1.4.5              curl_7.0.0                 
-## [113] nlme_3.1-165                cachem_1.1.0               
-## [115] zoo_1.8-14                  GlobalOptions_0.1.2        
-## [117] KernSmooth_2.23-24          parallel_4.4.0             
-## [119] miniUI_0.1.2                vipor_0.4.7                
-## [121] AnnotationDbi_1.68.0        ggrastr_1.0.2              
-## [123] pillar_1.9.0                vctrs_0.6.5                
-## [125] RANN_2.6.2                  promises_1.3.0             
-## [127] xtable_1.8-4                cluster_2.1.6              
-## [129] beeswarm_0.4.0              paletteer_1.6.0            
-## [131] evaluate_1.0.5              cli_3.6.5                  
-## [133] compiler_4.4.0              rlang_1.1.6                
-## [135] crayon_1.5.2                future.apply_1.20.0        
-## [137] labeling_0.4.3              rematch2_2.1.2             
-## [139] plyr_1.8.9                  ggbeeswarm_0.7.2           
-## [141] stringi_1.8.4               viridisLite_0.4.2          
-## [143] deldir_2.0-4                babelgene_22.9             
-## [145] assertthat_0.2.1            Biostrings_2.74.1          
-## [147] lazyeval_0.2.2              spatstat.geom_3.6-0        
-## [149] Matrix_1.7-4                RcppHNSW_0.6.0             
-## [151] hms_1.1.3                   sparseMatrixStats_1.18.0   
-## [153] bit64_4.0.5                 future_1.68.0              
-## [155] statmod_1.5.0               KEGGREST_1.46.0            
-## [157] shiny_1.8.1.1               SummarizedExperiment_1.36.0
-## [159] ROCR_1.0-11                 igraph_2.2.1               
-## [161] memoise_2.0.1               bslib_0.7.0                
-## [163] bit_4.0.5</code></pre>
+##  [75] fansi_1.0.6                 mcprogress_0.1.1           
+##  [77] digest_0.6.35               timechange_0.3.0           
+##  [79] R6_2.6.1                    mime_0.12                  
+##  [81] ggprism_1.0.7               colorspace_2.1-0           
+##  [83] scattermore_1.2             tensor_1.5.1               
+##  [85] spatstat.data_3.1-9         RSQLite_2.3.7              
+##  [87] R.methodsS3_1.8.2           utf8_1.2.4                 
+##  [89] generics_0.1.3              data.table_1.15.4          
+##  [91] S4Arrays_1.6.0              httr_1.4.7                 
+##  [93] htmlwidgets_1.6.4           uwot_0.2.4                 
+##  [95] pkgconfig_2.0.3             gtable_0.3.6               
+##  [97] blob_1.2.4                  lmtest_0.9-40              
+##  [99] S7_0.2.1                    XVector_0.46.0             
+## [101] htmltools_0.5.8.1           dotCall64_1.2              
+## [103] GSEABase_1.68.0             scales_1.4.0               
+## [105] Biobase_2.66.0              png_0.1-8                  
+## [107] spatstat.univar_3.1-6       snakecase_0.11.1           
+## [109] knitr_1.47                  rstudioapi_0.16.0          
+## [111] tzdb_0.4.0                  reshape2_1.4.5             
+## [113] curl_7.0.0                  nlme_3.1-165               
+## [115] cachem_1.1.0                zoo_1.8-15                 
+## [117] GlobalOptions_0.1.3         KernSmooth_2.23-24         
+## [119] parallel_4.4.0              miniUI_0.1.2               
+## [121] vipor_0.4.7                 AnnotationDbi_1.68.0       
+## [123] ggrastr_1.0.2               pillar_1.9.0               
+## [125] vctrs_0.6.5                 RANN_2.6.2                 
+## [127] promises_1.3.0              xtable_1.8-4               
+## [129] cluster_2.1.6               beeswarm_0.4.0             
+## [131] paletteer_1.7.0             evaluate_1.0.5             
+## [133] cli_3.6.5                   compiler_4.4.0             
+## [135] rlang_1.1.7                 crayon_1.5.2               
+## [137] future.apply_1.20.2         labeling_0.4.3             
+## [139] rematch2_2.1.2              plyr_1.8.9                 
+## [141] ggbeeswarm_0.7.3            stringi_1.8.4              
+## [143] viridisLite_0.4.2           deldir_2.0-4               
+## [145] babelgene_22.9              assertthat_0.2.1           
+## [147] Biostrings_2.74.1           lazyeval_0.2.2             
+## [149] spatstat.geom_3.7-0         Matrix_1.7-4               
+## [151] RcppHNSW_0.6.0              hms_1.1.3                  
+## [153] sparseMatrixStats_1.18.0    bit64_4.0.5                
+## [155] future_1.69.0               statmod_1.5.0              
+## [157] KEGGREST_1.46.0             shiny_1.8.1.1              
+## [159] SummarizedExperiment_1.36.0 ROCR_1.0-12                
+## [161] igraph_2.2.2                memoise_2.0.1              
+## [163] bslib_0.7.0                 bit_4.0.5</code></pre>
 </div>
 
 
