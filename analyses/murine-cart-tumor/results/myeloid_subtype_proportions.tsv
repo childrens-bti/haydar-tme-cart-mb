@@ -1,4 +1,4 @@
-condition	myeloid_subtype	n	prop
+condition	cell_group	n	prop
 41BB-L	Early activated microglia	2233	0.130447482182498
 41BB-L	TAM-like phagocytic microglia	1643	0.0959808388830471
 41BB-L	Stress-response microglia	3876	0.226428321065545
