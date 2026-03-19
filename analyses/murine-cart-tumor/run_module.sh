@@ -32,8 +32,36 @@ Rscript -e "rmarkdown::render('08-grant-umaps.Rmd')"
 Rscript -e "rmarkdown::render('09-lineage-plot.Rmd')"
 # Perform differential expression analysis in myeloid cells and generates pathway-annotated dot plots
 Rscript -e "rmarkdown::render('10-myeloid-functional-marker-dotplots.Rmd')"
-# Run Hallmark GSEA for the specified subtype (defaults to myeloid) and generate volcano/GSEA plots
-Rscript -e "rmarkdown::render('11-subtype-pseudobulk-gsea.Rmd')"
+
+# Run Hallmark GSEA analysis for myeloid
+Rscript -e "rmarkdown::render(
+  '11-subtype-pseudobulk-gsea.Rmd',
+  params = list(
+    input_rds = 'cart_myeloid_subtypes.rds',
+    subtype_label = 'myeloid'
+  ),
+  output_file = '11-subtype-pseudobulk-gsea-myeloid.html'
+)"
+
+# Run Hallmark GSEA analysis for tcell
+Rscript -e "rmarkdown::render(
+  '11-subtype-pseudobulk-gsea.Rmd',
+  params = list(
+    input_rds = 'cart_tcell_subtypes.rds',
+    subtype_label = 'tcell'
+  ),
+  output_file = '11-subtype-pseudobulk-gsea-tcell.html'
+)"
+
+# Run Hallmark GSEA analysis for dc
+Rscript -e "rmarkdown::render(
+  '11-subtype-pseudobulk-gsea.Rmd',
+  params = list(
+    input_rds = 'cart_dc_subtypes.rds',
+    subtype_label = 'dc'
+  ),
+  output_file = '11-subtype-pseudobulk-gsea-dc.html'
+)"
 
 # Run subtype composition analysis for myeloid
 Rscript -e "rmarkdown::render(
