@@ -67,13 +67,13 @@ unique(obj$myeloid_subtype)
 
 ```{r define-condition-order}
 # Define condition order and colors once
-condition_levels <- c("41BB-L", "B7H3", "CD8-41BB", "CD28-41BB", "STOP", "tumor")
+condition_levels <- c("41BB-L", "B7H3", "CD28-41BB", "CD8-41BB", "STOP", "tumor")
 
 condition_colors <- c(
   "41BB-L" = "#7570B3",
   "B7H3" = "#E7298A",
-  "CD8-41BB" = "#D95F02",
   "CD28-41BB" = "#1B9E77",
+  "CD8-41BB" = "#D95F02",
   "STOP" = "#BDBDBD",
   "tumor" = "#66A61E"
 )
@@ -108,9 +108,9 @@ typeI_ifn_isgs <- c(
 ) # Warning: The following features are not present in the object: Ifit5, Ifi6, Mx1, Mx2, Ddx58
 
 # ---- GBP Antimicrobial / IFN-Induced ----
-gbp_antimicrobial <- c(
-  "Gbp2","Gbp3","Gbp4","Gbp5"
-) # Warning: The following features are not present in the object: Gbp1
+#gbp_antimicrobial <- c(
+#  "Gbp2","Gbp3","Gbp4","Gbp5"
+#) # Warning: The following features are not present in the object: Gbp1
 
 # ---- NF-kB / Inflammatory Cytokines ----
 nfkb_inflammatory_cytokines <- c(
@@ -142,9 +142,9 @@ inflammasome_innate_amplification <- c(
 )
 
 # ---- Antiviral / RNA Sensing Crosstalk ----
-antiviral_rna_sensing_crosstalk <- c(
-  "Ddx60","Dhx58"
-)
+#antiviral_rna_sensing_crosstalk <- c(
+#  "Ddx60","Dhx58"
+#)
 
 # ---- Additional Myeloid Response / Activation Markers ----
 additional_myeloid_response_activation <- c(
@@ -160,13 +160,13 @@ tlr_gene_sets <- list(
   Core_Signaling_Cascade = core_signaling_cascade,
   IRF_Interferon_TFs = irf_interferon_tfs,
   TypeI_IFN_ISGs = typeI_ifn_isgs,
-  GBP_Antimicrobial = gbp_antimicrobial,
+  #GBP_Antimicrobial = gbp_antimicrobial,
   NFkB_Inflammatory_Cytokines = nfkb_inflammatory_cytokines,
   Chemokines = chemokines,
   Antigen_Presentation_CoStimulation = antigen_presentation_costimulation,
   Myeloid_Activation_Polarization = myeloid_activation_polarization,
   Inflammasome_Innate_Amplification = inflammasome_innate_amplification,
-  Antiviral_RNA_Sensing_Crosstalk = antiviral_rna_sensing_crosstalk,
+  #Antiviral_RNA_Sensing_Crosstalk = antiviral_rna_sensing_crosstalk,
   Additional_Myeloid_Response_Activation = additional_myeloid_response_activation
 )
 # Calculate module scores for each gene set using UCell
@@ -545,7 +545,7 @@ for (f in features) {
       ),
       axis.title.x = element_blank(),
       plot.title = element_text(size = 15, face = "bold", hjust = 0.5),
-      plot.margin = margin(10, 20, 10, 20),
+      plot.margin = margin(10, 30, 10, 40),
       legend.position = "none"
     )
 
@@ -581,7 +581,7 @@ for (f in features) {
       ),
       axis.title.x = element_blank(),
       plot.title = element_text(size = 15, face = "bold", hjust = 0.5),
-      plot.margin = margin(10, 20, 10, 20)
+      plot.margin = margin(10, 30, 10, 40)
     )
 
   print(p)
