@@ -9,7 +9,7 @@ output:
 params:
   input_rds: "cart_myeloid_subtypes.rds"
   subtype_label: "myeloid"
-  condition_levels: !r c("tumor", "STOP", "B7H3", "41BB-L", "CD8-41BB", "CD28-41BB")
+  condition_levels: !r c("41BB-L", "B7H3", "CD28-41BB", "CD8-41BB", "STOP", "tumor")
   car_levels: !r c("41BB-L", "B7H3", "CD28-41BB", "CD8-41BB")
   minSize: 15
   maxSize: 500
@@ -97,6 +97,13 @@ set.seed(1234)
 
 ```{r load-data}
 subtype_label <- params$subtype_label
+
+subtype_title <- dplyr::case_when(
+  subtype_label == "myeloid" ~ "Myeloid",
+  subtype_label == "tcell" ~ "T cell",
+  subtype_label == "dc" ~ "DC",
+  TRUE ~ stringr::str_to_title(subtype_label)
+)
 
 obj <- readRDS(file.path(data_dir, params$input_rds))
 
@@ -267,6 +274,7 @@ run_pseudobulk_fgsea <- function(pb_counts,
                                  hallmark_pathways,
                                  out_prefix,
                                  subtype_label,
+                                 subtype_title,
                                  results_dir,
                                  plot_dir,
                                  minSize = 15,
@@ -314,7 +322,7 @@ run_pseudobulk_fgsea <- function(pb_counts,
     file.path(results_dir, paste0(subtype_label, "_GSEA_", out_prefix, "_hallmark.csv"))
   )
   
-  plot_title <- format_contrast_title(out_prefix)
+  plot_title <- paste(subtype_title, "-", format_contrast_title(out_prefix))
 
   pvol <- plot_volcano(
     df = res_df,
@@ -358,6 +366,7 @@ run_pseudobulk_contrast <- function(pb_counts,
                                     hallmark_pathways,
                                     out_prefix,
                                     subtype_label,
+                                    subtype_title,
                                     results_dir,
                                     plot_dir,
                                     minSize,
@@ -380,6 +389,7 @@ run_pseudobulk_contrast <- function(pb_counts,
     hallmark_pathways = hallmark_pathways,
     out_prefix = out_prefix,
     subtype_label = subtype_label,
+    subtype_title = subtype_title,
     results_dir = results_dir,
     plot_dir = plot_dir,
     minSize = minSize,
@@ -442,6 +452,7 @@ for (cond in all_conditions) {
     hallmark_pathways = hallmark_pathways,
     out_prefix = paste0("pseudobulk_", out_prefix),
     subtype_label = subtype_label,
+    subtype_title = subtype_title,
     results_dir = results_dir,
     plot_dir = plot_dir,
     minSize = params$minSize,
@@ -491,6 +502,7 @@ for (cond in all_conditions) {
     hallmark_pathways = hallmark_pathways,
     out_prefix = paste0("pseudobulk_", out_prefix),
     subtype_label = subtype_label,
+    subtype_title = subtype_title,
     results_dir = results_dir,
     plot_dir = plot_dir,
     minSize = params$minSize,

@@ -42,8 +42,10 @@ murine-cart-tumor/
 ├── 09-lineage-plot.html
 ├── 10-myeloid-functional-marker-dotplots.Rmd
 ├── 10-myeloid-functional-marker-dotplots.html
+├── 11-subtype-pseudobulk-gsea-dc.html
+├── 11-subtype-pseudobulk-gsea-myeloid.html
+├── 11-subtype-pseudobulk-gsea-tcell.html
 ├── 11-subtype-pseudobulk-gsea.Rmd
-├── 11-subtype-pseudobulk-gsea.html
 ├── 12-subtype-composition-analysis-dc.html
 ├── 12-subtype-composition-analysis-myeloid.html
 ├── 12-subtype-composition-analysis-tcell.html
@@ -56,6 +58,18 @@ murine-cart-tumor/
 │   ├── cart_lineage_proportions_stacked_barplot.png
 │   ├── cart_umap_clusters.png
 │   ├── cart_umap_lineage_annotations.png
+│   ├── dc_gsea_dot_pseudobulk_41BB-L_vs_otherCAR.pdf
+│   ├── dc_gsea_dot_pseudobulk_41BB-L_vs_rest.pdf
+│   ├── dc_gsea_dot_pseudobulk_B7H3_vs_otherCAR.pdf
+│   ├── dc_gsea_dot_pseudobulk_B7H3_vs_rest.pdf
+│   ├── dc_gsea_dot_pseudobulk_CD28-41BB_vs_otherCAR.pdf
+│   ├── dc_gsea_dot_pseudobulk_CD28-41BB_vs_rest.pdf
+│   ├── dc_gsea_dot_pseudobulk_CD8-41BB_vs_otherCAR.pdf
+│   ├── dc_gsea_dot_pseudobulk_CD8-41BB_vs_rest.pdf
+│   ├── dc_gsea_dot_pseudobulk_STOP_vs_allCAR.pdf
+│   ├── dc_gsea_dot_pseudobulk_STOP_vs_rest.pdf
+│   ├── dc_gsea_dot_pseudobulk_tumor_vs_allCAR.pdf
+│   ├── dc_gsea_dot_pseudobulk_tumor_vs_rest.pdf
 │   ├── dc_subtype_composition_sccomp.png
 │   ├── dc_subtype_composition_sccomp_41BBL_baseline.pdf
 │   ├── dc_subtype_hallmark_auc_heatmap.pdf
@@ -65,6 +79,18 @@ murine-cart-tumor/
 │   ├── dc_subtype_proportions_stacked_barplot.png
 │   ├── dc_subtypes_by_condition.png
 │   ├── dc_subtypes_umap.png
+│   ├── dc_volcano_pseudobulk_41BB-L_vs_otherCAR.pdf
+│   ├── dc_volcano_pseudobulk_41BB-L_vs_rest.pdf
+│   ├── dc_volcano_pseudobulk_B7H3_vs_otherCAR.pdf
+│   ├── dc_volcano_pseudobulk_B7H3_vs_rest.pdf
+│   ├── dc_volcano_pseudobulk_CD28-41BB_vs_otherCAR.pdf
+│   ├── dc_volcano_pseudobulk_CD28-41BB_vs_rest.pdf
+│   ├── dc_volcano_pseudobulk_CD8-41BB_vs_otherCAR.pdf
+│   ├── dc_volcano_pseudobulk_CD8-41BB_vs_rest.pdf
+│   ├── dc_volcano_pseudobulk_STOP_vs_allCAR.pdf
+│   ├── dc_volcano_pseudobulk_STOP_vs_rest.pdf
+│   ├── dc_volcano_pseudobulk_tumor_vs_allCAR.pdf
+│   ├── dc_volcano_pseudobulk_tumor_vs_rest.pdf
 │   ├── myeloid_dotplot_subcluster_markers.pdf
 │   ├── myeloid_dotplot_subcluster_markers_panelE.pdf
 │   ├── myeloid_dotplot_subtype_markers_exclude_inflammatory_monocytes.pdf
@@ -103,6 +129,18 @@ murine-cart-tumor/
 │   ├── myeloid_volcano_pseudobulk_STOP_vs_rest.pdf
 │   ├── myeloid_volcano_pseudobulk_tumor_vs_allCAR.pdf
 │   ├── myeloid_volcano_pseudobulk_tumor_vs_rest.pdf
+│   ├── tcell_gsea_dot_pseudobulk_41BB-L_vs_otherCAR.pdf
+│   ├── tcell_gsea_dot_pseudobulk_41BB-L_vs_rest.pdf
+│   ├── tcell_gsea_dot_pseudobulk_B7H3_vs_otherCAR.pdf
+│   ├── tcell_gsea_dot_pseudobulk_B7H3_vs_rest.pdf
+│   ├── tcell_gsea_dot_pseudobulk_CD28-41BB_vs_otherCAR.pdf
+│   ├── tcell_gsea_dot_pseudobulk_CD28-41BB_vs_rest.pdf
+│   ├── tcell_gsea_dot_pseudobulk_CD8-41BB_vs_otherCAR.pdf
+│   ├── tcell_gsea_dot_pseudobulk_CD8-41BB_vs_rest.pdf
+│   ├── tcell_gsea_dot_pseudobulk_STOP_vs_allCAR.pdf
+│   ├── tcell_gsea_dot_pseudobulk_STOP_vs_rest.pdf
+│   ├── tcell_gsea_dot_pseudobulk_tumor_vs_allCAR.pdf
+│   ├── tcell_gsea_dot_pseudobulk_tumor_vs_rest.pdf
 │   ├── tcell_subtype_composition_sccomp_41BBL_baseline.pdf
 │   ├── tcell_subtype_composition_sccomp_STOP.png
 │   ├── tcell_subtype_composition_sccomp_tumor.png
@@ -113,6 +151,18 @@ murine-cart-tumor/
 │   ├── tcell_subtype_proportions_stacked_barplot.png
 │   ├── tcell_subtypes_by_condition.png
 │   ├── tcell_subtypes_umap.png
+│   ├── tcell_volcano_pseudobulk_41BB-L_vs_otherCAR.pdf
+│   ├── tcell_volcano_pseudobulk_41BB-L_vs_rest.pdf
+│   ├── tcell_volcano_pseudobulk_B7H3_vs_otherCAR.pdf
+│   ├── tcell_volcano_pseudobulk_B7H3_vs_rest.pdf
+│   ├── tcell_volcano_pseudobulk_CD28-41BB_vs_otherCAR.pdf
+│   ├── tcell_volcano_pseudobulk_CD28-41BB_vs_rest.pdf
+│   ├── tcell_volcano_pseudobulk_CD8-41BB_vs_otherCAR.pdf
+│   ├── tcell_volcano_pseudobulk_CD8-41BB_vs_rest.pdf
+│   ├── tcell_volcano_pseudobulk_STOP_vs_allCAR.pdf
+│   ├── tcell_volcano_pseudobulk_STOP_vs_rest.pdf
+│   ├── tcell_volcano_pseudobulk_tumor_vs_allCAR.pdf
+│   ├── tcell_volcano_pseudobulk_tumor_vs_rest.pdf
 │   ├── umap_41bb_myeloid_subtypes.png
 │   ├── umap_b7h3_myeloid_subtypes.png
 │   ├── umap_cd28_myeloid_subtypes.png
@@ -128,6 +178,30 @@ murine-cart-tumor/
 │   ├── cart_cluster_markers.csv
 │   ├── cart_lineage_markers.csv
 │   ├── cart_lineage_proportions.tsv
+│   ├── dc_DESeq2_pseudobulk_41BB-L_vs_otherCAR.csv
+│   ├── dc_DESeq2_pseudobulk_41BB-L_vs_rest.csv
+│   ├── dc_DESeq2_pseudobulk_B7H3_vs_otherCAR.csv
+│   ├── dc_DESeq2_pseudobulk_B7H3_vs_rest.csv
+│   ├── dc_DESeq2_pseudobulk_CD28-41BB_vs_otherCAR.csv
+│   ├── dc_DESeq2_pseudobulk_CD28-41BB_vs_rest.csv
+│   ├── dc_DESeq2_pseudobulk_CD8-41BB_vs_otherCAR.csv
+│   ├── dc_DESeq2_pseudobulk_CD8-41BB_vs_rest.csv
+│   ├── dc_DESeq2_pseudobulk_STOP_vs_allCAR.csv
+│   ├── dc_DESeq2_pseudobulk_STOP_vs_rest.csv
+│   ├── dc_DESeq2_pseudobulk_tumor_vs_allCAR.csv
+│   ├── dc_DESeq2_pseudobulk_tumor_vs_rest.csv
+│   ├── dc_GSEA_pseudobulk_41BB-L_vs_otherCAR_hallmark.csv
+│   ├── dc_GSEA_pseudobulk_41BB-L_vs_rest_hallmark.csv
+│   ├── dc_GSEA_pseudobulk_B7H3_vs_otherCAR_hallmark.csv
+│   ├── dc_GSEA_pseudobulk_B7H3_vs_rest_hallmark.csv
+│   ├── dc_GSEA_pseudobulk_CD28-41BB_vs_otherCAR_hallmark.csv
+│   ├── dc_GSEA_pseudobulk_CD28-41BB_vs_rest_hallmark.csv
+│   ├── dc_GSEA_pseudobulk_CD8-41BB_vs_otherCAR_hallmark.csv
+│   ├── dc_GSEA_pseudobulk_CD8-41BB_vs_rest_hallmark.csv
+│   ├── dc_GSEA_pseudobulk_STOP_vs_allCAR_hallmark.csv
+│   ├── dc_GSEA_pseudobulk_STOP_vs_rest_hallmark.csv
+│   ├── dc_GSEA_pseudobulk_tumor_vs_allCAR_hallmark.csv
+│   ├── dc_GSEA_pseudobulk_tumor_vs_rest_hallmark.csv
 │   ├── dc_subcluster_markers.csv
 │   ├── dc_subtype_c5_gsea_results.csv
 │   ├── dc_subtype_c7_gsea_results.csv
@@ -168,6 +242,30 @@ murine-cart-tumor/
 │   ├── myeloid_subtype_proportions.tsv
 │   ├── myeloid_treatment_markers.csv
 │   ├── nkt_subcluster_markers.csv
+│   ├── tcell_DESeq2_pseudobulk_41BB-L_vs_otherCAR.csv
+│   ├── tcell_DESeq2_pseudobulk_41BB-L_vs_rest.csv
+│   ├── tcell_DESeq2_pseudobulk_B7H3_vs_otherCAR.csv
+│   ├── tcell_DESeq2_pseudobulk_B7H3_vs_rest.csv
+│   ├── tcell_DESeq2_pseudobulk_CD28-41BB_vs_otherCAR.csv
+│   ├── tcell_DESeq2_pseudobulk_CD28-41BB_vs_rest.csv
+│   ├── tcell_DESeq2_pseudobulk_CD8-41BB_vs_otherCAR.csv
+│   ├── tcell_DESeq2_pseudobulk_CD8-41BB_vs_rest.csv
+│   ├── tcell_DESeq2_pseudobulk_STOP_vs_allCAR.csv
+│   ├── tcell_DESeq2_pseudobulk_STOP_vs_rest.csv
+│   ├── tcell_DESeq2_pseudobulk_tumor_vs_allCAR.csv
+│   ├── tcell_DESeq2_pseudobulk_tumor_vs_rest.csv
+│   ├── tcell_GSEA_pseudobulk_41BB-L_vs_otherCAR_hallmark.csv
+│   ├── tcell_GSEA_pseudobulk_41BB-L_vs_rest_hallmark.csv
+│   ├── tcell_GSEA_pseudobulk_B7H3_vs_otherCAR_hallmark.csv
+│   ├── tcell_GSEA_pseudobulk_B7H3_vs_rest_hallmark.csv
+│   ├── tcell_GSEA_pseudobulk_CD28-41BB_vs_otherCAR_hallmark.csv
+│   ├── tcell_GSEA_pseudobulk_CD28-41BB_vs_rest_hallmark.csv
+│   ├── tcell_GSEA_pseudobulk_CD8-41BB_vs_otherCAR_hallmark.csv
+│   ├── tcell_GSEA_pseudobulk_CD8-41BB_vs_rest_hallmark.csv
+│   ├── tcell_GSEA_pseudobulk_STOP_vs_allCAR_hallmark.csv
+│   ├── tcell_GSEA_pseudobulk_STOP_vs_rest_hallmark.csv
+│   ├── tcell_GSEA_pseudobulk_tumor_vs_allCAR_hallmark.csv
+│   ├── tcell_GSEA_pseudobulk_tumor_vs_rest_hallmark.csv
 │   ├── tcell_subtype_c5_gsea_results.csv
 │   ├── tcell_subtype_c7_gsea_results.csv
 │   ├── tcell_subtype_composition_sccomp_41BBL_baseline_results.tsv
