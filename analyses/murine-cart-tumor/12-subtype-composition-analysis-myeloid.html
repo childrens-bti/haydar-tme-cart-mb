@@ -1506,10 +1506,7 @@ results_dir &lt;- file.path(analysis_dir, &quot;results&quot;)
 plot_dir &lt;- file.path(analysis_dir, &quot;plots&quot;)
 
 # Source custom theme
-source(file.path(root_dir, &quot;figures&quot;, &quot;theme.R&quot;))
-
-# set random seed
-set.seed(1234)</code></pre>
+source(file.path(root_dir, &quot;figures&quot;, &quot;theme.R&quot;))</code></pre>
 </div>
 <div id="parameters" class="section level2">
 <h2>Parameters</h2>
@@ -1551,7 +1548,10 @@ stopifnot(&quot;condition&quot; %in% colnames(obj@meta.data))</code></pre>
 </div>
 <div id="bb-l-is-set-as-the-reference-condition" class="section level2">
 <h2>41BB-L is set as the reference condition</h2>
-<pre class="r"><code># 41BB-L (first level) is used as the baseline reference
+<pre class="r"><code># set random seed
+set.seed(1234)
+
+# 41BB-L (first level) is used as the baseline reference
 sccomp_input &lt;- obj@meta.data |&gt;
   tibble::rownames_to_column(&quot;cell&quot;) |&gt;
   dplyr::select(
@@ -1575,7 +1575,7 @@ cat(&quot;Reference condition for sccomp:&quot;, levels(sccomp_input$condition)[
     .sample = sample,
     .cell_group = cell_group,
     bimodal_mean_variability_association = TRUE,
-    cores = 4,
+    cores = 1,
     verbose = FALSE
   ) |&gt;
   sccomp_test()
