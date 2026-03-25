@@ -16,19 +16,14 @@ params:
 ## Setup
 ```{r load-packages, message=FALSE, warning=FALSE}
 # Load libraries
-library(rprojroot)
-library(dplyr)
-library(Seurat)
-library(patchwork)
-library(ggplot2)
-library(tidyverse)
-library(SeuratObject)
-library(scCustomize)
-library(AUCell)
-library(msigdbr)
-library(sccomp)
-library(pheatmap)
-library(fgsea)
+library(rprojroot)  
+library(dplyr)  
+library(Seurat)  
+library(ggplot2)  
+library(tidyverse)  
+library(SeuratObject)  
+library(scCustomize)  
+library(sccomp) 
 
 # Define directories
 root_dir <- find_root(has_dir(".git"))
