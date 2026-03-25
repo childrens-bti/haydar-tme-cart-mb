@@ -34,6 +34,34 @@ Rscript -e "rmarkdown::render('09-lineage-plot.Rmd')"
 Rscript -e "rmarkdown::render('10-myeloid-functional-marker-dotplots.Rmd')"
 # Run Hallmark GSEA for the specified subtype (defaults to myeloid) and generate volcano/GSEA plots
 Rscript -e "rmarkdown::render('11-subtype-pseudobulk-gsea.Rmd')"
-# Run myeloid composition analysis
-Rscript -e "rmarkdown::render('12-myeloid-composition-analysis.Rmd')"
+
+# Run subtype composition analysis for myeloid
+Rscript -e "rmarkdown::render(
+  '12-subtype-composition-analysis.Rmd',
+  params = list(
+    input_rds = 'cart_myeloid_subtypes.rds',
+    subtype_label = 'myeloid'
+  ),
+  output_file = '12-subtype-composition-analysis-myeloid.html'
+)"
+
+# Run subtype composition analysis for tcell
+Rscript -e "rmarkdown::render(
+  '12-subtype-composition-analysis.Rmd',
+  params = list(
+    input_rds = 'cart_tcell_subtypes.rds',
+    subtype_label = 'tcell'
+  ),
+  output_file = '12-subtype-composition-analysis-tcell.html'
+)"
+
+# Run subtype composition analysis for dc
+Rscript -e "rmarkdown::render(
+  '12-subtype-composition-analysis.Rmd',
+  params = list(
+    input_rds = 'cart_dc_subtypes.rds',
+    subtype_label = 'dc'
+  ),
+  output_file = '12-subtype-composition-analysis-dc.html'
+)"
 

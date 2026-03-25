@@ -17,7 +17,7 @@
 9. `09-lineage-plot.Rmd`: generates dot plot of top lineage markers and stacked barplot of lineage proportions across conditions.
 10. `10-myeloid-functional-marker-dotplots.Rmd`: performs differential expression analysis in myeloid cells by subcluster, subtype, and treatment condition, annotates marker genes with Hallmark pathways, and generates dot plots for visualization.
 11. `11-subtype-pseudobulk-gsea.Rmd`: performs Hallmark GSEA for a user-specified cell subtype across treatment conditions using a pseudobulk DESeq2 workflow.
-12. `12-myeloid-composition-analysis.Rmd`: performs myeloid subtype composition analysis using sccomp with 41BB-L as the baseline reference, and generates composition plots and stacked bar plots of subtype proportions across conditions.
+12. `12-subtype-composition-analysis.Rmd`: performs subtype composition analysis using sccomp with 41BB-L as the baseline reference, and generates composition plots and stacked bar plots of subtype proportions across conditions for myeloid, T cell, or DC data.
 
 ## Analysis module directory structure
 ```
@@ -44,8 +44,10 @@ murine-cart-tumor/
 ├── 10-myeloid-functional-marker-dotplots.html
 ├── 11-subtype-pseudobulk-gsea.Rmd
 ├── 11-subtype-pseudobulk-gsea.html
-├── 12-myeloid-composition-analysis.Rmd
-├── 12-myeloid-composition-analysis.html
+├── 12-subtype-composition-analysis-dc.html
+├── 12-subtype-composition-analysis-myeloid.html
+├── 12-subtype-composition-analysis-tcell.html
+├── 12-subtype-composition-analysis.Rmd
 ├── README.md
 ├── plots
 │   ├── cart_dotplot_lineage_proportions.png
@@ -55,10 +57,12 @@ murine-cart-tumor/
 │   ├── cart_umap_clusters.png
 │   ├── cart_umap_lineage_annotations.png
 │   ├── dc_subtype_composition_sccomp.png
+│   ├── dc_subtype_composition_sccomp_41BBL_baseline.pdf
 │   ├── dc_subtype_hallmark_auc_heatmap.pdf
 │   ├── dc_subtype_heatmap_top_markers.pdf
 │   ├── dc_subtype_proportions_barplot.png
 │   ├── dc_subtype_proportions_dotplot.png
+│   ├── dc_subtype_proportions_stacked_barplot.png
 │   ├── dc_subtypes_by_condition.png
 │   ├── dc_subtypes_umap.png
 │   ├── myeloid_dotplot_subcluster_markers.pdf
@@ -99,12 +103,14 @@ murine-cart-tumor/
 │   ├── myeloid_volcano_pseudobulk_STOP_vs_rest.pdf
 │   ├── myeloid_volcano_pseudobulk_tumor_vs_allCAR.pdf
 │   ├── myeloid_volcano_pseudobulk_tumor_vs_rest.pdf
+│   ├── tcell_subtype_composition_sccomp_41BBL_baseline.pdf
 │   ├── tcell_subtype_composition_sccomp_STOP.png
 │   ├── tcell_subtype_composition_sccomp_tumor.png
 │   ├── tcell_subtype_hallmark_auc_heatmap.pdf
 │   ├── tcell_subtype_heatmap_top_markers.pdf
 │   ├── tcell_subtype_proportions_barplot.png
 │   ├── tcell_subtype_proportions_dotplot.png
+│   ├── tcell_subtype_proportions_stacked_barplot.png
 │   ├── tcell_subtypes_by_condition.png
 │   ├── tcell_subtypes_umap.png
 │   ├── umap_41bb_myeloid_subtypes.png
@@ -125,8 +131,10 @@ murine-cart-tumor/
 │   ├── dc_subcluster_markers.csv
 │   ├── dc_subtype_c5_gsea_results.csv
 │   ├── dc_subtype_c7_gsea_results.csv
+│   ├── dc_subtype_composition_sccomp_41BBL_baseline_results.tsv
 │   ├── dc_subtype_hallmark_gsea_results.csv
 │   ├── dc_subtype_markers.csv
+│   ├── dc_subtype_proportions.tsv
 │   ├── myeloid_DESeq2_pseudobulk_41BB-L_vs_otherCAR.csv
 │   ├── myeloid_DESeq2_pseudobulk_41BB-L_vs_rest.csv
 │   ├── myeloid_DESeq2_pseudobulk_B7H3_vs_otherCAR.csv
@@ -154,16 +162,18 @@ murine-cart-tumor/
 │   ├── myeloid_subcluster_markers.csv
 │   ├── myeloid_subtype_c5_gsea_results.csv
 │   ├── myeloid_subtype_c7_gsea_results.csv
+│   ├── myeloid_subtype_composition_sccomp_41BBL_baseline_results.tsv
 │   ├── myeloid_subtype_hallmark_gsea_results.csv
 │   ├── myeloid_subtype_markers.csv
 │   ├── myeloid_subtype_proportions.tsv
 │   ├── myeloid_treatment_markers.csv
 │   ├── nkt_subcluster_markers.csv
-│   ├── sccomp_41BBL_baseline_results.tsv
 │   ├── tcell_subtype_c5_gsea_results.csv
 │   ├── tcell_subtype_c7_gsea_results.csv
+│   ├── tcell_subtype_composition_sccomp_41BBL_baseline_results.tsv
 │   ├── tcell_subtype_hallmark_gsea_results.csv
-│   └── tcell_subtype_markers.csv
+│   ├── tcell_subtype_markers.csv
+│   └── tcell_subtype_proportions.tsv
 ├── run_module.sh
 └── util
     ├── run_doubletfinder.R
