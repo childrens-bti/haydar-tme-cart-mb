@@ -93,8 +93,15 @@ murine-cart-tumor/
 │   ├── dc_volcano_pseudobulk_tumor_vs_rest.pdf
 │   ├── myeloid_dotplot_subcluster_markers.pdf
 │   ├── myeloid_dotplot_subcluster_markers_panelE.pdf
+│   ├── myeloid_dotplot_subcluster_markers_panelF.pdf
+│   ├── myeloid_dotplot_subtype_markers.pdf
 │   ├── myeloid_dotplot_subtype_markers_exclude_inflammatory_monocytes.pdf
+│   ├── myeloid_dotplot_subtype_markers_panelE.pdf
+│   ├── myeloid_dotplot_subtype_markers_panelE_exclude_inflammatory_monocytes.pdf
+│   ├── myeloid_dotplot_subtype_markers_panelF.pdf
+│   ├── myeloid_dotplot_subtype_markers_panelF_exclude_inflammatory_monocytes.pdf
 │   ├── myeloid_dotplot_treatment_markers.pdf
+│   ├── myeloid_dotplot_treatment_markers_panelE.pdf
 │   ├── myeloid_dotplot_treatment_markers_panelF.pdf
 │   ├── myeloid_gsea_dot_pseudobulk_41BB-L_vs_otherCAR.pdf
 │   ├── myeloid_gsea_dot_pseudobulk_41BB-L_vs_rest.pdf
@@ -117,6 +124,8 @@ murine-cart-tumor/
 │   ├── myeloid_subtype_proportions_stacked_barplot.png
 │   ├── myeloid_subtypes_by_condition_umap.png
 │   ├── myeloid_subtypes_umap.png
+│   ├── myeloid_umap_subcluster.pdf
+│   ├── myeloid_umap_subtype_cluster_labels.pdf
 │   ├── myeloid_volcano_pseudobulk_41BB-L_vs_otherCAR.pdf
 │   ├── myeloid_volcano_pseudobulk_41BB-L_vs_rest.pdf
 │   ├── myeloid_volcano_pseudobulk_B7H3_vs_otherCAR.pdf
