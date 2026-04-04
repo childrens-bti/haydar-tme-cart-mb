@@ -18,6 +18,7 @@ tlr-analysis/
 │   ├── tlr_module_scores_heatmap_by_condition.pdf
 │   ├── tlr_module_scores_heatmap_by_subtype.pdf
 │   ├── tlr_module_scores_heatmap_by_subtype_condition.pdf
+│   ├── tlr_module_scores_heatmap_by_condition_subtype.pdf
 │   ├── tlr_module_scores_umap.pdf
 │   ├── tlr_module_scores_umap_by_condition.pdf
 │   ├── tlr_module_scores_violin_by_condition.pdf

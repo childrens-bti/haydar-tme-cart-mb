@@ -15,6 +15,7 @@ output:
 - `plots/tlr_module_scores_heatmap_by_condition.pdf`
 - `plots/tlr_module_scores_heatmap_by_subtype.pdf`
 - `plots/tlr_module_scores_heatmap_by_subtype_condition.pdf`
+- `plots/tlr_module_scores_heatmap_by_condition_subtype.pdf`
 - `plots/tlr_module_scores_violin_by_condition.pdf`
 - `plots/tlr_module_scores_violin_by_subtype.pdf`
 - `plots/tlr_module_scores_violin_by_subtype_condition.pdf`
@@ -54,13 +55,6 @@ set.seed(1234)
 ## Load data
 ```{r load-seurat-object}
 obj <- readRDS(file.path(data_dir, "cart_myeloid_subtypes.rds"))
-
-# Standardize subtype naming
-obj$myeloid_subtype <- obj$myeloid_subtype %>%
-  stringr::str_replace(
-    "Perivascular macrophages.*",
-    "Perivascular macrophages"
-  )
 
 unique(obj$myeloid_subtype)
 ```
@@ -485,6 +479,73 @@ pheatmap(
 )
 ```
 
+## Heatmap of module scores by condition and subtype
+```{r heatmap-module-scores-condition-subtype, fig.width=14, fig.height=10}
+obj_sub$myeloid_subtype <- factor(obj_sub$myeloid_subtype, levels = subtype_order)
+obj_sub$condition <- factor(obj_sub$condition, levels = condition_levels)
+
+df <- obj_sub@meta.data %>%
+  select(myeloid_subtype, condition, all_of(modules)) %>%
+  group_by(myeloid_subtype, condition) %>%
+  summarise(across(all_of(modules), ~ mean(.x, na.rm = TRUE)), .groups = "drop") %>%
+  arrange(condition, myeloid_subtype)
+
+mat <- df %>%
+  select(all_of(modules)) %>%
+  as.matrix()
+
+rownames(mat) <- paste(df$condition, df$myeloid_subtype, sep = " | ")
+storage.mode(mat) <- "double"
+
+mat_z <- scale(mat)
+mat_t <- t(mat_z)
+rownames(mat_t) <- gsub("_", " ", rownames(mat_t))
+
+ordered_cols <- paste(df$condition, df$myeloid_subtype, sep = " | ")
+mat_t <- mat_t[, ordered_cols]
+
+annotation_col <- data.frame(
+  condition = factor(df$condition, levels = condition_levels),
+  subtype = factor(df$myeloid_subtype, levels = subtype_order)
+)
+rownames(annotation_col) <- colnames(mat_t)
+
+subtype_colors <- setNames(
+  DiscretePalette(length(subtype_order)),
+  subtype_order
+)
+
+ann_colors <- list(
+  condition = condition_colors,
+  subtype = subtype_colors
+)
+
+condition_counts <- table(df$condition)
+gaps_col <- cumsum(condition_counts)
+
+pheatmap(
+  mat_t,
+  annotation_col = annotation_col,
+  annotation_colors = ann_colors,
+  cluster_rows = TRUE,
+  cluster_cols = FALSE,
+  gaps_col = gaps_col[-length(gaps_col)],
+  breaks = seq(-2, 2, length.out = 101),
+  border_color = NA,
+  fontsize_row = 10,
+  fontsize_col = 8,
+  angle_col = 90,
+  show_rownames = TRUE,
+  show_colnames = FALSE,
+  legend = TRUE,
+  legend_breaks = c(-2, -1, 0, 1, 2),
+  legend_labels = c("-2", "-1", "0", "1", "2"),
+  filename = file.path(plot_dir, "tlr_module_scores_heatmap_by_condition_subtype.pdf"),
+  width = 14,
+  height = 8
+)
+```
+
 ## Violin plots by condition
 ```{r violin-module-scores-condition, fig.height=8, fig.width=10}
 pdf(file.path(plot_dir, "tlr_module_scores_violin_by_condition.pdf"),
@@ -522,8 +583,12 @@ dev.off()
 
 ## Violin plots excluding Inflammatory monocytes
 ```{r violin-module-scores-subtype, fig.height=8, fig.width=18}
+subtype_axis_labels <- c(
+  "Perivascular macrophages (chemokine-producing)" = "Perivascular macrophages\n(chemokine-producing)"
+)
+
 pdf(file.path(plot_dir, "tlr_module_scores_violin_by_subtype.pdf"),
-    width = 8, height = 6)
+    width = 10, height = 6)
 
 for (f in features) {
 
@@ -535,6 +600,9 @@ for (f in features) {
     group.by = "myeloid_subtype",
     pt.size = 0
   ) &
+    scale_x_discrete(labels = function(x) {
+      ifelse(x %in% names(subtype_axis_labels), subtype_axis_labels[x], x)
+    }) &
     ggtitle(clean_title) &
     theme(
       axis.text.x = element_text(
@@ -572,6 +640,9 @@ for (f in features) {
     cols = condition_colors,
     pt.size = 0
   ) &
+    scale_x_discrete(labels = function(x) {
+      ifelse(x %in% names(subtype_axis_labels), subtype_axis_labels[x], x)
+    }) &
     ggtitle(clean_title) &
     theme(
       axis.text.x = element_text(
