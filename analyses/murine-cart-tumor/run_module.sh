@@ -93,3 +93,7 @@ Rscript -e "rmarkdown::render(
   output_file = '12-subtype-composition-analysis-dc.html'
 )"
 
+# Perform T cell re-clustering
+Rscript -e "rmarkdown::render('13-tcell-reclustering.Rmd')"
+
+
