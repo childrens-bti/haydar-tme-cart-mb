@@ -18,6 +18,8 @@
 10. `10-myeloid-functional-marker-dotplots.Rmd`: performs differential expression analysis in myeloid cells by subcluster, subtype, and treatment condition, annotates marker genes with Hallmark pathways, and generates dot plots for visualization.
 11. `11-subtype-pseudobulk-gsea.Rmd`: performs Hallmark GSEA for a user-specified cell subtype across treatment conditions using a pseudobulk DESeq2 workflow.
 12. `12-subtype-composition-analysis.Rmd`: performs subtype composition analysis using sccomp with 41BB-L as the baseline reference, and generates composition plots and stacked bar plots of subtype proportions across conditions for myeloid, T cell, or DC data.
+13. `13-tcell-reclustering.Rmd`: performs re-clustering of T cells after additional filtering and evaluates consistency with previous subtype annotations.
+14. `14-dc-reclustering.Rmd`: performs re-clustering of dendritic cells after additional filtering and evaluates consistency with previous subtype annotations.
 
 ## Analysis module directory structure
 ```
@@ -50,6 +52,14 @@ murine-cart-tumor/
 ├── 12-subtype-composition-analysis-myeloid.html
 ├── 12-subtype-composition-analysis-tcell.html
 ├── 12-subtype-composition-analysis.Rmd
+├── 13-tcell-reclustering-summary-report.html
+├── 13-tcell-reclustering-summary-report.md
+├── 13-tcell-reclustering.Rmd
+├── 13-tcell-reclustering.html
+├── 14-dc-reclustering-summary-report.html
+├── 14-dc-reclustering-summary-report.md
+├── 14-dc-reclustering.Rmd
+├── 14-dc-reclustering.html
 ├── README.md
 ├── plots
 │   ├── cart_dotplot_lineage_proportions.png
@@ -91,6 +101,20 @@ murine-cart-tumor/
 │   ├── dc_volcano_pseudobulk_STOP_vs_rest.pdf
 │   ├── dc_volcano_pseudobulk_tumor_vs_allCAR.pdf
 │   ├── dc_volcano_pseudobulk_tumor_vs_rest.pdf
+│   ├── filtered_dc_cluster_vs_old_subtype_heatmap.pdf
+│   ├── filtered_dc_old_subtype_labels_on_reclustered_umap.pdf
+│   ├── filtered_dc_old_subtype_marker_violinplots.pdf
+│   ├── filtered_dc_reclustered_proportions_stacked_barplot.pdf
+│   ├── filtered_dc_reclustered_umap.pdf
+│   ├── filtered_dc_reclustered_umap_by_treatment.pdf
+│   ├── filtered_dc_top_old_label_per_new_cluster_barplot.pdf
+│   ├── filtered_tcell_cluster_vs_old_subtype_heatmap.pdf
+│   ├── filtered_tcell_old_subtype_labels_on_reclustered_umap.pdf
+│   ├── filtered_tcell_old_subtype_marker_violinplots.pdf
+│   ├── filtered_tcell_reclustered_proportions_stacked_barplot.pdf
+│   ├── filtered_tcell_reclustered_umap.pdf
+│   ├── filtered_tcell_reclustered_umap_by_treatment.pdf
+│   ├── filtered_tcell_top_old_label_per_new_cluster_barplot.pdf
 │   ├── myeloid_dotplot_subcluster_markers.pdf
 │   ├── myeloid_dotplot_subcluster_markers_panelE.pdf
 │   ├── myeloid_dotplot_subcluster_markers_panelF.pdf
@@ -185,8 +209,10 @@ murine-cart-tumor/
 │   ├── analysis-report_v2.html
 │   ├── analysis-report_v2.md
 │   ├── cart_cluster_markers.csv
+│   ├── cart_dc_reclustered.rds
 │   ├── cart_lineage_markers.csv
 │   ├── cart_lineage_proportions.tsv
+│   ├── cart_tcell_reclustered.rds
 │   ├── dc_DESeq2_pseudobulk_41BB-L_vs_otherCAR.csv
 │   ├── dc_DESeq2_pseudobulk_41BB-L_vs_rest.csv
 │   ├── dc_DESeq2_pseudobulk_B7H3_vs_otherCAR.csv
@@ -218,6 +244,14 @@ murine-cart-tumor/
 │   ├── dc_subtype_hallmark_gsea_results.csv
 │   ├── dc_subtype_markers.csv
 │   ├── dc_subtype_proportions.tsv
+│   ├── filtered_dc_reclustered_markers.csv
+│   ├── filtered_dc_reclustered_proportions.tsv
+│   ├── filtered_dc_reclustered_top30_markers_per_cluster.csv
+│   ├── filtered_dc_top_old_label_per_new_cluster.tsv
+│   ├── filtered_tcell_reclustered_markers.csv
+│   ├── filtered_tcell_reclustered_proportions.tsv
+│   ├── filtered_tcell_reclustered_top30_markers_per_cluster.csv
+│   ├── filtered_tcell_top_old_label_per_new_cluster.tsv
 │   ├── myeloid_DESeq2_pseudobulk_41BB-L_vs_otherCAR.csv
 │   ├── myeloid_DESeq2_pseudobulk_41BB-L_vs_rest.csv
 │   ├── myeloid_DESeq2_pseudobulk_B7H3_vs_otherCAR.csv

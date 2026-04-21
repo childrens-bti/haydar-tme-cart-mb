@@ -96,4 +96,5 @@ Rscript -e "rmarkdown::render(
 # Perform T cell re-clustering
 Rscript -e "rmarkdown::render('13-tcell-reclustering.Rmd')"
 
-
+# Perform DC re-clustering
+Rscript -e "rmarkdown::render('14-dc-reclustering.Rmd')
