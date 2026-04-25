@@ -449,7 +449,7 @@ colors.use &lt;- grDevices::colorRampPalette(colors = colors)(100)
 breaks &lt;- seq(-3, 3, length.out = 101)
 
 # save heatmap as pdf
-pdf(file = file.path(plot_dir, &quot;reclustered_dc_subcluster_hallmark_auc_heatmap.pdf&quot;), width = 16, height = 8)
+pdf(file = file.path(plot_dir, &quot;filtered_dc_subcluster_hallmark_auc_heatmap.pdf&quot;), width = 16, height = 8)
 
 hm &lt;- pheatmap::pheatmap(mat = hallmark_z_scores,
                    color = colors.use,
