@@ -126,7 +126,7 @@ p_umap_split <- DimPlot(
   ncol = 3,
   label = FALSE
 ) +
-  ggtitle("Re-clustered T cell subclusters by treatment")
+  ggtitle("Re-clustered DC subclusters by treatment")
 
 p_umap_split
 
