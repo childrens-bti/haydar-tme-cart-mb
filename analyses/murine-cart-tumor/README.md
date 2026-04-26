@@ -19,7 +19,7 @@
 11. `11-subtype-pseudobulk-gsea.Rmd`: performs Hallmark GSEA for a user-specified cell subtype across treatment conditions using a pseudobulk DESeq2 workflow.
 12. `12-subtype-composition-analysis.Rmd`: performs subtype composition analysis using sccomp with 41BB-L as the baseline reference, and generates composition plots and stacked bar plots of subtype proportions across conditions for myeloid, T cell, or DC data.
 13. `13-tcell-reclustering.Rmd`: performs re-clustering of T cells after additional filtering and evaluates consistency with previous subtype annotations.
-14. `14-dc-reclustering.Rmd`: performs re-clustering of dendritic cells after additional filtering and evaluates consistency with previous subtype annotations.
+14. `14-dc-reclustering.Rmd`: performs re-clustering of dendritic cells after additional filtering, evaluates consistency with previous subtype annotations, and runs AUCell to evaluate Hallmark pathway activity across updated DC clusters.
 
 ## Analysis module directory structure
 ```
@@ -108,6 +108,7 @@ murine-cart-tumor/
 │   ├── filtered_dc_reclustered_umap.pdf
 │   ├── filtered_dc_reclustered_umap_by_treatment.pdf
 │   ├── filtered_dc_top_old_label_per_new_cluster_barplot.pdf
+│   ├── filtered_dc_subcluster_hallmark_auc_heatmap.pdf
 │   ├── filtered_tcell_cluster_vs_old_subtype_heatmap.pdf
 │   ├── filtered_tcell_old_subtype_labels_on_reclustered_umap.pdf
 │   ├── filtered_tcell_old_subtype_marker_violinplots.pdf

@@ -11,7 +11,7 @@
 
 <meta name="author" content="Bicna Song" />
 
-<meta name="date" content="2026-04-25" />
+<meta name="date" content="2026-04-26" />
 
 <title>14-dc-reclustering.Rmd</title>
 
@@ -352,7 +352,7 @@ display: none;
 
 <h1 class="title toc-ignore">14-dc-reclustering.Rmd</h1>
 <h4 class="author">Bicna Song</h4>
-<h4 class="date">2026-04-25</h4>
+<h4 class="date">2026-04-26</h4>
 
 </div>
 
@@ -387,7 +387,18 @@ plots for each old subtype</a></li>
 <li><a href="#stacked-barplot-of-subtype-proportions" id="toc-stacked-barplot-of-subtype-proportions">Stacked barplot of
 subtype proportions</a></li>
 <li><a href="#save-object" id="toc-save-object">Save object</a></li>
+<li><a href="#gene-set-enrichment-analysis" id="toc-gene-set-enrichment-analysis">Gene set enrichment analysis</a>
+<ul>
+<li><a href="#aucell-scoring-on-msigdb-hallmark-gene-sets" id="toc-aucell-scoring-on-msigdb-hallmark-gene-sets">AUCell scoring on
+MSigDB Hallmark Gene sets</a></li>
+<li><a href="#hallmark-gene-set-activity-by-dc-subcluster" id="toc-hallmark-gene-set-activity-by-dc-subcluster">Hallmark gene set
+activity by dc subcluster</a></li>
+</ul></li>
+<li><a href="#subcluster-vs-pathway-heatmap-of-aucell-scores" id="toc-subcluster-vs-pathway-heatmap-of-aucell-scores">Subcluster vs
+pathway heatmap of AUCell scores</a>
+<ul>
 <li><a href="#session-info" id="toc-session-info">Session info</a></li>
+</ul></li>
 </ul>
 </div>
 
@@ -402,6 +413,9 @@ subtype proportions</a></li>
   library(tidyverse)
   library(SeuratObject)
   library(scCustomize)
+  library(AUCell)
+  library(msigdbr)
+  library(pheatmap)
 })
 
 # Define directories
@@ -844,6 +858,60 @@ p_prop</code></pre>
   file.path(results_dir, &quot;cart_dc_reclustered.rds&quot;)
 )</code></pre>
 </div>
+<div id="gene-set-enrichment-analysis" class="section level1">
+<h1>Gene set enrichment analysis</h1>
+<div id="aucell-scoring-on-msigdb-hallmark-gene-sets" class="section level2">
+<h2>AUCell scoring on MSigDB Hallmark Gene sets</h2>
+<pre class="r"><code># msigdb hallmark
+msigdb_hallmark &lt;- msigdbr::msigdbr(species = &quot;Mus musculus&quot;, category = &quot;H&quot;) %&gt;%
+  dplyr::select(gs_name, gene_symbol) %&gt;%
+  dplyr::group_by(gs_name) %&gt;%
+  dplyr::summarise(genes = list(gene_symbol)) %&gt;%
+  deframe()</code></pre>
+</div>
+<div id="hallmark-gene-set-activity-by-dc-subcluster" class="section level2">
+<h2>Hallmark gene set activity by dc subcluster</h2>
+<pre class="r"><code># AUCell on hallmark genesets
+cells_rankings &lt;- AUCell_buildRankings(GetAssayData(dc_obj, assay = &quot;RNA&quot;, layer = &quot;data&quot;), nCores = 1, plotStats = FALSE)
+hallmark_AUC &lt;- AUCell_calcAUC(msigdb_hallmark, cells_rankings)
+
+# add hallmark scores to seurat object
+hallmark_scores_df &lt;- as.data.frame(t(getAUC(hallmark_AUC)))
+dc_obj &lt;- AddMetaData(dc_obj, metadata = hallmark_scores_df)</code></pre>
+</div>
+</div>
+<div id="subcluster-vs-pathway-heatmap-of-aucell-scores" class="section level1">
+<h1>Subcluster vs pathway heatmap of AUCell scores</h1>
+<pre class="r"><code># z scores of AUCell scores across clusters per gene set
+hallmark_scores_df$cluster = dc_obj$seurat_clusters
+
+avg_hallmark_scores &lt;- hallmark_scores_df %&gt;%
+  group_by(cluster) %&gt;%
+  summarise(across(starts_with(&quot;HALLMARK&quot;), mean)) %&gt;%
+  column_to_rownames(&quot;cluster&quot;)
+
+hallmark_z_scores &lt;- scale(avg_hallmark_scores)
+
+rownames(hallmark_z_scores) &lt;- paste0(&quot;Cluster&quot;, rownames(hallmark_z_scores))
+
+# Color scale
+colors &lt;- rev(RColorBrewer::brewer.pal(n = 11, name = &quot;RdBu&quot;))
+colors.use &lt;- grDevices::colorRampPalette(colors = colors)(100)
+breaks &lt;- seq(-3, 3, length.out = 101)
+
+# save heatmap as pdf
+pheatmap::pheatmap(
+  mat = hallmark_z_scores,
+  color = colors.use,
+  border_color = &quot;white&quot;,
+  breaks = breaks,
+  clustering_distance_rows = &quot;correlation&quot;,
+  clustering_distance_cols = &quot;correlation&quot;,
+  main = &quot;Hallmark Pathway AUCell Activity across DC Subclusters&quot;,
+  filename = file.path(plot_dir, &quot;filtered_dc_subcluster_hallmark_auc_heatmap.pdf&quot;),
+  width = 16,
+  height = 8
+)</code></pre>
 <div id="session-info" class="section level2">
 <h2>Session info</h2>
 <pre class="r"><code>sessionInfo()</code></pre>
@@ -871,57 +939,98 @@ p_prop</code></pre>
 ## [8] base     
 ## 
 ## other attached packages:
-##  [1] ggthemes_5.2.0       future_1.69.0        scCustomize_3.2.4   
-##  [4] lubridate_1.9.3      forcats_1.0.0        stringr_1.5.1       
-##  [7] purrr_1.0.2          readr_2.1.5          tidyr_1.3.1         
-## [10] tibble_3.2.1         tidyverse_2.0.0      ggplot2_4.0.2       
-## [13] patchwork_1.3.2.9000 Seurat_5.4.0         SeuratObject_5.3.0  
-## [16] sp_2.2-1             dplyr_1.1.4          rprojroot_2.1.1     
+##  [1] ggthemes_5.2.0       future_1.69.0        pheatmap_1.0.12     
+##  [4] msigdbr_25.1.1       AUCell_1.28.0        scCustomize_3.2.4   
+##  [7] lubridate_1.9.3      forcats_1.0.0        stringr_1.5.1       
+## [10] purrr_1.0.2          readr_2.1.5          tidyr_1.3.1         
+## [13] tibble_3.2.1         tidyverse_2.0.0      ggplot2_4.0.2       
+## [16] patchwork_1.3.2.9000 Seurat_5.4.0         SeuratObject_5.3.0  
+## [19] sp_2.2-1             dplyr_1.1.4          rprojroot_2.1.1     
 ## 
 ## loaded via a namespace (and not attached):
-##   [1] RColorBrewer_1.1-3     shape_1.4.6.1          rstudioapi_0.16.0     
-##   [4] jsonlite_2.0.0         magrittr_2.0.3         spatstat.utils_3.2-1  
-##   [7] ggbeeswarm_0.7.3       farver_2.1.2           rmarkdown_2.27        
-##  [10] GlobalOptions_0.1.3    vctrs_0.6.5            ROCR_1.0-12           
-##  [13] spatstat.explore_3.7-0 paletteer_1.7.0        janitor_2.2.1         
-##  [16] htmltools_0.5.8.1      sass_0.4.9             sctransform_0.4.3     
-##  [19] parallelly_1.46.1      KernSmooth_2.23-24     bslib_0.7.0           
-##  [22] htmlwidgets_1.6.4      ica_1.0-3              plyr_1.8.9            
-##  [25] plotly_4.12.0          zoo_1.8-15             cachem_1.1.0          
-##  [28] igraph_2.2.2           mime_0.12              lifecycle_1.0.4       
-##  [31] pkgconfig_2.0.3        Matrix_1.7-4           R6_2.6.1              
-##  [34] fastmap_1.2.0          snakecase_0.11.1       fitdistrplus_1.2-6    
-##  [37] shiny_1.8.1.1          digest_0.6.35          colorspace_2.1-0      
-##  [40] rematch2_2.1.2         tensor_1.5.1           RSpectra_0.16-2       
-##  [43] irlba_2.3.7            labeling_0.4.3         progressr_0.18.0      
-##  [46] fansi_1.0.6            spatstat.sparse_3.1-0  timechange_0.3.0      
-##  [49] httr_1.4.7             polyclip_1.10-7        abind_1.4-8           
-##  [52] compiler_4.4.0         withr_3.0.2            S7_0.2.1              
-##  [55] fastDummies_1.7.5      highr_0.11             MASS_7.3-60.2         
-##  [58] tools_4.4.0            vipor_0.4.7            lmtest_0.9-40         
-##  [61] beeswarm_0.4.0         httpuv_1.6.15          future.apply_1.20.2   
-##  [64] goftest_1.2-3          glue_1.7.0             nlme_3.1-165          
-##  [67] promises_1.3.0         Rtsne_0.17             cluster_2.1.6         
-##  [70] reshape2_1.4.5         generics_0.1.3         gtable_0.3.6          
-##  [73] spatstat.data_3.1-9    tzdb_0.4.0             data.table_1.15.4     
-##  [76] hms_1.1.3              utf8_1.2.4             spatstat.geom_3.7-0   
-##  [79] RcppAnnoy_0.0.23       ggrepel_0.9.6          RANN_2.6.2            
-##  [82] pillar_1.9.0           limma_3.62.2           ggprism_1.0.7         
-##  [85] spam_2.11-3            RcppHNSW_0.6.0         later_1.3.2           
-##  [88] circlize_0.4.17        splines_4.4.0          lattice_0.22-6        
-##  [91] survival_3.7-0         deldir_2.0-4           tidyselect_1.2.1      
-##  [94] miniUI_0.1.2           pbapply_1.7-4          knitr_1.47            
-##  [97] gridExtra_2.3          scattermore_1.2        xfun_0.44             
-## [100] statmod_1.5.0          matrixStats_1.5.0      stringi_1.8.4         
-## [103] lazyeval_0.2.2         yaml_2.3.12            evaluate_1.0.5        
-## [106] codetools_0.2-20       cli_3.6.5              uwot_0.2.4            
-## [109] xtable_1.8-4           reticulate_1.45.0      jquerylib_0.1.4       
-## [112] Rcpp_1.0.12            mcprogress_0.1.1       globals_0.19.0        
-## [115] spatstat.random_3.4-4  png_0.1-8              ggrastr_1.0.2         
-## [118] spatstat.univar_3.1-6  parallel_4.4.0         presto_1.0.0          
-## [121] dotCall64_1.2          listenv_0.10.0         viridisLite_0.4.2     
-## [124] scales_1.4.0           ggridges_0.5.7         rlang_1.1.7           
-## [127] cowplot_1.2.0</code></pre>
+##   [1] RcppAnnoy_0.0.23            splines_4.4.0              
+##   [3] later_1.3.2                 R.oo_1.26.0                
+##   [5] polyclip_1.10-7             janitor_2.2.1              
+##   [7] graph_1.84.1                XML_3.99-0.16.1            
+##   [9] fastDummies_1.7.5           lifecycle_1.0.4            
+##  [11] globals_0.19.0              lattice_0.22-6             
+##  [13] MASS_7.3-60.2               magrittr_2.0.3             
+##  [15] limma_3.62.2                plotly_4.12.0              
+##  [17] sass_0.4.9                  rmarkdown_2.27             
+##  [19] jquerylib_0.1.4             yaml_2.3.12                
+##  [21] httpuv_1.6.15               sctransform_0.4.3          
+##  [23] spam_2.11-3                 spatstat.sparse_3.1-0      
+##  [25] reticulate_1.45.0           cowplot_1.2.0              
+##  [27] pbapply_1.7-4               DBI_1.2.3                  
+##  [29] RColorBrewer_1.1-3          zlibbioc_1.52.0            
+##  [31] abind_1.4-8                 GenomicRanges_1.58.0       
+##  [33] Rtsne_0.17                  presto_1.0.0               
+##  [35] R.utils_2.12.3              BiocGenerics_0.52.0        
+##  [37] GenomeInfoDbData_1.2.13     circlize_0.4.17            
+##  [39] IRanges_2.40.1              S4Vectors_0.44.0           
+##  [41] ggrepel_0.9.6               irlba_2.3.7                
+##  [43] listenv_0.10.0              spatstat.utils_3.2-1       
+##  [45] goftest_1.2-3               RSpectra_0.16-2            
+##  [47] spatstat.random_3.4-4       annotate_1.84.0            
+##  [49] fitdistrplus_1.2-6          parallelly_1.46.1          
+##  [51] DelayedMatrixStats_1.28.1   DelayedArray_0.32.0        
+##  [53] codetools_0.2-20            tidyselect_1.2.1           
+##  [55] shape_1.4.6.1               UCSC.utils_1.2.0           
+##  [57] farver_2.1.2                matrixStats_1.5.0          
+##  [59] stats4_4.4.0                spatstat.explore_3.7-0     
+##  [61] jsonlite_2.0.0              progressr_0.18.0           
+##  [63] ggridges_0.5.7              survival_3.7-0             
+##  [65] tools_4.4.0                 ica_1.0-3                  
+##  [67] Rcpp_1.0.12                 glue_1.7.0                 
+##  [69] SparseArray_1.6.2           gridExtra_2.3              
+##  [71] xfun_0.44                   MatrixGenerics_1.18.1      
+##  [73] GenomeInfoDb_1.42.3         withr_3.0.2                
+##  [75] fastmap_1.2.0               fansi_1.0.6                
+##  [77] mcprogress_0.1.1            digest_0.6.35              
+##  [79] timechange_0.3.0            R6_2.6.1                   
+##  [81] mime_0.12                   ggprism_1.0.7              
+##  [83] colorspace_2.1-0            scattermore_1.2            
+##  [85] tensor_1.5.1                spatstat.data_3.1-9        
+##  [87] RSQLite_2.3.7               R.methodsS3_1.8.2          
+##  [89] utf8_1.2.4                  generics_0.1.3             
+##  [91] data.table_1.15.4           S4Arrays_1.6.0             
+##  [93] httr_1.4.7                  htmlwidgets_1.6.4          
+##  [95] uwot_0.2.4                  pkgconfig_2.0.3            
+##  [97] gtable_0.3.6                blob_1.2.4                 
+##  [99] lmtest_0.9-40               S7_0.2.1                   
+## [101] XVector_0.46.0              htmltools_0.5.8.1          
+## [103] dotCall64_1.2               GSEABase_1.68.0            
+## [105] scales_1.4.0                Biobase_2.66.0             
+## [107] png_0.1-8                   spatstat.univar_3.1-6      
+## [109] snakecase_0.11.1            knitr_1.47                 
+## [111] tzdb_0.4.0                  reshape2_1.4.5             
+## [113] curl_7.0.0                  nlme_3.1-165               
+## [115] cachem_1.1.0                zoo_1.8-15                 
+## [117] GlobalOptions_0.1.3         KernSmooth_2.23-24         
+## [119] parallel_4.4.0              miniUI_0.1.2               
+## [121] vipor_0.4.7                 AnnotationDbi_1.68.0       
+## [123] ggrastr_1.0.2               pillar_1.9.0               
+## [125] vctrs_0.6.5                 RANN_2.6.2                 
+## [127] promises_1.3.0              xtable_1.8-4               
+## [129] cluster_2.1.6               beeswarm_0.4.0             
+## [131] paletteer_1.7.0             evaluate_1.0.5             
+## [133] cli_3.6.5                   compiler_4.4.0             
+## [135] rlang_1.1.7                 crayon_1.5.2               
+## [137] future.apply_1.20.2         labeling_0.4.3             
+## [139] rematch2_2.1.2              plyr_1.8.9                 
+## [141] ggbeeswarm_0.7.3            stringi_1.8.4              
+## [143] viridisLite_0.4.2           deldir_2.0-4               
+## [145] babelgene_22.9              assertthat_0.2.1           
+## [147] Biostrings_2.74.1           lazyeval_0.2.2             
+## [149] spatstat.geom_3.7-0         Matrix_1.7-4               
+## [151] RcppHNSW_0.6.0              hms_1.1.3                  
+## [153] sparseMatrixStats_1.18.0    bit64_4.0.5                
+## [155] statmod_1.5.0               KEGGREST_1.46.0            
+## [157] shiny_1.8.1.1               highr_0.11                 
+## [159] SummarizedExperiment_1.36.0 ROCR_1.0-12                
+## [161] igraph_2.2.2                memoise_2.0.1              
+## [163] bslib_0.7.0                 bit_4.0.5</code></pre>
+</div>
 </div>
 
 
