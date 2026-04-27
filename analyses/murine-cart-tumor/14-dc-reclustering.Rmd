@@ -18,6 +18,9 @@ suppressPackageStartupMessages({
   library(tidyverse)
   library(SeuratObject)
   library(scCustomize)
+  library(AUCell)
+  library(msigdbr)
+  library(pheatmap)
 })
 
 # Define directories
@@ -126,7 +129,7 @@ p_umap_split <- DimPlot(
   ncol = 3,
   label = FALSE
 ) +
-  ggtitle("Re-clustered T cell subclusters by treatment")
+  ggtitle("Re-clustered DC subclusters by treatment")
 
 p_umap_split
 
@@ -412,6 +415,63 @@ ggsave(
 saveRDS(
   dc_obj,
   file.path(results_dir, "cart_dc_reclustered.rds")
+)
+```
+
+# Gene set enrichment analysis
+
+## AUCell scoring on MSigDB Hallmark Gene sets
+```{r get-genesets, message=FALSE, warning=FALSE}
+# msigdb hallmark
+msigdb_hallmark <- msigdbr::msigdbr(species = "Mus musculus", category = "H") %>%
+  dplyr::select(gs_name, gene_symbol) %>%
+  dplyr::group_by(gs_name) %>%
+  dplyr::summarise(genes = list(gene_symbol)) %>%
+  deframe()
+```
+
+## Hallmark gene set activity by dc subcluster
+```{r hallmark-activity, message=FALSE, warning=FALSE}
+# AUCell on hallmark genesets
+cells_rankings <- AUCell_buildRankings(GetAssayData(dc_obj, assay = "RNA", layer = "data"), nCores = 1, plotStats = FALSE)
+hallmark_AUC <- AUCell_calcAUC(msigdb_hallmark, cells_rankings)
+
+# add hallmark scores to seurat object
+hallmark_scores_df <- as.data.frame(t(getAUC(hallmark_AUC)))
+dc_obj <- AddMetaData(dc_obj, metadata = hallmark_scores_df)
+```
+
+# Subcluster vs pathway heatmap of AUCell scores
+```{r subcluster-pathway-heatmap, fig.height=8, fig.width=16}
+# z scores of AUCell scores across clusters per gene set
+hallmark_scores_df$cluster = dc_obj$seurat_clusters
+
+avg_hallmark_scores <- hallmark_scores_df %>%
+  group_by(cluster) %>%
+  summarise(across(starts_with("HALLMARK"), mean)) %>%
+  column_to_rownames("cluster")
+
+hallmark_z_scores <- scale(avg_hallmark_scores)
+
+rownames(hallmark_z_scores) <- paste0("Cluster", rownames(hallmark_z_scores))
+
+# Color scale
+colors <- rev(RColorBrewer::brewer.pal(n = 11, name = "RdBu"))
+colors.use <- grDevices::colorRampPalette(colors = colors)(100)
+breaks <- seq(-3, 3, length.out = 101)
+
+# save heatmap as pdf
+pheatmap::pheatmap(
+  mat = hallmark_z_scores,
+  color = colors.use,
+  border_color = "white",
+  breaks = breaks,
+  clustering_distance_rows = "correlation",
+  clustering_distance_cols = "correlation",
+  main = "Hallmark Pathway AUCell Activity across DC Subclusters",
+  filename = file.path(plot_dir, "filtered_dc_subcluster_hallmark_auc_heatmap.pdf"),
+  width = 16,
+  height = 8
 )
 ```
 
