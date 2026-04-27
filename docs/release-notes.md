@@ -1,6 +1,43 @@
 # release notes
 
-## current release (v4)
+## current release (v5)
+- Data release date: 2026-04-28
+- status: available
+
+Added files:
+- Renamed two Seurat objects to reflect changes in downstream analyses:
+  - `cart_nkt_subtypes.rds` (previously `cart_tcell_subtypes.rds`)
+  - `cart_dc_subtypes_v1.rds` (previously `cart_dc_subtypes.rds`)
+- Processed Seurat objects for re-subsetted and re-clustered T cell and DC data. These are in RDS format and can be loaded into R using `readRDS()`.
+  - `cart_tcell_subtypes.rds`
+  - `cart_dc_subtypes_v2.rds`
+
+```
+└── v5
+    ├── 41BB-L_pos_T_D1/
+    ├── 41BB-L_pos_T_D2/
+    ├── B7H3_at_endpoint/
+    ├── B7H3_pos_T_D1/
+    ├── B7H3_pos_T_D2/
+    ├── CD28-41BB_at_endpoint/
+    ├── CD28-41BB_pos_T_D1/
+    ├── CD28-41BB_pos_T_D2/
+    ├── CD8-41BB_pos_T_D1/
+    ├── CD8-41BB_pos_T_D2/
+    ├── STOP_pos_T_D1/
+    ├── STOP_pos_T_D2/
+    ├── Tumor_only_D1/
+    ├── Tumor_only_D2/
+    ├── cart_annotated.rds
+    ├── cart_myeloid_subtypes.rds
+    ├── cart_nkt_subtypes.rds
+    ├── cart_tcell_subtypes.rds
+    ├── cart_dc_subtypes_v1.rds
+    ├── cart_dc_subtypes_v2.rds
+    └── release-notes.md
+```
+
+## archived release (v4)
 - Data release date: 2026-02-18
 - status: available
 
