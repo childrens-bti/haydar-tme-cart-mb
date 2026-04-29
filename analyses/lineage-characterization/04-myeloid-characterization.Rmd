@@ -42,7 +42,7 @@ set.seed(1234)
 ## Load Data
 ```{r load-data}
 # Load Seurat object
-myeloid_obj <- readRDS(file.path(ml_res_dir, "cart_myeloid_subclusters.rds"))
+myeloid_obj <- readRDS(file.path(data_dir, "cart_myeloid_subtypes.rds"))
 ```
 
 ## Visualize myeloid subclusters
@@ -336,18 +336,18 @@ colors <- rev(RColorBrewer::brewer.pal(n = 11, name = "RdBu"))
 colors.use <- grDevices::colorRampPalette(colors = colors)(100)
 breaks <- seq(-3, 3, length.out = 101)
 
-# save heatmap as pdf
-pdf(file = file.path(plot_dir, "myeloid_subtype_hallmark_auc_heatmap.pdf"), width = 16, height = 8)
-
-hm <- pheatmap::pheatmap(mat = hallmark_z_scores,
-                   color = colors.use,
-                   border_color = "white",
-                   breaks = breaks,
-                   clustering_distance_rows = "correlation",
-                  clustering_distance_cols = "correlation",
-                  main = "Hallmark Pathway AUCell Activity across Myeloid Subtypes")
-print(hm)
-dev.off()
+pheatmap::pheatmap(
+  mat = hallmark_z_scores,
+  color = colors.use,
+  border_color = "white",
+  breaks = breaks,
+  clustering_distance_rows = "correlation",
+  clustering_distance_cols = "correlation",
+  main = "Hallmark Pathway AUCell Activity across Myeloid Subtypes",
+  filename = file.path(plot_dir, "myeloid_subtype_hallmark_auc_heatmap.pdf"),
+  width = 16,
+  height = 8
+)
 ```
 
 ## GSEA analysis of Hallmark gene sets

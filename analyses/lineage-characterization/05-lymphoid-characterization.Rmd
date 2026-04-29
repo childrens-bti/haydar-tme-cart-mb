@@ -406,15 +406,17 @@ colors <- rev(RColorBrewer::brewer.pal(n = 11, name = "RdBu"))
 colors.use <- grDevices::colorRampPalette(colors = colors)(100)
 breaks <- seq(-3, 3, length.out = 101)
 
-pdf(file = file.path(plot_dir, "tcell_subtype_hallmark_auc_heatmap.pdf"), width = 16, height = 8)
-hm <- pheatmap::pheatmap(mat = hallmark_z_scores,
-                   color = colors.use,
-                   border_color = "white",
-                   breaks = breaks,
-                   clustering_distance_rows = "correlation",
-                  clustering_distance_cols = "correlation") 
-print(hm)
-dev.off()
+pheatmap::pheatmap(
+  mat = hallmark_z_scores,
+  color = colors.use,
+  border_color = "white",
+  breaks = breaks,
+  clustering_distance_rows = "correlation",
+  clustering_distance_cols = "correlation",
+  filename = file.path(plot_dir, "tcell_subtype_hallmark_auc_heatmap.pdf"),
+  width = 16,
+  height = 8
+)
 ```
 
 ## GSEA analysis of Hallmark gene sets
