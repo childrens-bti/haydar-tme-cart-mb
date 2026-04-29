@@ -1,0 +1,617 @@
+---
+title: "05-lymphoid-characterization.Rmd"
+author: "Sam Chen"
+date: "`r Sys.Date()`"
+output: 
+  html_document:
+    toc: TRUE
+---
+
+## Setup
+```{r load-packages, message=FALSE, warning=FALSE}
+# Load libraries
+library(rprojroot)
+library(dplyr)
+library(Seurat)
+library(patchwork)
+library(ggplot2)
+library(tidyverse)
+library(SeuratObject)
+library(scCustomize)
+library(AUCell)
+library(msigdbr)
+library(sccomp)
+library(pheatmap)
+library(fgsea)
+
+# Define directories
+root_dir <- find_root(has_dir(".git"))
+data_dir <- file.path(root_dir, "data", "v5")
+analysis_dir <- file.path(root_dir, "analyses", "lineage-characterization")
+ml_res_dir <- file.path(root_dir, "analyses", "main-lineage-processing", "results")
+results_dir <- file.path(analysis_dir, "results")
+plot_dir <- file.path(analysis_dir, "plots")
+
+# Source custom theme
+source(file.path(root_dir, "figures", "theme.R"))
+
+# set random seed
+set.seed(1234)
+```
+
+## Load Data
+```{r load-data}
+# Load Seurat object
+lymphoid_obj <- readRDS(file.path(ml_res_dir, "cart_lymphoid_subclusters.rds"))
+```
+
+## Visualize lymphoid subclusters
+```{r visualize-lymphoid-subclusters, fig.height=6, fig.width=12}
+p1 <- DimPlot(lymphoid_obj, reduction = "umap", group.by = "seurat_clusters", label = TRUE, label.size = 4) + 
+  ggtitle("Subclusters")
+p2 <- DimPlot(lymphoid_obj, reduction = "umap", group.by = "cell_type", label = TRUE, label.size = 4) + 
+  ggtitle("lymphoid Cell Lineages")
+
+p1 + p2
+```
+
+## Cluster marker genes
+```{r cluster-markers, message=FALSE, warning=FALSE}
+cluster_markers <- FindAllMarkers(lymphoid_obj,
+                                  assay = "RNA",
+                                  layer = "data",
+                                  only.pos = TRUE,
+                                  min.pct = 0.5,
+                                  logfc.threshold = 0.5)
+
+write.csv(cluster_markers, file.path(results_dir, "nkt_subcluster_markers.csv"), row.names = FALSE)
+```
+
+Clusters at the top of UMAP are still driven by myeloid genes
+
+## T cell and macrophage genes
+```{r visualize-select-markers, fig.height=6, fig.width=6}
+FeaturePlot_scCustom(lymphoid_obj, features =  c("Cd3d", "Cd4", "Cd8a", "Trac"), reduction = "umap", pt.size = 0.1, alpha_exp = 0.5, colors_use = viridis_light_high) + 
+  plot_annotation(title = "T Cell Core")
+
+FeaturePlot_scCustom(lymphoid_obj, features = c("Lyz2", "Ms4a7", "Cd14", "Ctss"), reduction = "umap", pt.size = 0.1, alpha_exp = 0.5, colors_use = viridis_light_high) + plot_annotation(title = "Macrophage Core")
+```
+
+## Confirm with module scores to see whether they're really T cells with ambient myeloid RNA
+```{r module-scores}
+# T cell core program (CD4/CD8 agnostic)
+t_genes <- c(
+  "Cd3d","Cd3e","Cd3g",
+  "Cd4","Cd8a","Cd8b1",
+  "Trac","Trbc1","Trbc2",
+  "Lck","Lat",
+  "Il7r","Ccr7","Tcf7","Lef1",   # naive/memory
+  "Gzmb","Prf1","Ifng"           # effector
+)
+
+lymphoid_obj <- AddModuleScore(
+  lymphoid_obj,
+  features = list(t_genes),
+  name = "T_sig",
+  assay = "RNA",
+)
+
+# Generic macrophage / monocyte / TAM-ish
+mac_genes <- c(
+  "Lyz2","Lyz1","C1qa","C1qb","C1qc",
+  "Tyrobp","Aif1","Cst3",
+  "Csf1r","Mrc1","Cd68","Cd163",
+  "Lgals3","Apoe","Spp1",
+  "Ccl3","Ccl4"
+)
+
+lymphoid_obj <- AddModuleScore(
+  lymphoid_obj,
+  features = list(mac_genes),
+  name = "Mac_sig",
+  assay = "RNA",
+)
+
+# Microglia-enriched (CNS context)
+microglia_genes <- c(
+  "P2ry12","P2ry13","Tmem119",
+  "Cx3cr1","Gpr34","Fcrls",
+  "Hexb","Trem2","Olfml3",
+  "Sall1"
+)
+
+lymphoid_obj <- AddModuleScore(
+  lymphoid_obj,
+  features = list(microglia_genes),
+  name = "Mic_sig",
+  assay = "RNA",
+)
+
+# B cell genes
+b_genes <- c(
+  "Cd79a","Cd79b","Cd19","Ms4a1",      # BCR complex / CD19 / CD20
+  "Cd22","Bank1","Blnk","Pax5", "Igkc"         # B identity / signaling
+)
+
+lymphoid_obj <- AddModuleScore(
+  lymphoid_obj,
+  features = list(b_genes),
+  name = "B_sig",
+  assay = "RNA",
+)
+```
+
+## Visualize module scores
+```{r visualize-module-scores, fig.height=6, fig.width=8}
+FeaturePlot_scCustom(lymphoid_obj, features = c("T_sig1", "Mac_sig1", "Mic_sig1", "B_sig1"), reduction = "umap", pt.size = 0.1, alpha_exp = 0.5, colors_use = viridis_light_high) + 
+  plot_annotation(title = "Lineage module scores")
+```
+```{r module-score-violin, fig.height=6, fig.width=8}
+VlnPlot(lymphoid_obj, features = c("T_sig1", "Mac_sig1", "Mic_sig1", "B_sig1"), group.by = "seurat_clusters", pt.size = 0, ncol = 2) + 
+  plot_annotation(title = "Lineage module scores by cluster")
+```
+
+Compared to before resequencing, the contamination is much reduced, but still present.
+This suggest that further subsetting is probably not necessary anymore.
+
+## Visualize top markers
+```{r visualize-top-markers, fig.height=6, fig.width=6}
+top_markers_table <- cluster_markers %>%
+  group_by(cluster) %>%
+  slice_max(order_by = avg_log2FC, n = 4) %>%
+  ungroup() %>%
+  arrange(cluster, desc(avg_log2FC))
+
+for (clust in unique(top_markers_table$cluster)) {
+  clust_markers <- top_markers_table %>% filter(cluster == clust) %>% pull(gene)
+  p <- FeaturePlot_scCustom(lymphoid_obj, features = clust_markers, reduction = "umap", pt.size = 0.1, alpha_exp = 0.5, order=FALSE, colors_use = viridis_light_high) + 
+    plot_annotation(title = paste0("Cluster ", clust))
+  print(p)
+}
+```
+
+
+```{r other-markers, fig.height=6, fig.width=6}
+FeaturePlot_scCustom(lymphoid_obj, features = c("Tcf7", "Sell", "Lef1"), reduction = "umap", pt.size = 0.1, alpha_exp = 0.5, order=FALSE, colors_use = viridis_light_high) + plot_annotation(title = "Naive-like")
+
+FeaturePlot_scCustom(lymphoid_obj, features = c("S1pr1", "Klf2", "Slfn1"), reduction = "umap", pt.size = 0.1, alpha_exp = 0.5, order=FALSE, colors_use = viridis_light_high) + plot_annotation(title = "Quiescent")
+
+FeaturePlot_scCustom(lymphoid_obj, features = c("Cd28", "C1qa", "Lat"), reduction = "umap", pt.size = 0.1, alpha_exp = 0.5, order=FALSE, colors_use = viridis_light_high) + plot_annotation(title = "T-cell activation")
+
+FeaturePlot_scCustom(lymphoid_obj, features = c("Zap70", "Ifitm1", "Ifngr1"), reduction = "umap", pt.size = 0.1, alpha_exp = 0.5, order=FALSE, colors_use = viridis_light_high) + plot_annotation(title = "Cytokine signaling")
+
+FeaturePlot_scCustom(lymphoid_obj, features = c("Gzmb", "Gzma", "Prf1"), reduction = "umap", pt.size = 0.1, alpha_exp = 0.5, order=FALSE, colors_use = viridis_light_high) + plot_annotation(title = "Cytotoxicity")
+
+FeaturePlot_scCustom(lymphoid_obj, features = c("Pdcd1", "Ctla4", "Lag3", "Havcr2", "Eomes", "Tox"), reduction = "umap", pt.size = 0.1, alpha_exp = 0.5, order=FALSE, colors_use = viridis_light_high) + plot_annotation(title = "Inhibitory receptors")
+
+FeaturePlot_scCustom(lymphoid_obj, features = c("Foxp3", "Tnfrsf9"), reduction = "umap", pt.size = 0.1, alpha_exp = 0.5, colors_use = viridis_light_high) + plot_annotation(title = "Regulatory CD4")
+
+FeaturePlot_scCustom(lymphoid_obj, features = c("Ifng", "Ccl1", "Ccl4"), reduction = "umap", pt.size = 0.1, alpha_exp = 0.5, colors_use = viridis_light_high) + plot_annotation(title = "Effector CD4")
+```
+
+## Reannotate clusters by their expression profiles
+```{r reannotate-clusters}
+new_cluster_ids <- c(
+  "0" = "Heat-shocked T cells",
+  "1" = "Myeloid cells",
+  "2" = "CD4+ Regulatory T cells",
+  "3" = "CD8+ Cytotoxic T cells",
+  "4" = "CD4+ Helper T cells",
+  "5" = "Proliferating",
+  "6" = "iNKT1 cells",
+  "7" = "NK cells",
+  "8" = "Naive T cells",
+  "9" = "Proliferating",
+  "10" = "Central memory T cells",
+  "11" = "NK cells",
+  "12" = "IFN-stimulated T cells",
+  "13" = "iNKT17 cells",
+  "14" = "iNKT2 cells"
+)
+
+lymphoid_obj$tcell_subtype <- plyr::mapvalues(
+  x = lymphoid_obj$seurat_clusters,
+  from = names(new_cluster_ids),
+  to = new_cluster_ids
+)
+
+DimPlot(lymphoid_obj, reduction = "umap", group.by = "tcell_subtype") + 
+  ggtitle("T Cell Subtypes")
+ggsave(filename = file.path(plot_dir, "tcell_subtypes_umap.png"), width = 9, height = 6)
+```
+
+## Marker genes on subsets
+```{r subset-markers, message=FALSE, warning=FALSE}
+subtype_markers <- FindAllMarkers(lymphoid_obj,
+                                  assay = "RNA",
+                                 group.by = "tcell_subtype",
+                                  layer = "data",
+                                  only.pos = TRUE,
+                                  min.pct = 0.5,
+                                  logfc.threshold = 0.5)
+
+write.csv(subtype_markers, file.path(results_dir, "tcell_subtype_markers.csv"), row.names = FALSE)
+```
+
+```{r visualize-top-markers-heatmap, fig.height=16, fig.width=8}
+subtype_markers <- read.csv(file.path(results_dir, "tcell_subtype_markers.csv"))
+
+top50_markers <- subtype_markers %>%
+  group_by(cluster) %>%
+  top_n(n = 50, wt = avg_log2FC)
+
+# scale top markers in RNA assay
+lymphoid_obj <- ScaleData(lymphoid_obj, features = unique(top50_markers$gene), assay = "RNA")
+
+# separate heatmap for each cluster, save in one pdf file
+pdf(file = file.path(plot_dir, "tcell_subtype_heatmap_top_markers.pdf"), width = 16, height = 8)
+for (lineage in unique(top50_markers$cluster)) {
+  markers <- top50_markers %>%
+    filter(cluster == lineage) %>%
+    pull(gene)
+  
+  p <- DoHeatmap(lymphoid_obj, features = markers, group.by = "tcell_subtype", assay = "RNA", cells = 1:2000) +
+    ggtitle(paste("Top Markers for", lineage)) +
+    theme(plot.title = element_text(hjust = 0.5, face = "bold"))
+  
+  print(p)
+}
+dev.off()
+```
+
+# Composition analysis using sccomp
+
+## Split by condition
+```{r visualize-lymphoid-subclusters-by-condition, fig.height=6, fig.width=8}
+DimPlot(lymphoid_obj, reduction = "umap", group.by = "tcell_subtype", split.by = "condition", ncol = 3) + 
+  ggtitle("T Cell Subclusters by Condition")
+ggsave(filename = file.path(plot_dir, "tcell_subtypes_by_condition.png"), width = 16, height = 6)
+```
+
+```{r composition-analysis-sccomp_tumor, message=FALSE, warning=FALSE}
+sccomp_input_tumor <- lymphoid_obj@meta.data |>
+  tibble::rownames_to_column("cell") |>
+  dplyr::select(
+    cell,
+    sample = sample,
+    cell_group = tcell_subtype,
+    condition
+  ) %>% mutate(condition = factor(condition,
+               levels = c('tumor', 'STOP', '41BB-L', 'B7H3', 'CD28-41BB', 'CD8-41BB'))) %>%  
+  as_tibble()
+
+sccomp_result_tumor = 
+  sccomp_input_tumor |>
+  sccomp_estimate( 
+    formula_composition = ~ condition, 
+    .sample = sample, 
+    .cell_group = cell_group,
+    bimodal_mean_variability_association  = TRUE,
+    cores = 4,
+    verbose = FALSE
+  ) |> 
+  sccomp_test()
+
+```
+
+```{r composition-analysis-sccomp_STOP, message=FALSE, warning=FALSE}
+sccomp_input_STOP <- lymphoid_obj@meta.data |>
+  tibble::rownames_to_column("cell") |>
+  dplyr::select(
+    cell,
+    sample = sample,
+    cell_group = tcell_subtype,
+    condition
+  ) %>% mutate(condition = factor(condition,
+               levels = c('STOP', "tumor", '41BB-L', 'B7H3', 'CD28-41BB', 'CD8-41BB'))) %>%  
+  as_tibble()
+
+sccomp_result_STOP = 
+  sccomp_input_STOP |>
+  sccomp_estimate( 
+    formula_composition = ~ condition, 
+    .sample = sample, 
+    .cell_group = cell_group,
+    bimodal_mean_variability_association  = TRUE,
+    cores = 4,
+    verbose = FALSE
+  ) |> 
+  sccomp_test()
+
+```
+
+```{r visualize-sccomp-results, fig.height=6, fig.width=12}
+sccomp_result_tumor |> 
+  plot_1D_intervals()
+ggsave(file.path(plot_dir, "tcell_subtype_composition_sccomp_tumor.png"), width = 12, height = 6)
+
+sccomp_result_STOP |> 
+  plot_1D_intervals()
+ggsave(file.path(plot_dir, "tcell_subtype_composition_sccomp_STOP.png"), width = 12, height = 6)
+```
+## plot relative proportions of clusters between conditions
+```{r plot-relative-proportions}
+## stacked barplot
+prop_df <- lymphoid_obj@meta.data %>%
+  count(condition, tcell_subtype) %>%
+  group_by(condition) %>%
+  mutate(prop = n / sum(n))
+
+ggplot(prop_df, aes(x = condition, y = prop, fill = tcell_subtype)) +
+  geom_col(position = position_dodge(width = 0.8)) +
+  ylab("Proportion") +
+  theme_classic()
+ggsave(filename = file.path(plot_dir, "tcell_subtype_proportions_barplot.png"), width =9, height = 6)
+
+## dotplot of proportions
+ggplot(prop_df, aes(x = condition, y = tcell_subtype, size = prop, color = prop)) +
+  geom_point() +
+  scale_color_viridis_c() +
+  scale_y_discrete(limits = rev) + 
+  theme_classic() +
+  ylab("Cluster") + 
+  xlab("Condition")
+ggsave(filename = file.path(plot_dir, "tcell_subtype_proportions_dotplot.png"), width =9, height = 6)
+```
+
+# Gene set enrichment analysis
+
+## AUCell scoring on MSigDB Hallmark Gene sets
+```{r get-genesets, message=FALSE, warning=FALSE}
+# msigdb hallmark
+msigdb_hallmark <- msigdbr::msigdbr(species = "Mus musculus", category = "H") %>%
+  dplyr::select(gs_name, gene_symbol) %>%
+  dplyr::group_by(gs_name) %>%
+  dplyr::summarise(genes = list(gene_symbol)) %>%
+  deframe()
+
+# c5 onology
+msigdb_c5 <- msigdbr::msigdbr(species = "Mus musculus", category = "C5", subcategory = "BP") %>%
+  dplyr::select(gs_name, gene_symbol) %>%
+  dplyr::group_by(gs_name) %>%
+  dplyr::summarise(genes = list(gene_symbol)) %>%
+  deframe()
+
+# c7 immune
+msigdb_c7 <- msigdbr::msigdbr(species = "Mus musculus", category = "C7") %>%
+  dplyr::select(gs_name, gene_symbol) %>%
+  dplyr::group_by(gs_name) %>%
+  dplyr::summarise(genes = list(gene_symbol)) %>%
+  deframe()
+```
+
+## Hallmark gene set activity by lymphoid subcluster
+```{r hallmark-activity, message=FALSE, warning=FALSE}
+# AUCell on hallmark genesets
+cells_rankings <- AUCell_buildRankings(GetAssayData(lymphoid_obj, assay = "RNA", layer = "data"), nCores = 4, plotStats = TRUE)
+hallmark_AUC <- AUCell_calcAUC(msigdb_hallmark, cells_rankings)
+```
+
+## Subtype vs pathway heatmap of AUCell scores
+```{r subtype-pathway-heatmap, fig.height=8, fig.width=16}
+# z scores of AUCell scores across clusters per gene set
+hallmark_scores_df <- as.data.frame(t(getAUC(hallmark_AUC)))
+hallmark_scores_df$cluster = lymphoid_obj$tcell_subtype
+
+avg_hallmark_scores <- hallmark_scores_df %>%
+  group_by(cluster) %>%
+  summarise(across(starts_with("HALLMARK"), mean)) %>%
+  column_to_rownames("cluster")
+
+hallmark_z_scores <- scale(avg_hallmark_scores)
+
+
+# Color scale
+colors <- rev(RColorBrewer::brewer.pal(n = 11, name = "RdBu"))
+colors.use <- grDevices::colorRampPalette(colors = colors)(100)
+breaks <- seq(-3, 3, length.out = 101)
+
+pdf(file = file.path(plot_dir, "tcell_subtype_hallmark_auc_heatmap.pdf"), width = 16, height = 8)
+hm <- pheatmap::pheatmap(mat = hallmark_z_scores,
+                   color = colors.use,
+                   border_color = "white",
+                   breaks = breaks,
+                   clustering_distance_rows = "correlation",
+                  clustering_distance_cols = "correlation") 
+print(hm)
+dev.off()
+```
+
+## GSEA analysis of Hallmark gene sets
+```{r gsea-hallmark}
+# get foldchanges for each gene per cluster
+clusters <- levels(lymphoid_obj$tcell_subtype)
+fc_list <- lapply(clusters, function(cl){
+  df <- FoldChange(
+    object = lymphoid_obj,
+    group.by = "tcell_subtype",
+    ident.1 = cl,
+    ident.2 = NULL,
+    assay = "RNA",
+    layer = "data"
+  )
+  df <- as.data.frame(df)
+  df$gene <- rownames(df)
+
+  # Filter by pct.1
+  df <- df %>% filter(pct.1 >= 0.05)
+  
+  df$cluster <- cl
+  df
+})
+names(fc_list) <- clusters  
+
+# rank genes by product of log FCs and -log10 p values
+make_rank_vector <- function(df) {
+  stat <- df$avg_log2FC
+  names(stat) <- df$gene
+  stat[is.finite(stat)]
+}
+
+fgsea_list_hallmark <- map(fc_list, function(df_cluster) {
+  stats_vec <- make_rank_vector(df_cluster)
+  print(length(stats_vec))
+
+  fgsea(
+    pathways = msigdb_hallmark,
+    stats    = stats_vec,
+    minSize  = 15,
+    maxSize  = 500,
+  )
+})
+
+fgsea_res_hallmark <- imap_dfr(fgsea_list_hallmark, ~ mutate(.x, cluster = .y))
+fgsea_res_hallmark_sig <- fgsea_res_hallmark %>% 
+  filter(padj < 0.1 & NES > 0) %>%
+  arrange(cluster, desc(NES)) %>%
+  select(cluster, pathway, NES, pval, padj)
+write.csv(fgsea_res_hallmark_sig, file.path(results_dir, "tcell_subtype_hallmark_gsea_results.csv"), row.names = FALSE)
+```
+
+## GSEA on C5 GO gene sets
+```{r gsea-c5}
+fgsea_list_c5 <- map(fc_list, function(df_cluster) {
+  stats_vec <- make_rank_vector(df_cluster)
+  print(length(stats_vec))
+  
+  fgsea(
+    pathways = msigdb_c5,
+    stats    = stats_vec,
+    minSize  = 15,
+    maxSize  = 500,
+  )
+})
+
+fgsea_res_c5 <- imap_dfr(fgsea_list_c5, ~ mutate(.x, cluster = .y))
+fgsea_res_c5_sig <- fgsea_res_c5 %>% 
+  filter(padj < 0.1) %>%
+  arrange(cluster, desc(NES)) %>%
+  select(cluster, pathway, NES, pval, padj)
+write.csv(fgsea_res_c5_sig, file.path(results_dir, "tcell_subtype_c5_gsea_results.csv"), row.names = FALSE)
+```
+
+## GSEA on C7 immune gene sets
+```{r gsea-c7}
+fgsea_list_c7 <- map(fc_list, function(df_cluster) {
+  stats_vec <- make_rank_vector(df_cluster)
+  print(length(stats_vec))
+  
+  fgsea(
+    pathways = msigdb_c7,
+    stats    = stats_vec,
+    minSize  = 15,
+    maxSize  = 500,
+  )
+})
+
+fgsea_res_c7 <- imap_dfr(fgsea_list_c7, ~ mutate(.x, cluster = .y))
+fgsea_res_c7_sig <- fgsea_res_c7 %>% 
+       filter(padj < 0.1) %>%
+       arrange(cluster, desc(NES)) %>%
+       select(cluster, pathway, NES, pval, padj)
+write.csv(fgsea_res_c7_sig, file.path(results_dir, "tcell_subtype_c7_gsea_results.csv"), row.names = FALSE)
+```
+
+## Save T cell object
+```{r save-tcell-object}
+saveRDS(lymphoid_obj, file.path(results_dir, "cart_nkt_subtypes.rds"))
+```
+
+# Summary of the T cell subtypes
+AI-assisted summerization of the full marker lists for each T cell subtype.
+
+### Heat-shock Activated T cells
+- Key markers: Hspa1a, Hspa1b, Dnajb1, Jun, Cd69, Ms4a4b, Rasal3, Btg2
+- Recently activated or acutely stressed T cells, often induced by tissue dissociation, tumor microenvironment stress, or strong stimulation. Represents a state, not a stable lineage.
+- Literature support:
+  - Hauet-Broere et al., Ann. Rheum. Dis. 2006: Heat shock proteins induce T cell regulation of chronic inflammation
+  - Calderwood & Gong, Trends Biochem. Sci. 2016: Heat Shock Proteins Promote Cancer: It’s a Protection Racket
+
+### Myeloid cells (contamination)
+- Key markers: Csf1r, Tmem119, Hexb, Cst3, Ccl3
+- Microglia/macrophage-like cells. Clear non-lymphoid contamination and should be excluded from T/NKT-focused analyses.Potentially central memory T cells, but not clean
+
+### CD4+ Regulatory T cells
+- Key markers: Foxp3, Ctla4, Il2ra (CD25), Ikzf2, Tnfrsf4
+- Immunosuppressive CD4+ T cells involved in immune tolerance and checkpoint regulation. Likely dampen effector responses within the tissue
+- Literature support:
+  - Rudensky, Immunol. Rev. 2011: Regulatory T Cells and Foxp3
+  - Walker, J. Autoimmun. 2013: Treg and CTLA-4: Two intertwining pathways to immune tolerance
+  - Chen et al., Int. Immunopharmacol. 2016: CD4⁺CD25⁺ regulatory T cells in tumor immunity
+
+### CD8+ Cytotoxic T cells
+- Key markers: Cd8a, Cd8b1, Gzmb, Nkg7, Prf1, Pdcd1
+- Activated cytotoxic effector T cells with killing capacity. PD-1 expression suggests recent activation and/or early exhaustion.
+- Literature support:
+  - Raskov et al., Br. J. Cancer. 2021: Cytotoxic CD8⁺ T cells in cancer and cancer immunotherapy
+
+### CD4+ Helper T cells
+- Key markers: Cd4, Icos, Tnfrsf4 (OX40), Bhlhe40
+- Activated helper T cells supporting immune coordination and cytokine signaling. Less cytotoxic, more regulatory/organizing in function.
+- Literature support:
+  - Luckheeram et al., Clin. Dev. Immunol. 2012: CD4⁺ T Cells: Differentiation and Functions
+
+## Early-activation T cells
+- Key markers: Egr1, Jun, Fos, Atf3, Zfp36, Dusp1, Hspa1a/b, Klf2
+- “Shock response” T cells—very typical after stimulation or tissue dissociation
+- Literature support:
+  - Malissen & Bongrand, Annu. Rev. Immunol. 2015: Early T cell activation: integrating biochemical, structural, and biophysical cues
+  - Chen et al., Blood. 2009: Identification of early growth response protein 1 (EGR-1) as a novel target for JUN-induced apoptosis in multiple myeloma
+
+## Proliferating
+- Key markers: Mki67, Cdk1, Ccnb1, Ccnb2, Top2a
+- Actively cycling lymphocytes. Identity is secondary; represents a cell-cycle state shared across multiple T/NKT subsets.
+
+# iNKT1 cells
+- Key markers: Eomes, Tbx21, Prf1, Gzma, Nkg7
+- Cytotoxic, Th1-like invariant NKT cells. Specialized for IFN-γ production and effector responses against tumors or infections.
+- Literature support:
+  - Daussy et al., J. Exp. Med. 2014: T-bet and Eomes instruct the development of two distinct natural killer cell lineages in the liver and in the bone marrow
+  - Shimizu et al., Commun. Biol. 2019: Eomes transcription factor is required for the development and differentiation of invariant NKT cells
+
+# NK cells
+- Key markers: Ncr1, Klrb1c, Klrd1, Tyrobp, Fcgr3
+- Innate cytotoxic lymphocytes lacking TCR signaling. Functionally distinct from T and iNKT cells, with strong NK receptor programs.
+- Literature support:
+  - Chen et al., Signal Transduction and Targeted Therapy. 2024: Comprehensive snapshots of natural killer cells functions, signaling, molecular mechanisms and clinical utilization
+
+# Naive T cells
+- Key markers: Satb1, Txk, Cd7, Tcf7, Lef1
+- Quiescent or early-differentiation T cells with minimal activation or effector signatures. Likely precursors to activated or memory states.
+- Literature support:
+  - Willinger et al., J. Immunol. 2006: Human naive CD8 T cells down-regulate expression of the WNT pathway transcription factors lymphoid enhancer binding factor 1 and transcription factor 7 (T cell factor-1) following antigen encounter in vitro and in vivo
+  - Aandahl et al., J. Immunol. 2003: CD7 is a differentiation marker that identifies multiple CD8 T cell effector subsets
+  - Chen et al., Blood. 2009: Identification of early growth response protein 1 (EGR-1) as a novel target for JUN-induced apoptosis in multiple myeloma
+
+# Central memory T cells
+- Key markers: Sell (CD62L), S1pr1, Lef1, Foxp1
+- Recirculating memory T cells with lymphoid-homing capacity. Less cytotoxic, optimized for long-term immune surveillance.
+- Literature support:
+  - Yang et al., PLoS One. 2011: The shedding of CD62L (L-selectin) regulates the acquisition of lytic activity in human tumor-reactive T lymphocytes
+  - Sallusto et al., Nat. Rev. Immunol. 2004: Central memory and effector memory T cell subsets: function, generation, and maintenance
+  
+# IFN-stimulated T cells
+- Key markers: Ifit3, Isg15, Oas3, Zbp1
+- T cells responding to type I interferon signaling. Reflects cytokine exposure or viral/inflammatory sensing rather than lineage differences.
+- Literature support:
+  - Crouse et al., Nat. Rev. Immunol. 2015: Regulation of antiviral T cell responses by type I interferons
+  - Lim et al., iScience. 2024: Type I interferon signaling regulates myeloid and T cell crosstalk in the glioblastoma tumor microenvironment
+
+# iNKT17 cells
+- Key markers: Rorc, Il23r, Il1r1, Cxcr6, Zbtb16
+- Pro-inflammatory invariant NKT subset associated with IL-17 biology and tissue residency, particularly in barrier or inflamed tissues.
+- Literature support:
+  - Giannou et al., Immunity. 2023: Tissue resident iNKT17 cells facilitate cancer cell extravasation in liver metastasis via interleukin-22
+  - Thapa et al., Sci. Rep. 2017: The differentiation of ROR-γt expressing iNKT17 cells is orchestrated by Runx1
+
+# iNKT2 cells
+- Key markers: Gata3, Il17rb, Il1rl1 (ST2), Areg
+- Th2-like invariant NKT cells involved in cytokine support and tissue repair. Amphiregulin suggests regenerative or homeostatic roles.
+- Literature support:
+  - Krovi & Gapin, Front. Immunol. 2018: Invariant Natural Killer T Cell Subsets—More Than Just Developmental Intermediates
+
+## Session Info
+```{r session-info}
+sessionInfo()
+```
+  
