@@ -11,7 +11,7 @@
 
 <meta name="author" content="Sam Chen, Bicna Song" />
 
-<meta name="date" content="2026-04-27" />
+<meta name="date" content="2026-04-29" />
 
 <title>01-myeloid-condition-umaps</title>
 
@@ -352,7 +352,7 @@ display: none;
 
 <h1 class="title toc-ignore">01-myeloid-condition-umaps</h1>
 <h4 class="author">Sam Chen, Bicna Song</h4>
-<h4 class="date">2026-04-27</h4>
+<h4 class="date">2026-04-29</h4>
 
 </div>
 
@@ -387,8 +387,8 @@ library(MAST)
 root_dir &lt;- find_root(has_dir(&quot;.git&quot;))
 data_dir &lt;- file.path(root_dir, &quot;data&quot;, &quot;v5&quot;)
 analysis_dir &lt;- file.path(root_dir, &quot;analyses&quot;, &quot;downstream-analyses&quot;)
-results_dir &lt;- file.path(analysis_dir, &quot;results&quot;)
-plot_dir &lt;- file.path(analysis_dir, &quot;plots&quot;)
+results_dir &lt;- file.path(analysis_dir, &quot;results&quot;, &quot;myeloid&quot;)
+plot_dir &lt;- file.path(analysis_dir, &quot;plots&quot;, &quot;myeloid&quot;)
 
 dir.create(results_dir, recursive = TRUE, showWarnings = FALSE)
 dir.create(plot_dir, recursive = TRUE, showWarnings = FALSE)
@@ -485,21 +485,21 @@ objs &lt;- lapply(objs, reprocess_sample)</code></pre>
 <pre><code>## Warning: The default method for RunUMAP has changed from calling Python UMAP via reticulate to the R-native UWOT using the cosine metric
 ## To use Python UMAP via reticulate, set umap.method to &#39;umap-learn&#39; and metric to &#39;correlation&#39;
 ## This message will be shown once per session</code></pre>
-<pre><code>## 18:58:57 UMAP embedding parameters a = 0.9922 b = 1.112</code></pre>
-<pre><code>## 18:58:57 Read 22072 rows and found 20 numeric columns</code></pre>
-<pre><code>## 18:58:57 Using Annoy for neighbor search, n_neighbors = 30</code></pre>
-<pre><code>## 18:58:57 Building Annoy index with metric = cosine, n_trees = 50</code></pre>
+<pre><code>## 19:47:14 UMAP embedding parameters a = 0.9922 b = 1.112</code></pre>
+<pre><code>## 19:47:14 Read 22072 rows and found 20 numeric columns</code></pre>
+<pre><code>## 19:47:14 Using Annoy for neighbor search, n_neighbors = 30</code></pre>
+<pre><code>## 19:47:14 Building Annoy index with metric = cosine, n_trees = 50</code></pre>
 <pre><code>## 0%   10   20   30   40   50   60   70   80   90   100%</code></pre>
 <pre><code>## [----|----|----|----|----|----|----|----|----|----|</code></pre>
 <pre><code>## **************************************************|
-## 18:58:59 Writing NN index file to temp file /tmp/RtmpN0GynD/file113a7f928e25
-## 18:58:59 Searching Annoy index using 1 thread, search_k = 3000
-## 18:59:06 Annoy recall = 100%
-## 18:59:07 Commencing smooth kNN distance calibration using 1 thread with target n_neighbors = 30
-## 18:59:08 Initializing from normalized Laplacian + noise (using RSpectra)
-## 18:59:09 Commencing optimization for 200 epochs, with 980026 positive edges
-## 18:59:09 Using rng type: pcg
-## 18:59:18 Optimization finished
+## 19:47:16 Writing NN index file to temp file /tmp/Rtmp7nncN3/file21fa22c9825c
+## 19:47:16 Searching Annoy index using 1 thread, search_k = 3000
+## 19:47:23 Annoy recall = 100%
+## 19:47:24 Commencing smooth kNN distance calibration using 1 thread with target n_neighbors = 30
+## 19:47:25 Initializing from normalized Laplacian + noise (using RSpectra)
+## 19:47:26 Commencing optimization for 200 epochs, with 980026 positive edges
+## 19:47:26 Using rng type: pcg
+## 19:47:35 Optimization finished
 ## Splitting &#39;counts&#39;, &#39;data&#39; layers. Not splitting &#39;scale.data&#39;. If you would like to split other layers, set in `layers` argument.
 ## Normalizing layer: counts.41BB-L_pos_T_D1
 ## Normalizing layer: counts.41BB-L_pos_T_D2
@@ -545,21 +545,21 @@ objs &lt;- lapply(objs, reprocess_sample)</code></pre>
 ##     Ccl2, C1qa, Ccn1, Ifi203, Hspa1a, Cd4, Cd74, Fam43a, Oas2, Ms4a7</code></pre>
 <pre><code>## Warning: Number of dimensions changing from 30 to 50</code></pre>
 <pre><code>## Warning: Number of dimensions changing from 30 to 50</code></pre>
-<pre><code>## 18:59:49 UMAP embedding parameters a = 0.9922 b = 1.112
-## 18:59:49 Read 17118 rows and found 20 numeric columns
-## 18:59:49 Using Annoy for neighbor search, n_neighbors = 30
-## 18:59:49 Building Annoy index with metric = cosine, n_trees = 50
+<pre><code>## 19:48:06 UMAP embedding parameters a = 0.9922 b = 1.112
+## 19:48:06 Read 17118 rows and found 20 numeric columns
+## 19:48:06 Using Annoy for neighbor search, n_neighbors = 30
+## 19:48:06 Building Annoy index with metric = cosine, n_trees = 50
 ## 0%   10   20   30   40   50   60   70   80   90   100%
 ## [----|----|----|----|----|----|----|----|----|----|
 ## **************************************************|
-## 18:59:50 Writing NN index file to temp file /tmp/RtmpN0GynD/file113a589de306
-## 18:59:50 Searching Annoy index using 1 thread, search_k = 3000
-## 18:59:55 Annoy recall = 100%
-## 18:59:56 Commencing smooth kNN distance calibration using 1 thread with target n_neighbors = 30
-## 18:59:57 Initializing from normalized Laplacian + noise (using RSpectra)
-## 18:59:58 Commencing optimization for 200 epochs, with 755882 positive edges
-## 18:59:58 Using rng type: pcg
-## 19:00:05 Optimization finished
+## 19:48:08 Writing NN index file to temp file /tmp/Rtmp7nncN3/file21fa16083e5a
+## 19:48:08 Searching Annoy index using 1 thread, search_k = 3000
+## 19:48:13 Annoy recall = 100%
+## 19:48:14 Commencing smooth kNN distance calibration using 1 thread with target n_neighbors = 30
+## 19:48:15 Initializing from normalized Laplacian + noise (using RSpectra)
+## 19:48:15 Commencing optimization for 200 epochs, with 755882 positive edges
+## 19:48:15 Using rng type: pcg
+## 19:48:23 Optimization finished
 ## Splitting &#39;counts&#39;, &#39;data&#39; layers. Not splitting &#39;scale.data&#39;. If you would like to split other layers, set in `layers` argument.
 ## Normalizing layer: counts.STOP_pos_T_D1
 ## Normalizing layer: counts.STOP_pos_T_D2
@@ -605,21 +605,21 @@ objs &lt;- lapply(objs, reprocess_sample)</code></pre>
 ##     Ccn1, Ccl8, Cd4, Pf4, Folr2, Ifi203, Gas6, Cd209f, Timd4, Ifi207</code></pre>
 <pre><code>## Warning: Number of dimensions changing from 30 to 50
 ## Warning: Number of dimensions changing from 30 to 50</code></pre>
-<pre><code>## 19:00:33 UMAP embedding parameters a = 0.9922 b = 1.112
-## 19:00:33 Read 15089 rows and found 20 numeric columns
-## 19:00:33 Using Annoy for neighbor search, n_neighbors = 30
-## 19:00:33 Building Annoy index with metric = cosine, n_trees = 50
+<pre><code>## 19:48:51 UMAP embedding parameters a = 0.9922 b = 1.112
+## 19:48:51 Read 15089 rows and found 20 numeric columns
+## 19:48:51 Using Annoy for neighbor search, n_neighbors = 30
+## 19:48:51 Building Annoy index with metric = cosine, n_trees = 50
 ## 0%   10   20   30   40   50   60   70   80   90   100%
 ## [----|----|----|----|----|----|----|----|----|----|
 ## **************************************************|
-## 19:00:35 Writing NN index file to temp file /tmp/RtmpN0GynD/file113a620d6e18
-## 19:00:35 Searching Annoy index using 1 thread, search_k = 3000
-## 19:00:39 Annoy recall = 100%
-## 19:00:40 Commencing smooth kNN distance calibration using 1 thread with target n_neighbors = 30
-## 19:00:41 Initializing from normalized Laplacian + noise (using RSpectra)
-## 19:00:41 Commencing optimization for 200 epochs, with 658456 positive edges
-## 19:00:41 Using rng type: pcg
-## 19:00:48 Optimization finished
+## 19:48:52 Writing NN index file to temp file /tmp/Rtmp7nncN3/file21fa2c5b3662
+## 19:48:52 Searching Annoy index using 1 thread, search_k = 3000
+## 19:48:57 Annoy recall = 100%
+## 19:48:57 Commencing smooth kNN distance calibration using 1 thread with target n_neighbors = 30
+## 19:48:59 Initializing from normalized Laplacian + noise (using RSpectra)
+## 19:48:59 Commencing optimization for 200 epochs, with 658456 positive edges
+## 19:48:59 Using rng type: pcg
+## 19:49:06 Optimization finished
 ## Splitting &#39;counts&#39;, &#39;data&#39; layers. Not splitting &#39;scale.data&#39;. If you would like to split other layers, set in `layers` argument.
 ## Normalizing layer: counts.B7H3_pos_T_D1
 ## Normalizing layer: counts.B7H3_pos_T_D2
@@ -665,21 +665,21 @@ objs &lt;- lapply(objs, reprocess_sample)</code></pre>
 ##     Lgals3bp, Itgal, Gatm, Cxcl10, Acod1, Daxx, Cybb, Iigp1, Klra2, Herc6</code></pre>
 <pre><code>## Warning: Number of dimensions changing from 30 to 50
 ## Warning: Number of dimensions changing from 30 to 50</code></pre>
-<pre><code>## 19:01:25 UMAP embedding parameters a = 0.9922 b = 1.112
-## 19:01:25 Read 20794 rows and found 20 numeric columns
-## 19:01:25 Using Annoy for neighbor search, n_neighbors = 30
-## 19:01:25 Building Annoy index with metric = cosine, n_trees = 50
+<pre><code>## 19:49:43 UMAP embedding parameters a = 0.9922 b = 1.112
+## 19:49:43 Read 20794 rows and found 20 numeric columns
+## 19:49:43 Using Annoy for neighbor search, n_neighbors = 30
+## 19:49:43 Building Annoy index with metric = cosine, n_trees = 50
 ## 0%   10   20   30   40   50   60   70   80   90   100%
 ## [----|----|----|----|----|----|----|----|----|----|
 ## **************************************************|
-## 19:01:27 Writing NN index file to temp file /tmp/RtmpN0GynD/file113a762a02d0
-## 19:01:27 Searching Annoy index using 1 thread, search_k = 3000
-## 19:01:34 Annoy recall = 100%
-## 19:01:34 Commencing smooth kNN distance calibration using 1 thread with target n_neighbors = 30
-## 19:01:36 Initializing from normalized Laplacian + noise (using RSpectra)
-## 19:01:36 Commencing optimization for 200 epochs, with 911942 positive edges
-## 19:01:36 Using rng type: pcg
-## 19:01:45 Optimization finished
+## 19:49:45 Writing NN index file to temp file /tmp/Rtmp7nncN3/file21fa6f449688
+## 19:49:45 Searching Annoy index using 1 thread, search_k = 3000
+## 19:49:51 Annoy recall = 100%
+## 19:49:52 Commencing smooth kNN distance calibration using 1 thread with target n_neighbors = 30
+## 19:49:53 Initializing from normalized Laplacian + noise (using RSpectra)
+## 19:49:54 Commencing optimization for 200 epochs, with 911942 positive edges
+## 19:49:54 Using rng type: pcg
+## 19:50:03 Optimization finished
 ## Splitting &#39;counts&#39;, &#39;data&#39; layers. Not splitting &#39;scale.data&#39;. If you would like to split other layers, set in `layers` argument.
 ## Normalizing layer: counts.CD8-41BB_pos_T_D1
 ## Normalizing layer: counts.CD8-41BB_pos_T_D2
@@ -725,21 +725,21 @@ objs &lt;- lapply(objs, reprocess_sample)</code></pre>
 ##     Hp, Cd177, Grk5, Adgre4, Ms4a4c, Ceacam1, Ace, Stxbp6, Rasgrp2, Vcan</code></pre>
 <pre><code>## Warning: Number of dimensions changing from 30 to 50
 ## Warning: Number of dimensions changing from 30 to 50</code></pre>
-<pre><code>## 19:02:13 UMAP embedding parameters a = 0.9922 b = 1.112
-## 19:02:13 Read 17230 rows and found 20 numeric columns
-## 19:02:13 Using Annoy for neighbor search, n_neighbors = 30
-## 19:02:13 Building Annoy index with metric = cosine, n_trees = 50
+<pre><code>## 19:50:31 UMAP embedding parameters a = 0.9922 b = 1.112
+## 19:50:31 Read 17230 rows and found 20 numeric columns
+## 19:50:31 Using Annoy for neighbor search, n_neighbors = 30
+## 19:50:31 Building Annoy index with metric = cosine, n_trees = 50
 ## 0%   10   20   30   40   50   60   70   80   90   100%
 ## [----|----|----|----|----|----|----|----|----|----|
 ## **************************************************|
-## 19:02:14 Writing NN index file to temp file /tmp/RtmpN0GynD/file113a5af70c09
-## 19:02:14 Searching Annoy index using 1 thread, search_k = 3000
-## 19:02:19 Annoy recall = 100%
-## 19:02:20 Commencing smooth kNN distance calibration using 1 thread with target n_neighbors = 30
-## 19:02:21 Initializing from normalized Laplacian + noise (using RSpectra)
-## 19:02:22 Commencing optimization for 200 epochs, with 736858 positive edges
-## 19:02:22 Using rng type: pcg
-## 19:02:29 Optimization finished</code></pre>
+## 19:50:33 Writing NN index file to temp file /tmp/Rtmp7nncN3/file21fa50e72a0e
+## 19:50:33 Searching Annoy index using 1 thread, search_k = 3000
+## 19:50:38 Annoy recall = 100%
+## 19:50:38 Commencing smooth kNN distance calibration using 1 thread with target n_neighbors = 30
+## 19:50:40 Initializing from normalized Laplacian + noise (using RSpectra)
+## 19:50:40 Commencing optimization for 200 epochs, with 736858 positive edges
+## 19:50:40 Using rng type: pcg
+## 19:50:48 Optimization finished</code></pre>
 </div>
 <div id="visualize-umaps" class="section level2">
 <h2>Visualize UMAPs</h2>

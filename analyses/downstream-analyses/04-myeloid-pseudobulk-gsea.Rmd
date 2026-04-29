@@ -1,0 +1,267 @@
+---
+title: "04-myeloid-pseudobulk"
+author: "Bicna Song"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: TRUE
+    toc_float: TRUE
+---
+
+## Setup
+```{r load-packages, message=FALSE, warning=FALSE}
+# Load libraries
+library(rprojroot)
+library(dplyr)
+library(tibble)
+library(Seurat)
+library(SeuratObject)
+library(ggplot2)
+library(msigdbr)
+library(fgsea)
+library(Matrix)
+library(DESeq2)
+library(stringr)
+library(EnhancedVolcano)
+library(purrr)
+
+# Define directories
+root_dir <- find_root(has_dir(".git"))
+data_dir <- file.path(root_dir, "data", "v5")
+analysis_dir <- file.path(root_dir, "analyses", "downstream-analyses")
+results_dir <- file.path(analysis_dir, "results", "myeloid", "GSEA")
+plot_dir <- file.path(analysis_dir, "plots", "myeloid", "GSEA")
+
+dir.create(results_dir, recursive = TRUE, showWarnings = FALSE)
+dir.create(plot_dir, recursive = TRUE, showWarnings = FALSE)
+
+# Source custom theme
+source(file.path(root_dir, "figures", "theme.R"))
+source(file.path(analysis_dir, "util", "pseudobulk_gsea_helpers.R"))
+
+# set random seed
+set.seed(1234)
+
+# Analysis parameters
+subtype_label <- "myeloid"
+```
+
+## Load data and define identities
+```{r load-data}
+subtype_title <- dplyr::case_when(
+  subtype_label == "myeloid" ~ "Myeloid",
+  subtype_label == "tcell" ~ "T cell",
+  subtype_label == "dc" ~ "DC",
+  TRUE ~ stringr::str_to_title(subtype_label)
+)
+
+obj <- readRDS(file.path(data_dir, "cart_myeloid_subtypes.rds"))
+
+# Make condition a factor with explicit order so contrasts are stable/reproducible
+condition_levels <- intersect(c("41BB-L", "B7H3", "CD28-41BB", "CD8-41BB", "STOP", "tumor"), unique(as.character(obj$condition)))
+
+obj$condition <- factor(obj$condition, levels = condition_levels)
+Idents(obj) <- "condition"
+
+all_conditions <- levels(obj$condition)
+car_levels <- intersect(c("41BB-L", "B7H3", "CD28-41BB", "CD8-41BB"), all_conditions)
+
+cat("Subtype label:", subtype_label, "\n")
+cat("Conditions:", paste(all_conditions, collapse = ", "), "\n")
+cat("CAR conditions:", paste(car_levels, collapse = ", "), "\n")
+
+table(obj$condition)
+```
+
+## Load MSigDB Hallmark gene sets
+```{r load-msigdb-hallmark}
+hallmark_pathways <- msigdbr(species = "Mus musculus", category = "H") %>%
+  dplyr::select(gs_name, gene_symbol) %>%
+  split(x = .$gene_symbol, f = .$gs_name)
+
+length(hallmark_pathways)
+```
+
+## Build pseudobulk counts per sample
+This section aggregates raw UMI counts across all cells in the input subtype object belonging to the same sample, yielding a genes × samples count matrix.
+```{r build-pseudobulk, message=FALSE, warning=FALSE}
+stopifnot(all(c("sample", "condition") %in% colnames(obj@meta.data)))
+
+counts <- GetAssayData(obj, assay = "RNA", layer = "counts")
+
+meta <- obj@meta.data %>%
+  dplyr::select(sample, condition) %>%
+  mutate(
+    sample = as.character(sample),
+    condition = factor(condition, levels = levels(obj$condition))
+  )
+
+# Aggregate counts by sample (genes x samples)
+pb_counts <- Matrix::t(rowsum(Matrix::t(counts), group = meta$sample))
+
+# Sample-level metadata (one row per sample)
+coldata <- meta %>%
+  as.data.frame() %>%
+  { rownames(.) <- NULL; . } %>%
+  distinct(sample, condition) %>%
+  tibble::column_to_rownames("sample")
+
+# Align matrices
+pb_counts <- pb_counts[, rownames(coldata)]
+
+table(coldata$condition)
+```
+
+## 1) Each condition vs rest
+
+```{r each-condition-vs-rest, message=FALSE, warning=FALSE}
+pb_rest_results <- list()
+
+for (cond in all_conditions) {
+  ref_conditions <- setdiff(all_conditions, cond)
+  out_prefix <- paste0(cond, "_vs_rest")
+
+  cat("\n===== Running each-vs-rest:", cond, "vs rest =====\n")
+
+  pb_rest_results[[cond]] <- run_pseudobulk_contrast(
+    pb_counts = pb_counts,
+    coldata = coldata,
+    case_condition = cond,
+    ref_conditions = ref_conditions,
+    ref_label = "rest",
+    hallmark_pathways = hallmark_pathways,
+    out_prefix = paste0("pseudobulk_", out_prefix),
+    subtype_label = subtype_label,
+    subtype_title = subtype_title,
+    results_dir = results_dir,
+    plot_dir = plot_dir,
+    minSize = 15,
+    maxSize = 500,
+    volcano_lfc_cutoff = 1,
+    volcano_p_cutoff = 0.05,
+    gsea_p_cutoff = 0.05
+  )
+}
+```
+
+## 2) Each condition vs other CARs
+
+For CAR conditions:
+
+- compare to the other CAR conditions
+
+For non-CAR conditions:
+
+- compare to all CAR conditions
+
+```{r each-condition-vs-other-cars, message=FALSE, warning=FALSE}
+pb_car_results <- list()
+
+for (cond in all_conditions) {
+
+  if (cond %in% car_levels) {
+    ref_conditions <- setdiff(car_levels, cond)
+    ref_label <- "otherCAR"
+    out_prefix <- paste0(cond, "_vs_otherCAR")
+  } else {
+    ref_conditions <- car_levels
+    ref_label <- "allCAR"
+    out_prefix <- paste0(cond, "_vs_allCAR")
+  }
+
+  if (length(ref_conditions) == 0) next
+
+  cat("\n===== Running condition-vs-CARs:", cond, "=====\n")
+
+  pb_car_results[[cond]] <- run_pseudobulk_contrast(
+    pb_counts = pb_counts,
+    coldata = coldata,
+    case_condition = cond,
+    ref_conditions = ref_conditions,
+    ref_label = ref_label,
+    hallmark_pathways = hallmark_pathways,
+    out_prefix = paste0("pseudobulk_", out_prefix),
+    subtype_label = subtype_label,
+    subtype_title = subtype_title,
+    results_dir = results_dir,
+    plot_dir = plot_dir,
+    minSize = 15,
+    maxSize = 500,
+    volcano_lfc_cutoff = 1,
+    volcano_p_cutoff = 0.05,
+    gsea_p_cutoff = 0.05
+  )
+}
+```
+
+## 3) Each subtype vs rest
+
+```{r each-myeloid-subtype-vs-rest, message=FALSE, warning=FALSE}
+if (!"myeloid_subtype" %in% colnames(obj@meta.data)) {
+  stop("The object does not contain a myeloid_subtype metadata column.")
+}
+
+subtype_levels <- obj@meta.data %>%
+  dplyr::pull(myeloid_subtype) %>%
+  as.character() %>%
+  unique() %>%
+  sort()
+
+myeloid_subtype_gsea_results <- list()
+
+for (subtype in subtype_levels) {
+  sample_subtype <- obj@meta.data %>%
+    dplyr::select(sample, myeloid_subtype) %>%
+    mutate(
+      sample = as.character(sample),
+      myeloid_subtype = as.character(myeloid_subtype),
+      subtype_group = ifelse(myeloid_subtype == subtype, subtype, "rest"),
+      sample_group = paste(sample, subtype_group, sep = "__")
+    )
+
+  pb_counts_subtype <- Matrix::t(rowsum(Matrix::t(counts), group = sample_subtype$sample_group))
+
+  coldata_subtype <- sample_subtype %>%
+    distinct(sample_group, subtype_group) %>%
+    dplyr::rename(condition = subtype_group) %>%
+    tibble::remove_rownames() %>%
+    tibble::column_to_rownames("sample_group")
+
+  coldata_subtype$condition <- factor(coldata_subtype$condition, levels = c("rest", subtype))
+  pb_counts_subtype <- pb_counts_subtype[, rownames(coldata_subtype), drop = FALSE]
+
+  if (sum(coldata_subtype$condition == subtype) < 1 || sum(coldata_subtype$condition == "rest") < 1) {
+    message("Skipping subtype ", subtype, " because there are not enough samples in one of the groups.")
+    next
+  }
+
+  cat("\n===== Running myeloid_subtype vs rest for:", subtype, "====\n")
+  print(table(coldata_subtype$condition))
+  
+  out_prefix <- paste0(subtype, "_vs_rest")
+
+  myeloid_subtype_gsea_results[[subtype]] <- run_pseudobulk_contrast(
+    pb_counts = pb_counts_subtype,
+    coldata = coldata_subtype,
+    case_condition = subtype,
+    ref_conditions = "rest",
+    ref_label = "rest",
+    hallmark_pathways = hallmark_pathways,
+    out_prefix = paste0("pseudobulk_", out_prefix),
+    subtype_label = subtype_label,
+    subtype_title = subtype_title,
+    results_dir = results_dir,
+    plot_dir = plot_dir,
+    minSize = 15,
+    maxSize = 500,
+    volcano_lfc_cutoff = 1,
+    volcano_p_cutoff = 0.05,
+    gsea_p_cutoff = 0.05
+  )
+}
+```
+
+## Session info
+```{r session-info}
+sessionInfo()
+```

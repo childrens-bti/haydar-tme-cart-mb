@@ -67,7 +67,8 @@ plot_volcano <- function(df,
     drawConnectors = TRUE,
     widthConnectors = 0.4,
     colConnectors = "black",
-    max.overlaps = Inf
+    max.overlaps = Inf,
+    titleLabSize = 10
   )
 }
 
@@ -199,7 +200,7 @@ run_pseudobulk_fgsea <- function(pb_counts,
   )
   ggsave(
     file.path(plot_dir, paste0(subtype_label, "_volcano_", out_prefix, ".pdf")),
-    pvol, width = 8, height = 6
+    pvol, width = 9, height = 7
   )
   
   pgsea <- plot_gsea_dot(
@@ -213,7 +214,7 @@ run_pseudobulk_fgsea <- function(pb_counts,
   if (!is.null(pgsea)) {
     ggsave(
       file.path(plot_dir, paste0(subtype_label, "_gsea_dot_", out_prefix, ".pdf")),
-      pgsea, width = 8, height = 6
+      pgsea, width = 10, height = 6
     )
   }
   

@@ -15,8 +15,8 @@ Rscript -e "rmarkdown::render('02-lineage-plot.Rmd')"
 # Perform differential expression analysis in myeloid cells and generate pathway-annotated dot plots
 Rscript -e "rmarkdown::render('03-myeloid-functional-marker-dotplots.Rmd')"
 
-# Run pseudobulk DESeq2-based Hallmark GSEA for myeloid cells by treatment condition
-Rscript -e "rmarkdown::render('04-myeloid-pseudobulk-gsea-by-treatment.Rmd')"
+# Run pseudobulk DESeq2-based Hallmark GSEA for myeloid cells
+Rscript -e "rmarkdown::render('04-myeloid-pseudobulk-gsea.Rmd')"
 
 # Perform subtype composition analysis for myeloid cells using sccomp
 Rscript -e "rmarkdown::render('05-myeloid-composition-analysis.Rmd')"

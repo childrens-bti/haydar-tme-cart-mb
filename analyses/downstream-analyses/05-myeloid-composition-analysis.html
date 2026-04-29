@@ -11,7 +11,7 @@
 
 <meta name="author" content="Bicna Song" />
 
-<meta name="date" content="2026-04-27" />
+<meta name="date" content="2026-04-29" />
 
 <title>05-myeloid-composition-analysis</title>
 
@@ -1481,7 +1481,7 @@ border-radius: 0px;
 
 <h1 class="title toc-ignore">05-myeloid-composition-analysis</h1>
 <h4 class="author">Bicna Song</h4>
-<h4 class="date">2026-04-27</h4>
+<h4 class="date">2026-04-29</h4>
 
 </div>
 
@@ -1502,8 +1502,8 @@ library(sccomp)
 root_dir &lt;- find_root(has_dir(&quot;.git&quot;))
 data_dir &lt;- file.path(root_dir, &quot;data&quot;, &quot;v5&quot;)
 analysis_dir &lt;- file.path(root_dir, &quot;analyses&quot;, &quot;downstream-analyses&quot;)
-results_dir &lt;- file.path(analysis_dir, &quot;results&quot;)
-plot_dir &lt;- file.path(analysis_dir, &quot;plots&quot;)
+results_dir &lt;- file.path(analysis_dir, &quot;results&quot;, &quot;myeloid&quot;)
+plot_dir &lt;- file.path(analysis_dir, &quot;plots&quot;, &quot;myeloid&quot;)
 
 dir.create(results_dir, recursive = TRUE, showWarnings = FALSE)
 dir.create(plot_dir, recursive = TRUE, showWarnings = FALSE)

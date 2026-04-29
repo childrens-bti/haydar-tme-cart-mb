@@ -11,7 +11,7 @@
 
 <meta name="author" content="Bicna Song" />
 
-<meta name="date" content="2026-04-27" />
+<meta name="date" content="2026-04-29" />
 
 <title>07-dc-reclustering.Rmd</title>
 
@@ -352,7 +352,7 @@ display: none;
 
 <h1 class="title toc-ignore">07-dc-reclustering.Rmd</h1>
 <h4 class="author">Bicna Song</h4>
-<h4 class="date">2026-04-27</h4>
+<h4 class="date">2026-04-29</h4>
 
 </div>
 
@@ -421,8 +421,8 @@ pathway heatmap of AUCell scores</a>
 root_dir &lt;- find_root(has_dir(&quot;.git&quot;))
 data_dir &lt;- file.path(root_dir, &quot;data&quot;, &quot;v5&quot;)
 analysis_dir &lt;- file.path(root_dir, &quot;analyses&quot;, &quot;downstream-analyses&quot;)
-results_dir &lt;- file.path(analysis_dir, &quot;results&quot;)
-plot_dir &lt;- file.path(analysis_dir, &quot;plots&quot;)
+results_dir &lt;- file.path(analysis_dir, &quot;results&quot;, &quot;dc&quot;)
+plot_dir &lt;- file.path(analysis_dir, &quot;plots&quot;, &quot;dc&quot;)
 
 dir.create(results_dir, recursive = TRUE, showWarnings = FALSE)
 dir.create(plot_dir, recursive = TRUE, showWarnings = FALSE)
@@ -995,33 +995,34 @@ pheatmap::pheatmap(
 ## [105] scales_1.4.0                Biobase_2.66.0             
 ## [107] png_0.1-8                   spatstat.univar_3.1-6      
 ## [109] snakecase_0.11.1            knitr_1.47                 
-## [111] tzdb_0.4.0                  reshape2_1.4.5             
-## [113] curl_7.0.0                  nlme_3.1-165               
-## [115] cachem_1.1.0                zoo_1.8-15                 
-## [117] GlobalOptions_0.1.3         KernSmooth_2.23-24         
-## [119] parallel_4.4.0              miniUI_0.1.2               
-## [121] vipor_0.4.7                 AnnotationDbi_1.68.0       
-## [123] ggrastr_1.0.2               pillar_1.9.0               
-## [125] vctrs_0.6.5                 RANN_2.6.2                 
-## [127] promises_1.3.0              xtable_1.8-4               
-## [129] cluster_2.1.6               beeswarm_0.4.0             
-## [131] paletteer_1.7.0             evaluate_1.0.5             
-## [133] cli_3.6.5                   compiler_4.4.0             
-## [135] rlang_1.1.7                 crayon_1.5.2               
-## [137] future.apply_1.20.2         labeling_0.4.3             
-## [139] rematch2_2.1.2              plyr_1.8.9                 
-## [141] ggbeeswarm_0.7.3            stringi_1.8.4              
-## [143] viridisLite_0.4.2           deldir_2.0-4               
-## [145] babelgene_22.9              assertthat_0.2.1           
-## [147] Biostrings_2.74.1           lazyeval_0.2.2             
-## [149] spatstat.geom_3.7-0         Matrix_1.7-4               
-## [151] RcppHNSW_0.6.0              hms_1.1.3                  
-## [153] sparseMatrixStats_1.18.0    bit64_4.0.5                
-## [155] statmod_1.5.0               KEGGREST_1.46.0            
-## [157] shiny_1.8.1.1               highr_0.11                 
-## [159] SummarizedExperiment_1.36.0 ROCR_1.0-12                
-## [161] igraph_2.2.2                memoise_2.0.1              
-## [163] bslib_0.7.0                 bit_4.0.5</code></pre>
+## [111] rstudioapi_0.16.0           tzdb_0.4.0                 
+## [113] reshape2_1.4.5              curl_7.0.0                 
+## [115] nlme_3.1-165                cachem_1.1.0               
+## [117] zoo_1.8-15                  GlobalOptions_0.1.3        
+## [119] KernSmooth_2.23-24          parallel_4.4.0             
+## [121] miniUI_0.1.2                vipor_0.4.7                
+## [123] AnnotationDbi_1.68.0        ggrastr_1.0.2              
+## [125] pillar_1.9.0                vctrs_0.6.5                
+## [127] RANN_2.6.2                  promises_1.3.0             
+## [129] xtable_1.8-4                cluster_2.1.6              
+## [131] beeswarm_0.4.0              paletteer_1.7.0            
+## [133] evaluate_1.0.5              cli_3.6.5                  
+## [135] compiler_4.4.0              rlang_1.1.7                
+## [137] crayon_1.5.2                future.apply_1.20.2        
+## [139] labeling_0.4.3              rematch2_2.1.2             
+## [141] plyr_1.8.9                  ggbeeswarm_0.7.3           
+## [143] stringi_1.8.4               viridisLite_0.4.2          
+## [145] deldir_2.0-4                babelgene_22.9             
+## [147] assertthat_0.2.1            Biostrings_2.74.1          
+## [149] lazyeval_0.2.2              spatstat.geom_3.7-0        
+## [151] Matrix_1.7-4                RcppHNSW_0.6.0             
+## [153] hms_1.1.3                   sparseMatrixStats_1.18.0   
+## [155] bit64_4.0.5                 statmod_1.5.0              
+## [157] KEGGREST_1.46.0             shiny_1.8.1.1              
+## [159] highr_0.11                  SummarizedExperiment_1.36.0
+## [161] ROCR_1.0-12                 igraph_2.2.2               
+## [163] memoise_2.0.1               bslib_0.7.0                
+## [165] bit_4.0.5</code></pre>
 </div>
 </div>
 
