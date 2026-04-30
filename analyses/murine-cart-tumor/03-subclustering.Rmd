@@ -1,0 +1,195 @@
+---
+title: "03-subclustering.Rmd"
+author: "Sam Chen"
+date: "`r Sys.Date()`"
+output: 
+  html_document:
+  toc: TRUE
+---
+
+```{r load-packages, message=FALSE, warning=FALSE}
+# Load libraries
+library(rprojroot)
+library(dplyr)
+library(Seurat)
+library(patchwork)
+library(ggplot2)
+library(tidyverse)
+library(SeuratObject)
+library(scCustomize)
+library(presto)
+
+# Define directories
+root_dir <- find_root(has_dir(".git"))
+data_dir <- file.path(root_dir, "data", "v3")
+analysis_dir <- file.path(root_dir, "analyses", "murine-cart-tumor")
+results_dir <- file.path(analysis_dir, "results")
+plot_dir <- file.path(analysis_dir, "plots")
+
+# Source custom theme
+source(file.path(root_dir, "figures", "theme.R"))
+
+# Source function
+source(file.path(analysis_dir, "util", "run_doubletfinder.R"))
+source(file.path(analysis_dir, "util", "run_soupx.R"))
+
+# set random seed
+set.seed(1234)
+```
+
+
+## Load data
+```{r load-seurat-object}
+obj <- readRDS(file.path(results_dir, "cart_annotated.rds"))
+```
+
+## Visualize annotated Seurat object
+```{r visualize-annotated-object, fig.height=6, fig.width=7}
+DimPlot(obj, reduction = "umap", group.by = "cell_type", label = TRUE, label.size = 4) + 
+  ggtitle("Annotated Lineages")
+```
+## Separated by CAR-T conditions
+```{r visualize-annotated-object-by-condition, fig.height=6, fig.width=10}
+DimPlot(obj, reduction = "umap", group.by = "cell_type", split.by = "condition", ncol = 3) + 
+  ggtitle("Annotated Lineages by Condition")
+```
+
+# Myeloid subclustering
+
+## Subset myeloid cells
+```{r subset-myeloid-cells}
+myeloid_cells <- c("Macrophages", "Microglia", "Monocytes")
+myeloid_obj <- subset(obj, subset = cell_type %in% myeloid_cells)
+```
+
+
+## Reprocess myeloid cells
+```{r reprocess-myeloid-cells, verbose=FALSE}
+myeloid_obj[['RNA']] <- split(myeloid_obj[['RNA']], myeloid_obj$sample)
+myeloid_obj <- NormalizeData(myeloid_obj)
+myeloid_obj <- FindVariableFeatures(myeloid_obj, selection.method = "vst", nfeatures = 2000)
+myeloid_obj <- ScaleData(myeloid_obj)
+myeloid_obj <- RunPCA(myeloid_obj, npcs = 30)
+ElbowPlot(myeloid_obj, ndims = 30) # use 20 dims
+
+myeloid_obj <- IntegrateLayers(
+  object = myeloid_obj, method = CCAIntegration,
+  orig.reduction = "pca", new.reduction = "integrated.cca", verbose=FALSE
+)
+
+myeloid_obj [["RNA"]] <- JoinLayers(myeloid_obj[["RNA"]])
+
+myeloid_obj <- FindNeighbors(myeloid_obj, reduction = "integrated.cca", dims = 1:20)
+myeloid_obj <- FindClusters(myeloid_obj, resolution = 0.5)
+
+myeloid_obj <- RunUMAP(myeloid_obj, reduction = "integrated.cca", dims = 1:20)
+```
+
+## Visualize myeloid subclusters
+```{r visualize-myeloid-subclusters, fig.height=6, fig.width=12}
+p1 <- DimPlot(myeloid_obj, reduction = "umap", group.by = "seurat_clusters", label = TRUE, label.size = 4) + 
+  ggtitle("Subclusters")
+p2 <- DimPlot(myeloid_obj, reduction = "umap", group.by = "cell_type", label = TRUE, label.size = 4) + 
+  ggtitle("Myeloid Cell Lineages")
+
+p1 + p2
+```
+
+## Split by condition
+```{r visualize-myeloid-subclusters-by-condition, fig.height=6, fig.width=8}
+DimPlot(myeloid_obj, reduction = "umap", group.by = "seurat_clusters", split.by = "condition", ncol = 3) + 
+  ggtitle("Myeloid Subclusters by Condition")
+```
+## Save myeloid object
+```{r save-myeloid-object}
+saveRDS(myeloid_obj, file.path(results_dir, "cart_myeloid_subclusters.rds"))
+```
+
+# NK/T subclustering
+
+## Subset NK/T cells
+```{r subset-lymphoid-cells}
+nkt_obj <- subset(obj, subset = cell_type %in% c("NK/T cells"))
+```
+
+## Reprocess lymphoid cells
+```{r reprocess-lymphoid-cells, verbose=FALSE}
+nkt_obj[['RNA']] <- split(nkt_obj[['RNA']], nkt_obj$sample)
+nkt_obj <- NormalizeData(nkt_obj)
+nkt_obj <- FindVariableFeatures(nkt_obj, selection.method = "vst", nfeatures = 2000)
+nkt_obj <- ScaleData(nkt_obj)
+nkt_obj <- RunPCA(nkt_obj, npcs = 30)
+ElbowPlot(nkt_obj, ndims = 30) # use 20 dims
+
+nkt_obj <- IntegrateLayers(
+  object = nkt_obj, method = CCAIntegration,
+  orig.reduction = "pca", new.reduction = "integrated.cca", verbose=FALSE
+)
+nkt_obj [["RNA"]] <- JoinLayers(nkt_obj[["RNA"]])
+
+nkt_obj <- FindNeighbors(nkt_obj, reduction = "integrated.cca", dims = 1:20)
+nkt_obj <- FindClusters(nkt_obj, resolution = 0.5)
+
+nkt_obj <- RunUMAP(nkt_obj, reduction = "integrated.cca", dims = 1:20)
+```
+
+## Visualize lymphoid subclusters
+```{r visualize-lymphoid-subclusters, fig.height=6, fig.width=7}
+DimPlot(nkt_obj, reduction = "umap", group.by = "seurat_clusters", label = TRUE, label.size = 4) +
+  ggtitle("Subclusters")
+```
+
+## Split by condition
+```{r visualize-lymphoid-subclusters-by-condition, fig.height=6, fig.width=8}
+DimPlot(nkt_obj, reduction = "umap", group.by = "seurat_clusters", split.by = "condition", ncol = 3) + 
+  ggtitle("Lymphoid Subclusters by Condition")
+```
+
+## Save lymphoid object
+```{r save-lymphoid-object}
+saveRDS(nkt_obj, file.path(results_dir, "cart_lymphoid_subclusters.rds"))
+```
+
+# Dendritic cell subclustering
+
+## Subset dendritic cells
+```{r subset-dendritic-cells}
+dc_obj <- subset(obj, subset = cell_type %in% c("Dendritic cells"))
+```
+
+## Reprocess dendritic cells
+```{r reprocess-dendritic-cells, verbose=FALSE}
+dc_obj[['RNA']] <- split(dc_obj[['RNA']], dc_obj$sample)
+dc_obj <- NormalizeData(dc_obj)
+dc_obj <- FindVariableFeatures(dc_obj, selection.method = "vst", nfeatures = 2000)
+dc_obj <- ScaleData(dc_obj)
+dc_obj <- RunPCA(dc_obj, npcs = 30)
+ElbowPlot(dc_obj, ndims = 30) # use 20 dims
+
+dc_obj <- IntegrateLayers(
+  object = dc_obj, method = CCAIntegration,
+  orig.reduction = "pca", new.reduction = "integrated.cca", k.weight=50, verbose=FALSE
+)
+dc_obj [["RNA"]] <- JoinLayers(dc_obj[["RNA"]])
+
+dc_obj <- FindNeighbors(dc_obj, reduction = "integrated.cca", dims = 1:20)
+dc_obj <- FindClusters(dc_obj, resolution = 0.5)
+dc_obj <- RunUMAP(dc_obj, reduction = "integrated.cca", dims = 1:20)
+```
+
+## Visualize dendritic cell subclusters
+```{r visualize-dc-subclusters, fig.height=6, fig.width=7}
+DimPlot(dc_obj, reduction = "umap", group.by = "seurat_clusters", label = TRUE, label.size = 4) +
+  ggtitle("Dendritic Cell Subclusters")
+```
+
+## Split by condition
+```{r visualize-dc-subclusters-by-condition, fig.height=6, fig.width=8}
+DimPlot(dc_obj, reduction = "umap", group.by = "seurat_clusters", split.by = "condition", ncol = 3) + 
+  ggtitle("Dendritic Cell Subclusters by Condition")
+```
+
+## Save dendritic cell object
+```{r save-dc-object}
+saveRDS(dc_obj, file.path(results_dir, "cart_dc_subclusters.rds"))
+```
