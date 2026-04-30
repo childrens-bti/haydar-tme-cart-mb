@@ -31,6 +31,9 @@ analysis_dir <- file.path(root_dir, "analyses", "endpoint-analysis")
 results_dir <- file.path(analysis_dir, "results")
 plot_dir <- file.path(analysis_dir, "plots")
 
+dir.create(results_dir, recursive = TRUE, showWarnings = FALSE)
+dir.create(plot_dir, recursive = TRUE, showWarnings = FALSE)
+
 # Source custom theme
 source(file.path(root_dir, "figures", "theme.R"))
 
