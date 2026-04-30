@@ -6,7 +6,7 @@
 
 ## Folder contents
 
-1. `07-endpoint-samples-analysis.Rmd`: focused analysis on endpoint samples to validate trends observed in earlier timepoints.
+1. `01-endpoint-samples-analysis.Rmd`: focused analysis on endpoint samples to validate trends observed in earlier timepoints.
 2. `plots/`: output plots (empty until the module is run).
 3. `results/`: intermediate artifacts (ignored by git).
 4. `util/`: helper scripts used by the module.
@@ -14,8 +14,8 @@
 ## Analysis module directory structure
 ```
 endpoint-analysis/
-├── 07-endpoint-samples-analysis.Rmd
-├── 07-endpoint-samples-analysis.html
+├── 01-endpoint-samples-analysis.Rmd
+├── 01-endpoint-samples-analysis.html
 ├── README.md
 ├── run_module.sh
 ├── plots

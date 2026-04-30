@@ -6,21 +6,21 @@
 
 ## Folder contents
 
-1. `04-myeloid-characterization.Rmd`: characterization of myeloid/macrophage/microglia subtypes, markers, composition, and pathway activity.
-2. `05-lymphoid-characterization.Rmd`: characterization of lymphoid/T cell subsets with additional filtering.
-3. `06-dendritic-characterization.Rmd`: characterization of dendritic cell subsets.
+1. `01-myeloid-characterization.Rmd`: characterization of myeloid/macrophage/microglia subtypes, markers, composition, and pathway activity.
+2. `02-lymphoid-characterization.Rmd`: characterization of lymphoid/T cell subsets with additional filtering.
+3. `03-dendritic-characterization.Rmd`: characterization of dendritic cell subsets.
 4. `plots/`: output plots from lineage characterization.
 5. `results/`: marker tables and GSEA outputs (excluding gitignored artifacts).
 
 ## Analysis module directory structure
 ```
 lineage-characterization/
-├── 04-myeloid-characterization.Rmd
-├── 04-myeloid-characterization.html
-├── 05-lymphoid-characterization.Rmd
-├── 05-lymphoid-characterization.html
-├── 06-dendritic-characterization.Rmd
-├── 06-dendritic-characterization.html
+├── 01-myeloid-characterization.Rmd
+├── 01-myeloid-characterization.html
+├── 02-lymphoid-characterization.Rmd
+├── 02-lymphoid-characterization.html
+├── 03-dendritic-characterization.Rmd
+├── 03-dendritic-characterization.html
 ├── README.md
 ├── run_module.sh
 ├── plots
