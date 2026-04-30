@@ -3,7 +3,7 @@ set -o pipefail
 
 # Define URL and version
 URL=${URL:-https://bti-openaccess-us-east-1-bti-bfx.s3.us-east-1.amazonaws.com/haydar-scrna}
-RELEASE=${RELEASE:-v4}
+RELEASE=${RELEASE:-v5}
 
 # Remove old symlinks in data
 find data -type l -delete
