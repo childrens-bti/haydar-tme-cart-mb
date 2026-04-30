@@ -1,0 +1,411 @@
+---
+title: "06-tcell-reclustering.Rmd"
+author: "Bicna Song"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: TRUE
+---
+
+## Load packages
+```{r load-packages, message=FALSE, warning=FALSE}
+suppressPackageStartupMessages({
+  library(rprojroot)
+  library(dplyr)
+  library(Seurat)
+  library(patchwork)
+  library(ggplot2)
+  library(tidyverse)
+  library(SeuratObject)
+  library(scCustomize)
+})
+
+# Define directories
+root_dir <- find_root(has_dir(".git"))
+data_dir <- file.path(root_dir, "data", "v5")
+analysis_dir <- file.path(root_dir, "analyses", "downstream-analyses")
+results_dir <- file.path(analysis_dir, "results", "tcell")
+plot_dir <- file.path(analysis_dir, "plots", "tcell")
+
+dir.create(results_dir, recursive = TRUE, showWarnings = FALSE)
+dir.create(plot_dir, recursive = TRUE, showWarnings = FALSE)
+
+# Source custom theme
+source(file.path(root_dir, "figures", "theme.R"))
+
+# Set seed for reproducibility
+set.seed(1234)
+```
+
+## Load tcell object
+```{r load-data}
+tcell_obj <- readRDS(file.path(data_dir, "cart_nkt_subtypes.rds"))
+
+table(tcell_obj$tcell_subtype)
+```
+
+## Exclude myeloid and NK cells
+```{r subset-tcells}
+exclude_subtypes <- c("Myeloid cells", "NK cells")
+
+tcell_obj <- subset(
+  tcell_obj,
+  subset = !tcell_subtype %in% exclude_subtypes
+)
+
+tcell_obj$tcell_subtype <- droplevels(tcell_obj$tcell_subtype)
+
+table(tcell_obj$tcell_subtype)
+```
+
+## Reprocess and re-cluster filtered cells
+```{r recluster-tcells, message=FALSE, warning=FALSE}
+set.seed(1234)
+
+tcell_obj[["RNA"]] <- split(tcell_obj[["RNA"]], tcell_obj$sample)
+
+tcell_obj <- NormalizeData(tcell_obj)
+tcell_obj <- FindVariableFeatures(tcell_obj, selection.method = "vst", nfeatures = 2000)
+tcell_obj <- ScaleData(tcell_obj)
+tcell_obj <- RunPCA(tcell_obj, npcs = 30)
+
+ElbowPlot(tcell_obj, ndims = 30)
+
+tcell_obj <- IntegrateLayers(
+  object = tcell_obj,
+  method = CCAIntegration,
+  orig.reduction = "pca",
+  new.reduction = "integrated.cca",
+  verbose = FALSE
+)
+
+tcell_obj[["RNA"]] <- JoinLayers(tcell_obj[["RNA"]])
+
+tcell_obj <- FindNeighbors(tcell_obj, reduction = "integrated.cca", dims = 1:20)
+tcell_obj <- FindClusters(tcell_obj, resolution = 0.5)
+tcell_obj <- RunUMAP(tcell_obj, reduction = "integrated.cca", dims = 1:20)
+```
+
+## UMAP of re-clustered filtered cells
+```{r umap-reclustered, fig.height=6, fig.width=7}
+p_umap_clusters <- DimPlot(
+  tcell_obj,
+  reduction = "umap",
+  group.by = "seurat_clusters",
+  label = TRUE,
+  label.size = 4
+) +
+  ggtitle("Re-clustered T cell subclusters")
+
+p_umap_clusters
+
+ggsave(
+  filename = file.path(plot_dir, "filtered_tcell_reclustered_umap.pdf"),
+  plot = p_umap_clusters,
+  width = 7,
+  height = 6,
+  device = cairo_pdf
+)
+```
+
+## UMAP split by treatment
+```{r umap-by-treatment, fig.height=6, fig.width=12}
+p_umap_split <- DimPlot(
+  tcell_obj,
+  reduction = "umap",
+  group.by = "seurat_clusters",
+  split.by = "condition",
+  ncol = 3,
+  label = FALSE
+) +
+  ggtitle("Re-clustered T cell subclusters by treatment")
+
+p_umap_split
+
+ggsave(
+  filename = file.path(plot_dir, "filtered_tcell_reclustered_umap_by_treatment.pdf"),
+  plot = p_umap_split,
+  width = 12,
+  height = 6,
+  device = cairo_pdf
+)
+```
+
+## Generate cluster markers
+```{r find-markers, message=FALSE, warning=FALSE}
+cluster_markers <- FindAllMarkers(
+  tcell_obj,
+  assay = "RNA",
+  slot = "data",
+  only.pos = TRUE,
+  min.pct = 0.1,
+  logfc.threshold = 0.5,
+  random.seed = 1234,
+  max.cells.per.ident = Inf
+)
+
+write.csv(
+  cluster_markers,
+  file.path(results_dir, "filtered_tcell_reclustered_markers.csv"),
+  row.names = FALSE
+)
+```
+
+## Top 30 markers per cluster
+```{r top30-markers}
+top30_markers <- cluster_markers %>%
+  dplyr::group_by(cluster) %>%
+  dplyr::slice_max(order_by = avg_log2FC, n = 30, with_ties = FALSE) %>%
+  dplyr::ungroup() %>%
+  dplyr::arrange(cluster, desc(avg_log2FC))
+
+write.csv(
+  top30_markers,
+  file.path(results_dir, "filtered_tcell_reclustered_top30_markers_per_cluster.csv"),
+  row.names = FALSE
+)
+
+top30_markers
+```
+
+## UMAP colored by previous subtype labels
+```{r umap-old-labels, fig.height=6, fig.width=8}
+p_old_labels <- DimPlot(
+  tcell_obj,
+  reduction = "umap",
+  group.by = "tcell_subtype",
+  label = TRUE,
+  label.size = 3
+) +
+  ggtitle("Filtered cells colored by previous subtype labels")
+
+p_old_labels
+
+ggsave(
+  filename = file.path(plot_dir, "filtered_tcell_old_subtype_labels_on_reclustered_umap.pdf"),
+  plot = p_old_labels,
+  width = 8,
+  height = 6,
+  device = cairo_pdf
+)
+```
+
+## New clusters vs old subtype labels
+```{r cluster-vs-old-labels}
+cluster_label_df <- tcell_obj@meta.data %>%
+  dplyr::filter(!is.na(seurat_clusters), !is.na(tcell_subtype)) %>%
+  dplyr::count(seurat_clusters, tcell_subtype, name = "n") %>%
+  dplyr::group_by(seurat_clusters) %>%
+  dplyr::mutate(prop_within_cluster = n / sum(n)) %>%
+  dplyr::ungroup()
+
+cluster_label_df
+```
+
+## Top old label per new cluster
+```{r top-old-label-per-cluster}
+cluster_label_summary <- cluster_label_df %>%
+  dplyr::group_by(seurat_clusters) %>%
+  dplyr::slice_max(order_by = prop_within_cluster, n = 1, with_ties = FALSE) %>%
+  dplyr::ungroup() %>%
+  dplyr::rename(
+    matched_old_label = tcell_subtype,
+    matched_count = n,
+    matched_prop = prop_within_cluster
+  ) %>%
+  dplyr::arrange(as.numeric(as.character(seurat_clusters)))
+
+write.table(
+  cluster_label_summary,
+  file = file.path(results_dir, "filtered_tcell_top_old_label_per_new_cluster.tsv"),
+  sep = "	",
+  quote = FALSE,
+  row.names = FALSE
+)
+
+cluster_label_summary
+```
+
+## Barplot of top old label match per new cluster
+```{r top-old-label-barplot, fig.height=5, fig.width=9}
+p_cluster_label_summary <- ggplot(
+  cluster_label_summary,
+  aes(
+    x = seurat_clusters,
+    y = matched_prop,
+    fill = matched_old_label
+  )
+) +
+  geom_col() +
+  geom_text(
+    aes(label = scales::percent(matched_prop, accuracy = 0.1)),
+    vjust = -0.3,
+    size = 3
+  ) +
+  theme_Publication() +
+  theme(
+    panel.background = element_rect(fill = "white"),
+    plot.background = element_rect(fill = "white"),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    axis.text.x = element_text(angle = 0, hjust = 0.5)
+  ) +
+  xlab("New Seurat cluster") +
+  ylab("Matched proportion") +
+  labs(fill = "Top old label") +
+  scale_y_continuous(
+    labels = scales::percent_format(),
+    limits = c(0, 1.05)
+  ) +
+  ggtitle("Top old subtype label match per new cluster")
+
+p_cluster_label_summary
+
+ggsave(
+  filename = file.path(plot_dir, "filtered_tcell_top_old_label_per_new_cluster_barplot.pdf"),
+  plot = p_cluster_label_summary,
+  width = 9,
+  height = 5,
+  device = cairo_pdf
+)
+```
+
+## Heatmap of new clusters vs old subtype labels
+```{r cluster-vs-old-label-heatmap, fig.height=6, fig.width=10}
+p_cluster_label_heatmap <- ggplot(
+  cluster_label_df,
+  aes(x = tcell_subtype, y = seurat_clusters, fill = prop_within_cluster)
+) +
+  geom_tile(color = "white") +
+  scale_fill_gradient(low = "white", high = "#2C7FB8") +
+  theme_Publication() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    panel.background = element_rect(fill = "white"),
+    plot.background = element_rect(fill = "white"),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank()
+  ) +
+  xlab("Previous subtype label") +
+  ylab("New Seurat cluster") +
+  labs(fill = "Within-cluster
+proportion") +
+  ggtitle("Mapping of new clusters to previous subtype labels")
+
+p_cluster_label_heatmap
+
+ggsave(
+  filename = file.path(plot_dir, "filtered_tcell_cluster_vs_old_subtype_heatmap.pdf"),
+  plot = p_cluster_label_heatmap,
+  width = 10,
+  height = 6,
+  device = cairo_pdf
+)
+```
+
+## Old subtype key markers
+```{r old-subtype-key-markers}
+old_subtype_markers <- list(
+  "Heat-shocked T cells" = c("Hspa1a", "Hspa1b", "Dnajb1", "Jun", "Cd69", "Ms4a4b", "Rasal3", "Btg2"),
+  "CD4+ Regulatory T cells" = c("Foxp3", "Ctla4", "Il2ra", "Ikzf2", "Tnfrsf4"),
+  "CD8+ Cytotoxic T cells" = c("Cd8a", "Cd8b1", "Gzmb", "Nkg7", "Prf1", "Pdcd1"),
+  "CD4+ Helper T cells" = c("Cd4", "Icos", "Tnfrsf4", "Bhlhe40"),
+  "Proliferating" = c("Mki67", "Cdk1", "Ccnb1", "Ccnb2", "Top2a"),
+  "iNKT1 cells" = c("Eomes", "Tbx21", "Prf1", "Gzma", "Nkg7"),
+  "Naive T cells" = c("Satb1", "Txk", "Cd7", "Tcf7", "Lef1"),
+  "Central memory T cells" = c("Sell", "S1pr1", "Lef1", "Foxp1"),
+  "IFN-stimulated T cells" = c("Ifit3", "Isg15", "Oas3", "Zbp1"),
+  "iNKT17 cells" = c("Rorc", "Il23r", "Il1r1", "Cxcr6", "Zbtb16"),
+  "iNKT2 cells" = c("Gata3", "Il17rb", "Il1rl1", "Areg")
+)
+```
+
+## Marker validation plots for each old subtype
+```{r old-subtype-marker-validation, fig.height=6, fig.width=8}
+vln_plot_list <- list()
+
+for (subtype_name in names(old_subtype_markers)) {
+  markers_use <- old_subtype_markers[[subtype_name]]
+  markers_use <- markers_use[markers_use %in% rownames(tcell_obj)]
+
+  if (length(markers_use) == 0) next
+
+  p_vln <- VlnPlot(
+    tcell_obj,
+    features = markers_use,
+    group.by = "seurat_clusters",
+    pt.size = 0,
+    ncol = 2
+  ) +
+    plot_annotation(title = paste0(subtype_name, " key markers across new clusters"))
+
+  vln_plot_list[[subtype_name]] <- p_vln
+}
+
+pdf(
+  file = file.path(plot_dir, "filtered_tcell_old_subtype_marker_violinplots.pdf"),
+  width = 12,
+  height = 8,
+  onefile = TRUE
+)
+for (plot_name in names(vln_plot_list)) {
+  print(vln_plot_list[[plot_name]])
+}
+dev.off()
+
+# Print the last plot in the knitted document as a visual check
+if (length(vln_plot_list) > 0) {
+  vln_plot_list[[length(vln_plot_list)]]
+}
+```
+
+## Stacked barplot of subtype proportions
+```{r subtype-stacked-barplot}
+prop_df <- tcell_obj@meta.data %>%
+  dplyr::filter(!is.na(condition), !is.na(tcell_subtype)) %>%
+  dplyr::count(condition, cell_group = tcell_subtype, name = "n") %>%
+  dplyr::group_by(condition) %>%
+  dplyr::mutate(prop = n / sum(n)) %>%
+  dplyr::ungroup()
+
+write.table(
+  prop_df,
+  file = file.path(results_dir, "filtered_tcell_reclustered_proportions.tsv"),
+  sep = "	",
+  quote = FALSE,
+  row.names = FALSE
+)
+
+p_prop <- ggplot(prop_df, aes(x = condition, y = prop, fill = cell_group)) +
+  geom_bar(stat = "identity") +
+  theme_Publication() +
+  theme(
+    panel.background = element_rect(fill = "white"),
+    plot.background  = element_rect(fill = "white"),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    axis.text.x = element_text(angle = 45, hjust = 1)
+  ) +
+  scale_fill_manual(
+    values = DiscretePalette(n = length(unique(prop_df$cell_group)))
+  ) +
+  labs(fill = NULL) +
+  ylab("Proportion") +
+  xlab("Condition") +
+  scale_y_continuous(labels = scales::percent_format())
+
+p_prop
+
+ggsave(
+  filename = file.path(plot_dir, "filtered_tcell_reclustered_proportions_stacked_barplot.pdf"),
+  plot = p_prop,
+  width = 8,
+  height = 5,
+  device = cairo_pdf
+)
+```
+
+## Session info
+```{r session-info}
+sessionInfo()
+```

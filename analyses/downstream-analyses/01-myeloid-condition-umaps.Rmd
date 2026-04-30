@@ -1,0 +1,103 @@
+---
+title: "01-myeloid-condition-umaps"
+author: "Sam Chen, Bicna Song"
+date: "`r Sys.Date()`"
+output: 
+  html_document:
+    toc: TRUE
+---
+
+## Setup
+```{r load-packages, message=FALSE, warning=FALSE}
+# Load libraries
+library(rprojroot)
+library(dplyr)
+library(Seurat)
+library(patchwork)
+library(ggplot2)
+library(tidyverse)
+library(SeuratObject)
+library(scCustomize)
+library(MAST)
+
+# Define directories
+root_dir <- find_root(has_dir(".git"))
+data_dir <- file.path(root_dir, "data", "v5")
+analysis_dir <- file.path(root_dir, "analyses", "downstream-analyses")
+results_dir <- file.path(analysis_dir, "results", "myeloid")
+plot_dir <- file.path(analysis_dir, "plots", "myeloid")
+
+dir.create(results_dir, recursive = TRUE, showWarnings = FALSE)
+dir.create(plot_dir, recursive = TRUE, showWarnings = FALSE)
+
+# Source custom theme
+source(file.path(root_dir, "figures", "theme.R"))
+
+# set random seed
+set.seed(1234)
+```
+
+## Load data
+```{r load-seurat-object}
+obj <- readRDS(file.path(data_dir, "cart_myeloid_subtypes.rds"))
+```
+
+## Subset to CD28-41BB, 41BB-L, and STOP cells separately
+```{r subset-grant-cells}
+obj_cd28 <- subset(obj, subset = condition %in% c("CD28-41BB"))
+obj_41bb <- subset(obj, subset = condition %in% c("41BB-L"))
+obj_stop <- subset(obj, subset = condition %in% c("STOP"))
+obj_b7h3 <- subset(obj, subset = condition %in% c("B7H3"))
+obj_cd8 <- subset(obj, subset = condition %in% c("CD8-41BB"))
+```
+
+## Seurat reprocessing and integration for each subsetted object
+```{r seurat-reprocess}
+objs <- list(CD28 = obj_cd28, L41BB = obj_41bb, STOP = obj_stop, B7H3 = obj_b7h3, CD8 = obj_cd8)
+
+reprocess_sample <- function(sub_obj) {
+  
+  sub_obj[["RNA"]] <- split(sub_obj[["RNA"]], f = sub_obj$sample)
+
+  sub_obj <- NormalizeData(sub_obj)
+  sub_obj <- FindVariableFeatures(sub_obj, selection.method = "vst", nfeatures = 2000)
+  sub_obj <- ScaleData(sub_obj)
+  sub_obj <- RunPCA(sub_obj)
+
+  sub_obj <- IntegrateLayers(
+    object = sub_obj, method = CCAIntegration,
+    orig.reduction = "pca", new.reduction = "integrated.cca", verbose = FALSE
+  )
+
+  sub_obj[["RNA"]] <- JoinLayers(sub_obj[["RNA"]])
+  sub_obj <- RunUMAP(sub_obj, reduction = "integrated.cca", 
+                     reduction.name = "umap", reduction.key  = "UMAP_", dims = 1:20)
+
+  sub_obj
+}
+
+objs <- lapply(objs, reprocess_sample)
+```
+
+## Visualize UMAPs
+```{r visualize-umaps, fig.width=10, fig.height=6}
+DimPlot(objs$CD28, reduction = "umap", group.by = "myeloid_subtype") + ggtitle("CD28-41BB")
+ggsave(file.path(plot_dir, "umap_cd28_myeloid_subtypes.png"), width=10, height=6)
+
+DimPlot(objs$L41BB, reduction = "umap", group.by = "myeloid_subtype") + ggtitle("41BB-L")
+ggsave(file.path(plot_dir, "umap_41bb_myeloid_subtypes.png"), width=10, height=6)
+
+DimPlot(objs$STOP, reduction = "umap", group.by = "myeloid_subtype") + ggtitle("STOP")
+ggsave(file.path(plot_dir, "umap_stop_myeloid_subtypes.png"), width=10, height=6)
+
+DimPlot(objs$B7H3, reduction = "umap", group.by = "myeloid_subtype") + ggtitle("B7H3")
+ggsave(file.path(plot_dir, "umap_b7h3_myeloid_subtypes.png"), width=10, height=6)
+
+DimPlot(objs$CD8, reduction = "umap", group.by = "myeloid_subtype") + ggtitle("CD8-41BB")
+ggsave(file.path(plot_dir, "umap_cd8_myeloid_subtypes.png"), width=10, height=6)
+```
+
+## Session info
+```{r session-info}
+sessionInfo()
+```
