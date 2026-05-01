@@ -12,12 +12,18 @@ output:
 suppressPackageStartupMessages({
   library(rprojroot)
   library(dplyr)
+  library(tibble)
   library(Seurat)
   library(patchwork)
-  library(ggplot2)
-  library(tidyverse)
   library(SeuratObject)
-  library(scCustomize)
+  library(ggplot2)
+  library(msigdbr)
+  library(fgsea)
+  library(Matrix)
+  library(DESeq2)
+  library(stringr)
+  library(EnhancedVolcano)
+  library(purrr)
 })
 
 # Define directories
@@ -32,9 +38,13 @@ dir.create(plot_dir, recursive = TRUE, showWarnings = FALSE)
 
 # Source custom theme
 source(file.path(root_dir, "figures", "theme.R"))
+source(file.path(analysis_dir, "util", "pseudobulk_gsea_helpers.R"))
 
 # Set seed for reproducibility
 set.seed(1234)
+
+# Analysis parameters
+subtype_label <- "tcell"
 ```
 
 ## Load tcell object
@@ -58,7 +68,7 @@ tcell_obj$tcell_subtype <- droplevels(tcell_obj$tcell_subtype)
 table(tcell_obj$tcell_subtype)
 ```
 
-## Reprocess and re-cluster filtered cells
+## Reprocess and re-cluster T cells
 ```{r recluster-tcells, message=FALSE, warning=FALSE}
 set.seed(1234)
 
@@ -86,7 +96,7 @@ tcell_obj <- FindClusters(tcell_obj, resolution = 0.5)
 tcell_obj <- RunUMAP(tcell_obj, reduction = "integrated.cca", dims = 1:20)
 ```
 
-## UMAP of re-clustered filtered cells
+## UMAP of re-clustered T cells
 ```{r umap-reclustered, fig.height=6, fig.width=7}
 p_umap_clusters <- DimPlot(
   tcell_obj,
@@ -100,7 +110,7 @@ p_umap_clusters <- DimPlot(
 p_umap_clusters
 
 ggsave(
-  filename = file.path(plot_dir, "filtered_tcell_reclustered_umap.pdf"),
+  filename = file.path(plot_dir, "tcell_reclustered_umap.pdf"),
   plot = p_umap_clusters,
   width = 7,
   height = 6,
@@ -123,7 +133,7 @@ p_umap_split <- DimPlot(
 p_umap_split
 
 ggsave(
-  filename = file.path(plot_dir, "filtered_tcell_reclustered_umap_by_treatment.pdf"),
+  filename = file.path(plot_dir, "tcell_reclustered_umap_by_treatment.pdf"),
   plot = p_umap_split,
   width = 12,
   height = 6,
@@ -146,7 +156,7 @@ cluster_markers <- FindAllMarkers(
 
 write.csv(
   cluster_markers,
-  file.path(results_dir, "filtered_tcell_reclustered_markers.csv"),
+  file.path(results_dir, "tcell_reclustered_markers.csv"),
   row.names = FALSE
 )
 ```
@@ -161,7 +171,7 @@ top30_markers <- cluster_markers %>%
 
 write.csv(
   top30_markers,
-  file.path(results_dir, "filtered_tcell_reclustered_top30_markers_per_cluster.csv"),
+  file.path(results_dir, "tcell_reclustered_top30_markers_per_cluster.csv"),
   row.names = FALSE
 )
 
@@ -177,12 +187,12 @@ p_old_labels <- DimPlot(
   label = TRUE,
   label.size = 3
 ) +
-  ggtitle("Filtered cells colored by previous subtype labels")
+  ggtitle("T cells colored by previous subtype labels")
 
 p_old_labels
 
 ggsave(
-  filename = file.path(plot_dir, "filtered_tcell_old_subtype_labels_on_reclustered_umap.pdf"),
+  filename = file.path(plot_dir, "tcell_old_subtype_labels_on_reclustered_umap.pdf"),
   plot = p_old_labels,
   width = 8,
   height = 6,
@@ -217,7 +227,7 @@ cluster_label_summary <- cluster_label_df %>%
 
 write.table(
   cluster_label_summary,
-  file = file.path(results_dir, "filtered_tcell_top_old_label_per_new_cluster.tsv"),
+  file = file.path(results_dir, "tcell_top_old_label_per_new_cluster.tsv"),
   sep = "	",
   quote = FALSE,
   row.names = FALSE
@@ -262,7 +272,7 @@ p_cluster_label_summary <- ggplot(
 p_cluster_label_summary
 
 ggsave(
-  filename = file.path(plot_dir, "filtered_tcell_top_old_label_per_new_cluster_barplot.pdf"),
+  filename = file.path(plot_dir, "tcell_top_old_label_per_new_cluster_barplot.pdf"),
   plot = p_cluster_label_summary,
   width = 9,
   height = 5,
@@ -295,7 +305,7 @@ proportion") +
 p_cluster_label_heatmap
 
 ggsave(
-  filename = file.path(plot_dir, "filtered_tcell_cluster_vs_old_subtype_heatmap.pdf"),
+  filename = file.path(plot_dir, "tcell_cluster_vs_old_subtype_heatmap.pdf"),
   plot = p_cluster_label_heatmap,
   width = 10,
   height = 6,
@@ -343,7 +353,7 @@ for (subtype_name in names(old_subtype_markers)) {
 }
 
 pdf(
-  file = file.path(plot_dir, "filtered_tcell_old_subtype_marker_violinplots.pdf"),
+  file = file.path(plot_dir, "tcell_old_subtype_marker_violinplots.pdf"),
   width = 12,
   height = 8,
   onefile = TRUE
@@ -359,6 +369,70 @@ if (length(vln_plot_list) > 0) {
 }
 ```
 
+
+## Save object  
+- No need to save this object again; it is already included in the v5 data release.
+```{r save-object}
+#saveRDS(
+#  tcell_obj,
+#  file.path(results_dir, "cart_tcell_subtypes.rds")
+#)
+```
+
+## Rename clusters
+```{r rename-clusters}
+new_cluster_ids <- c(
+  "0"  = "Quiescent T cells",
+  "1"  = "Treg",
+  "2"  = "Activated effector CD8 T cells (stress)",
+  "3"  = "NK-like cytotoxic lymphocytes",
+  "4"  = "Cycling / proliferating CAR T cells",
+  "5"  = "Activated CD4 effector / helper-like T cells",
+  "6"  = "Antigen-presenting myeloid cells",
+  "7"  = "Naïve / central-memory T cells",
+  "8"  = "Terminally differentiated cytotoxic T cells",
+  "9"  = "γδ T cells",
+  "10" = "IFN-responsive T cells",
+  "11" = "γδ / Th17-like T cells",
+  "12" = "Th2-like inflammatory T cells"
+)
+
+tcell_obj$tcell_subtype <- plyr::mapvalues(
+  x = tcell_obj$seurat_clusters,
+  from = names(new_cluster_ids),
+  to = new_cluster_ids
+) 
+```
+
+## UMAP colored by renmaed clusters
+```{r umap-rename-clusters, fig.height=6, fig.width=8}
+legend_labels <- paste0(
+  "C", sort(unique(tcell_obj$seurat_clusters)), ": ",
+  new_cluster_ids[as.character(sort(unique(tcell_obj$seurat_clusters)))]
+)
+
+p_rename_clusters <- DimPlot(
+  tcell_obj,
+  reduction = "umap",
+  group.by = "tcell_subtype",
+  label = FALSE
+) +
+  scale_color_discrete(labels = legend_labels) +  # ✅ legend only
+  theme(
+    plot.title = element_blank()
+  )
+
+p_rename_clusters
+
+ggsave(
+  filename = file.path(plot_dir, "tcell_rename_clustered_umap.pdf"),
+  plot = p_rename_clusters,
+  width = 10,
+  height = 6,
+  device = cairo_pdf
+)
+```
+
 ## Stacked barplot of subtype proportions
 ```{r subtype-stacked-barplot}
 prop_df <- tcell_obj@meta.data %>%
@@ -370,7 +444,7 @@ prop_df <- tcell_obj@meta.data %>%
 
 write.table(
   prop_df,
-  file = file.path(results_dir, "filtered_tcell_reclustered_proportions.tsv"),
+  file = file.path(results_dir, "tcell_reclustered_proportions.tsv"),
   sep = "	",
   quote = FALSE,
   row.names = FALSE
@@ -397,12 +471,103 @@ p_prop <- ggplot(prop_df, aes(x = condition, y = prop, fill = cell_group)) +
 p_prop
 
 ggsave(
-  filename = file.path(plot_dir, "filtered_tcell_reclustered_proportions_stacked_barplot.pdf"),
+  filename = file.path(plot_dir, "tcell_reclustered_proportions_stacked_barplot.pdf"),
   plot = p_prop,
   width = 8,
   height = 5,
   device = cairo_pdf
 )
+```
+
+## Load MSigDB Hallmark gene sets
+```{r load-msigdb-hallmark}
+hallmark_pathways <- msigdbr(species = "Mus musculus", category = "H") %>%
+  dplyr::select(gs_name, gene_symbol) %>%
+  split(x = .$gene_symbol, f = .$gs_name)
+
+length(hallmark_pathways)
+```
+
+## Pseudobulk GSEA: each tcell_subtype vs rest
+
+```{r}
+make_safe_filename <- function(x) {
+  x %>%
+    stringr::str_replace_all("γδ", "gamma_delta") %>%      # explicit handling
+    stringi::stri_trans_general("Latin-ASCII") %>%         # ✅ Naïve → Naive
+    stringr::str_replace_all("[^A-Za-z0-9]", "_") %>%
+    stringr::str_replace_all("_+", "_") %>%
+    stringr::str_remove("^_+|_+$")
+}
+```
+
+```{r each-tcell-subtype-vs-rest, message=FALSE, warning=FALSE}
+if (!"tcell_subtype" %in% colnames(tcell_obj@meta.data)) {
+  stop("The object does not contain a tcell_subtype metadata column.")
+}
+
+counts <- GetAssayData(tcell_obj, assay = "RNA", layer = "counts")
+
+subtype_levels <- tcell_obj@meta.data %>%
+  dplyr::pull(tcell_subtype) %>%
+  as.character() %>%
+  unique() %>%
+  sort()
+
+tcell_subtype_gsea_results <- list()
+
+for (subtype in subtype_levels) {
+  sample_subtype <- tcell_obj@meta.data %>%
+    dplyr::select(sample, tcell_subtype) %>%
+    mutate(
+      sample = as.character(sample),
+      subtype_group = ifelse(tcell_subtype == subtype, subtype, "rest"),
+      sample_group = paste(sample, subtype_group, sep = "__")
+    )
+
+  pb_counts_subtype <- Matrix::t(
+    rowsum(Matrix::t(counts), group = sample_subtype$sample_group)
+  )
+
+  coldata_subtype <- sample_subtype %>%
+    distinct(sample_group, subtype_group) %>%
+    dplyr::rename(condition = subtype_group) %>%
+    tibble::remove_rownames() %>%
+    tibble::column_to_rownames("sample_group")
+
+  coldata_subtype$condition <- factor(coldata_subtype$condition, levels = c("rest", subtype))
+  pb_counts_subtype <- pb_counts_subtype[, rownames(coldata_subtype), drop = FALSE]
+
+  if (sum(coldata_subtype$condition == subtype) < 1 || sum(coldata_subtype$condition == "rest") < 1) {
+    message("Skipping subtype ", subtype, " because there are not enough samples in one of the groups.")
+    next
+  }
+  
+  cat("\n===== Running tcell_subtype vs rest for:", subtype, "====\n")
+  print(table(coldata_subtype$condition))
+
+  safe_subtype <- make_safe_filename(subtype)
+  out_prefix <- paste0(safe_subtype, "_vs_rest")
+
+  tcell_subtype_gsea_results[[subtype]] <- run_pseudobulk_contrast(
+    pb_counts = pb_counts_subtype,
+    coldata = coldata_subtype,
+    case_condition = subtype,
+    ref_conditions = "rest",
+    ref_label = "rest",
+    hallmark_pathways = hallmark_pathways,
+    out_prefix = paste0("pseudobulk_", out_prefix),
+    subtype_label = subtype_label,
+    subtype_title = "T cell",
+    results_dir = results_dir,
+    plot_dir = plot_dir,
+    minSize = 15,
+    maxSize = 500,
+    volcano_lfc_cutoff = 1,
+    volcano_p_cutoff = 0.05,
+    gsea_p_cutoff = 0.05
+  )
+}
 ```
 
 ## Session info
