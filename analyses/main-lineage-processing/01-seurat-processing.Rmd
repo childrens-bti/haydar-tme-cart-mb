@@ -1,0 +1,288 @@
+---
+title: "01-seurat-processing"
+author: "Sam Chen"
+date: "`r Sys.Date()`"
+output: 
+  html_document:
+  toc: TRUE
+---
+
+## Setup
+
+```{r load-packages, message=FALSE, warning=FALSE}
+# Load libraries
+library(rprojroot)
+library(dplyr)
+library(Seurat)
+library(patchwork)
+library(ggplot2)
+library(DoubletFinder)
+library(tidyverse)
+library(SeuratObject)
+library(scCustomize)
+library(MAST)
+library(SoupX)
+
+# Define directories
+root_dir <- find_root(has_dir(".git"))
+data_dir <- file.path(root_dir, "data", "v5")
+analysis_dir <- file.path(root_dir, "analyses", "main-lineage-processing")
+results_dir <- file.path(analysis_dir, "results")
+plot_dir <- file.path(analysis_dir, "plots")
+
+dir.create(results_dir, recursive = TRUE, showWarnings = FALSE)
+dir.create(plot_dir, recursive = TRUE, showWarnings = FALSE)
+
+# Source custom theme
+source(file.path(root_dir, "figures", "theme.R"))
+
+# Source function
+source(file.path(analysis_dir, "util", "run_doubletfinder.R"))
+source(file.path(analysis_dir, "util", "run_soupx.R"))
+
+# set random seed
+set.seed(1234)
+```
+
+## Load Cell Ranger data
+```{r load-data}
+# All 14 sample names and conditions
+samples <- c("Tumor_only_D1", "Tumor_only_D2", "STOP_pos_T_D1", "STOP_pos_T_D2",
+             "B7H3_pos_T_D1", "B7H3_pos_T_D2",
+             "41BB-L_pos_T_D1", "41BB-L_pos_T_D2", 
+             "CD8-41BB_pos_T_D1", "CD8-41BB_pos_T_D2",
+             "CD28-41BB_pos_T_D1", "CD28-41BB_pos_T_D2")
+
+conditions <- c("tumor", "tumor", "STOP", "STOP",
+                "B7H3", "B7H3",
+                "41BB-L", "41BB-L",
+                "CD8-41BB", "CD8-41BB",
+                "CD28-41BB", "CD28-41BB")
+
+### Load in data, run SoupX, and output a list of seurat objects
+obj_list <- lapply(samples, function(sample) {
+  print(sample)
+  seurat_obj <- run_soupx(data_dir, sample, 
+                          guide_genes = list(
+                            mf = c("Adgre1", "Cd68", "Lyz2", "Cd14", "Mafb", "Fcgr1"),
+                            mg =  c("P2ry12", "Tmem119", "Hexb", "Sparc", "Csf1r"),
+                            t = c("Cd3d", "Cd3e", "Cd3g", "Cd2", "Trac"),
+                            nu = c("Snap25", "Syt1", "Rbfox3", "Camk2n1", "Map2"),
+                            ed = c("Cldn5", "Flt1", "Pecam1", "Kdr", "Vwf"),
+                            fb = c("Dcn", "Col1a1", "Col1a2", "Pdgfra", "Lum")
+                          ), 
+                          use_clustering = FALSE, 
+                          min_cells = 1, min_features = 50)
+  seurat_obj[["sample"]] <- sample
+  seurat_obj[["condition"]] <- conditions[which(samples == sample)]
+  return(seurat_obj)
+})
+```
+
+## Run doublet removal on individual samples
+```{r run-doubletfinder, warning=FALSE, message=FALSE}
+# Get Doublet/Singlet IDs by DoubletFinder()
+doublet_res <- lapply(obj_list, run_doubletfinder)
+doublet_res <- data.frame(bind_rows(doublet_res))
+rownames(doublet_res) <- doublet_res$row_names
+doublet_res$row_names <- NULL
+table(doublet_res$doublet_finder)
+```
+
+## Merge Seurat objects
+```{r merge-objects}
+# Merge all seurat objects into one
+combined_obj <- Reduce(function(x, y) merge(x, y), obj_list)
+```
+
+## Visualize and filter doublets
+```{r visualize-filter-doublets, fig.width=8, fig.height=6, out.width='100%', fig.align='center', message=FALSE, warning=FALSE}
+# Add Doublet/Singlet info to metadata
+combined_obj <- AddMetaData(combined_obj, metadata = doublet_res, col.name = 'doublet_finder')
+
+# Check how doublets singlets differ in QC measures per sample
+VlnPlot(combined_obj, split.by = "doublet_finder",
+        features = c("nFeature_RNA", "nCount_RNA"), 
+        ncol = 2, pt.size = 0) + theme(legend.position = 'right')
+
+# Filter out predicted doublets to keep only singlets for downstream analysis.
+combined_obj <- subset(x = combined_obj, subset = doublet_finder == 'Singlet')
+
+# Save the combined singlet object so I don't need to rerun doublet removal
+saveRDS(combined_obj, file = file.path(results_dir, "cart_combined.rds"))
+```
+
+## Basic QC metrics
+```{r visualize-qc-metrics, fig.width=10, fig.height=6, out.width='100%', fig.align='center', message=FALSE, warning=FALSE}
+
+#combined_obj <- readRDS(file.path(results_dir, "cart_combined.rds"))
+
+# add mitochondrial percentage
+combined_obj[["percent.mt"]] <- PercentageFeatureSet(combined_obj, pattern = "^mt-")
+# Visualize QC metrics
+p1 <- QC_Plots_Genes(seurat_object = combined_obj, alpha = 0.2, pt.size=0)
+p2 <- QC_Plots_UMIs(seurat_object = combined_obj,  y_axis_log = TRUE, alpha = 0.2, pt.size=0)
+p3 <- QC_Plots_Mito(seurat_object = combined_obj, mito_name = "percent.mt", high_cutoff = 10, alpha = 0.2, pt.size = 0)
+
+plots <- list(p1, p2, p3)
+plots <- lapply(plots, function(p)
+  p + theme(
+    plot.title = element_text(size = 10, margin = margin(b = 4)),
+    plot.margin = margin(t = 6, r = 25, b = 6, l = 12)  # add column gutters
+  )
+)
+wrap_plots(plots, ncol = 3)
+```
+
+## Perform adaptive QC filtering
+```{r adaptive-qc-filtering}
+
+# Before filtering
+before_filtering <- table(combined_obj$sample)
+
+# Filter on mitochondrial percentage first
+combined_obj <- subset(combined_obj, subset = percent.mt < 10)
+
+# Adaptive filtering on nFeature_RNA and nCount_RNA per sample to avoid removing too many cells
+# because Flex libraries are generally lower quality than standard libraries
+flex_qc <- function(seurat_obj, 
+                    q_low=0.02, q_high=0.995,
+                    floor_counts=100, floor_features=50) {
+  mat <- GetAssayData(seurat_obj, layer="counts")
+  nCount   <- Matrix::colSums(mat)
+  nFeature <- Matrix::colSums(mat > 0)
+
+  loC <- max(floor_counts,   quantile(nCount,   q_low,  na.rm=TRUE))
+  loF <- max(floor_features, quantile(nFeature, q_low,  na.rm=TRUE))
+  hiC <- quantile(nCount,   q_high, na.rm=TRUE)
+  hiF <- quantile(nFeature, q_high, na.rm=TRUE)
+
+  keep <- (nCount >= loC & nCount <= hiC &
+           nFeature >= loF & nFeature <= hiF)
+
+  subset(seurat_obj, cells = colnames(seurat_obj)[keep])
+}
+
+# split to perform per sample filtering
+objs <- SplitObject(combined_obj, split.by = "sample")
+objs_qc <- lapply(objs, function(x) {flex_qc(x)})
+
+# Merge back into one object
+combined_obj <- Reduce(function(x, y) merge(x, y), objs_qc)
+
+# After filtering
+after_filtering <- table(combined_obj$sample)
+
+# Plot number of cells before and after filtering
+qc_df <- data.frame(
+  sample = rep(names(before_filtering), 2),
+  n_cells = c(as.numeric(before_filtering), as.numeric(after_filtering)),
+  status = rep(c("Before Filtering", "After Filtering"), each = length(before_filtering))
+)
+
+ggplot(qc_df, aes(x = sample, y = n_cells, fill = status)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  labs(title = "Number of Cells Before and After QC Filtering",
+       x = "Sample",
+       y = "Number of Cells") +
+  scale_fill_manual(values = c("Before Filtering" = "lightblue", "After Filtering" = "salmon"))
+```
+
+## Data Normalization and scaling
+```{r normalize-and-scale}
+combined_obj <- NormalizeData(combined_obj, normalization.method = "LogNormalize", scale.factor = 10000)
+combined_obj <- FindVariableFeatures(combined_obj, selection.method = "vst", nfeatures = 2000)
+combined_obj <- ScaleData(combined_obj)
+```
+
+## Dimensional reduction with naive merging
+```{r dimension-reduction-naive-merge}
+combined_obj <- RunPCA(combined_obj)
+# Check elbow plot
+ElbowPlot(combined_obj, ndims = 50) # use 30 PCs for downstream analysis
+```
+
+## Clustering and UMAP with naive merging
+```{r naive-merge-cluster-and-umap}
+# clustering
+combined_obj <- FindNeighbors(combined_obj, dims = 1:30, reduction = "pca")
+combined_obj <- FindClusters(combined_obj, resolution = 0.5, cluster.name = "merged_clusters")
+
+# umap 
+combined_obj <- RunUMAP(combined_obj, dims = 1:30, reduction = "pca", reduction.name = "merged_umap")
+```
+
+## Visualize UMAP after naive merging
+```{r visualize-naive-merge-umap, fig.width=12, fig.height=6, out.width='100%', fig.align='center'}
+DimPlot(combined_obj, reduction = "merged_umap", 
+        group.by = c("merged_clusters", "sample"), alpha = 0.25)
+```
+
+```{r split-naive-merge-umap, fig.width=8, fig.height=16, out.width='100%', fig.align='center'}
+DimPlot(combined_obj, reduction = "merged_umap", 
+        group.by = "sample", split.by = "sample", ncol = 4, alpha = 0.5) + 
+  theme(
+    legend.text = element_text(size = 8),
+    legend.title = element_text(size = 10),
+    axis.text = element_text(size = 6),
+    strip.text = element_text(size = 10, face = "bold")
+  )
+```
+
+## Save naive merged object
+```{r save-merged-object}
+saveRDS(combined_obj, file = file.path(results_dir, "cart_merged.rds"))
+```
+
+## CCA integration
+Run CCA-based integration to mitigate sample/batch effects and re-compute neighbors/clusters
+```{r cca-integration, message=FALSE, warning=FALSE}
+# combined_obj <- readRDS(file.path(results_dir, "cart_merged.rds"))
+
+integrated_obj <- IntegrateLayers(
+  object = combined_obj, method = CCAIntegration,
+  orig.reduction = "pca", new.reduction = "integrated.cca",
+  verbose = FALSE
+)
+
+# re-join layers after integration
+integrated_obj[["RNA"]] <- JoinLayers(integrated_obj[["RNA"]])
+```
+
+## Clustering and UMAP of integrated object
+```{r cluster-and-umap-integrated}
+# clustering
+integrated_obj <- FindNeighbors(integrated_obj, reduction = "integrated.cca", dims = 1:30)
+integrated_obj <- FindClusters(integrated_obj, resolution = 0.5)
+
+# umap
+integrated_obj <- RunUMAP(integrated_obj, reduction = "integrated.cca", dims = 1:30)
+```
+
+## Visualize UMAP of integrated object
+```{r visualize-integrated-umap, fig.width=12, fig.height=6, out.width='100%', fig.align='center'}
+DimPlot(integrated_obj, reduction = "umap", 
+        group.by = c("seurat_clusters", "sample"), alpha = 0.25)
+```
+
+```{r split-integrated-umap, fig.width=8, fig.height=16, out.width='100%', fig.align='center'}
+DimPlot(integrated_obj, reduction = "umap", 
+        group.by = "sample", split.by = "sample", ncol = 4, alpha = 0.5) + 
+  theme(
+    legend.text = element_text(size = 8),
+    legend.title = element_text(size = 10),
+    axis.text = element_text(size = 6),
+    strip.text = element_text(size = 10, face = "bold")
+  )
+```
+
+## Save integrated object
+```{r save-integrated-object}
+saveRDS(integrated_obj, file = file.path(results_dir, "cart_integrated.rds"))
+```
+
+## Session Info
+```{r session-info}
+sessionInfo()
+```
