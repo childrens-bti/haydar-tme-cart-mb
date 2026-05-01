@@ -1,5 +1,5 @@
 ---
-title: "06-dendritic-characterization"
+title: "03-dendritic-characterization"
 author: "Sam Chen"
 date: "`r Sys.Date()`"
 output: 
