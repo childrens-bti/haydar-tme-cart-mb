@@ -11,6 +11,8 @@
 3. `results/`: intermediate artifacts (ignored by git).
 4. `util/`: helper scripts used by the module.
 
+Approximate runtime: 30 minutes on a machine with 32 cores and 128GB of RAM.
+
 ## Analysis module directory structure
 ```
 endpoint-analysis/

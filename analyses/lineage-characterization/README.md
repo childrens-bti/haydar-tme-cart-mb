@@ -12,6 +12,8 @@
 4. `plots/`: output plots from lineage characterization.
 5. `results/`: marker tables and GSEA outputs (excluding gitignored artifacts).
 
+Approximate runtime: ~45 minutes on a machine with 32 cores and 128GB of RAM.
+
 ## Analysis module directory structure
 ```
 lineage-characterization/

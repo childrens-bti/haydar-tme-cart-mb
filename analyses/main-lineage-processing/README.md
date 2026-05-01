@@ -13,6 +13,8 @@
 5. `results/`: intermediate and final artifacts (marker tables and derived outputs).
 6. `util/`: helper scripts used by the module.
 
+Approximate runtime: 5 hours on a machine with 32 cores and 128GB of RAM.
+
 ## Analysis module directory structure
 ```
 main-lineage-processing/
