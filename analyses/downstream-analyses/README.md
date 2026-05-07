@@ -252,7 +252,8 @@ downstream-analyses/
 │       ├── tcell_reclustered_markers.csv
 │       ├── tcell_reclustered_proportions.tsv
 │       ├── tcell_reclustered_top30_markers_per_cluster.csv
-│       └── tcell_top_old_label_per_new_cluster.tsv
+│       ├── tcell_top_old_label_per_new_cluster.tsv
+│       └── cart_tcell_subtypes_v2.rds
 ├── run_module.sh
 └── util
     ├── dotplot_helpers.R
