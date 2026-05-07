@@ -369,16 +369,6 @@ if (length(vln_plot_list) > 0) {
 }
 ```
 
-
-## Save object  
-- No need to save this object again; it is already included in the v5 data release.
-```{r save-object}
-#saveRDS(
-#  tcell_obj,
-#  file.path(results_dir, "cart_tcell_subtypes.rds")
-#)
-```
-
 ## Rename clusters
 ```{r rename-clusters}
 new_cluster_ids <- c(
@@ -568,6 +558,15 @@ for (subtype in subtype_levels) {
     gsea_p_cutoff = 0.05
   )
 }
+```
+
+## Save object
+- Save updated T-cell object (v2) with refined subtype annotations and subtype-specific GSEA results.
+```{r save-object}
+saveRDS(
+  tcell_obj,
+  file.path(results_dir, "cart_tcell_subtypes_v2.rds")
+)
 ```
 
 ## Session info
