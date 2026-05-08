@@ -1,0 +1,79 @@
+condition	cell_group	n	prop
+41BB-L	Quiescent T cells	173	0.144648829431438
+41BB-L	Treg	254	0.212374581939799
+41BB-L	Activated effector CD8 T cells (stress)	131	0.109531772575251
+41BB-L	NK-like cytotoxic lymphocytes	114	0.0953177257525084
+41BB-L	Cycling / proliferating CAR T cells	77	0.06438127090301
+41BB-L	Activated CD4 effector / helper-like T cells	77	0.06438127090301
+41BB-L	Antigen-presenting myeloid cells	100	0.0836120401337793
+41BB-L	Naïve / central-memory T cells	65	0.0543478260869565
+41BB-L	Terminally differentiated cytotoxic T cells	61	0.0510033444816054
+41BB-L	γδ T cells	55	0.0459866220735786
+41BB-L	IFN-responsive T cells	44	0.0367892976588629
+41BB-L	γδ / Th17-like T cells	27	0.0225752508361204
+41BB-L	Th2-like inflammatory T cells	18	0.0150501672240803
+B7H3	Quiescent T cells	352	0.149469214437367
+B7H3	Treg	345	0.146496815286624
+B7H3	Activated effector CD8 T cells (stress)	412	0.174946921443737
+B7H3	NK-like cytotoxic lymphocytes	165	0.0700636942675159
+B7H3	Cycling / proliferating CAR T cells	255	0.10828025477707
+B7H3	Activated CD4 effector / helper-like T cells	159	0.067515923566879
+B7H3	Antigen-presenting myeloid cells	153	0.064968152866242
+B7H3	Naïve / central-memory T cells	123	0.0522292993630573
+B7H3	Terminally differentiated cytotoxic T cells	113	0.0479830148619958
+B7H3	γδ T cells	90	0.0382165605095541
+B7H3	IFN-responsive T cells	130	0.0552016985138004
+B7H3	γδ / Th17-like T cells	29	0.0123142250530786
+B7H3	Th2-like inflammatory T cells	29	0.0123142250530786
+CD28-41BB	Quiescent T cells	131	0.164160401002506
+CD28-41BB	Treg	129	0.161654135338346
+CD28-41BB	Activated effector CD8 T cells (stress)	105	0.131578947368421
+CD28-41BB	NK-like cytotoxic lymphocytes	88	0.110275689223058
+CD28-41BB	Cycling / proliferating CAR T cells	54	0.0676691729323308
+CD28-41BB	Activated CD4 effector / helper-like T cells	47	0.0588972431077694
+CD28-41BB	Antigen-presenting myeloid cells	60	0.075187969924812
+CD28-41BB	Naïve / central-memory T cells	58	0.0726817042606516
+CD28-41BB	Terminally differentiated cytotoxic T cells	27	0.0338345864661654
+CD28-41BB	γδ T cells	34	0.0426065162907268
+CD28-41BB	IFN-responsive T cells	28	0.0350877192982456
+CD28-41BB	γδ / Th17-like T cells	16	0.0200501253132832
+CD28-41BB	Th2-like inflammatory T cells	21	0.0263157894736842
+CD8-41BB	Quiescent T cells	404	0.131553239986975
+CD8-41BB	Treg	399	0.12992510582872
+CD8-41BB	Activated effector CD8 T cells (stress)	343	0.111690003256268
+CD8-41BB	NK-like cytotoxic lymphocytes	331	0.107782481276457
+CD8-41BB	Cycling / proliferating CAR T cells	307	0.0999674373168349
+CD8-41BB	Activated CD4 effector / helper-like T cells	255	0.0830348420709866
+CD8-41BB	Antigen-presenting myeloid cells	196	0.0638228590035819
+CD8-41BB	Naïve / central-memory T cells	229	0.0745685444480625
+CD8-41BB	Terminally differentiated cytotoxic T cells	187	0.0608922175187235
+CD8-41BB	γδ T cells	215	0.0700097688049495
+CD8-41BB	IFN-responsive T cells	45	0.0146532074242918
+CD8-41BB	γδ / Th17-like T cells	128	0.0416802344513188
+CD8-41BB	Th2-like inflammatory T cells	32	0.0104200586128297
+STOP	Quiescent T cells	194	0.177981651376147
+STOP	Treg	140	0.128440366972477
+STOP	Activated effector CD8 T cells (stress)	149	0.136697247706422
+STOP	NK-like cytotoxic lymphocytes	79	0.0724770642201835
+STOP	Cycling / proliferating CAR T cells	82	0.0752293577981651
+STOP	Activated CD4 effector / helper-like T cells	129	0.118348623853211
+STOP	Antigen-presenting myeloid cells	73	0.0669724770642202
+STOP	Naïve / central-memory T cells	65	0.0596330275229358
+STOP	Terminally differentiated cytotoxic T cells	62	0.0568807339449541
+STOP	γδ T cells	40	0.036697247706422
+STOP	IFN-responsive T cells	39	0.0357798165137615
+STOP	γδ / Th17-like T cells	13	0.0119266055045872
+STOP	Th2-like inflammatory T cells	25	0.0229357798165138
+tumor	Quiescent T cells	68	0.180371352785146
+tumor	Treg	36	0.0954907161803713
+tumor	Activated effector CD8 T cells (stress)	44	0.116710875331565
+tumor	NK-like cytotoxic lymphocytes	47	0.124668435013263
+tumor	Cycling / proliferating CAR T cells	17	0.0450928381962865
+tumor	Activated CD4 effector / helper-like T cells	22	0.0583554376657825
+tumor	Antigen-presenting myeloid cells	35	0.0928381962864721
+tumor	Naïve / central-memory T cells	45	0.119363395225464
+tumor	Terminally differentiated cytotoxic T cells	5	0.013262599469496
+tumor	γδ T cells	18	0.0477453580901857
+tumor	IFN-responsive T cells	15	0.0397877984084881
+tumor	γδ / Th17-like T cells	14	0.0371352785145889
+tumor	Th2-like inflammatory T cells	11	0.0291777188328912

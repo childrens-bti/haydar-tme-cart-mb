@@ -124,13 +124,40 @@ downstream-analyses/
 │   │   ├── umap_cd8_myeloid_subtypes.png
 │   │   └── umap_stop_myeloid_subtypes.png
 │   └── tcell
-│       ├── filtered_tcell_cluster_vs_old_subtype_heatmap.pdf
-│       ├── filtered_tcell_old_subtype_labels_on_reclustered_umap.pdf
-│       ├── filtered_tcell_old_subtype_marker_violinplots.pdf
-│       ├── filtered_tcell_reclustered_proportions_stacked_barplot.pdf
-│       ├── filtered_tcell_reclustered_umap.pdf
-│       ├── filtered_tcell_reclustered_umap_by_treatment.pdf
-│       └── filtered_tcell_top_old_label_per_new_cluster_barplot.pdf
+│       ├── tcell_cluster_vs_old_subtype_heatmap.pdf
+│       ├── tcell_gsea_dot_pseudobulk_Activated_CD4_effector_helper_like_T_cells_vs_rest.pdf
+│       ├── tcell_gsea_dot_pseudobulk_Activated_effector_CD8_T_cells_stress_vs_rest.pdf
+│       ├── tcell_gsea_dot_pseudobulk_Antigen_presenting_myeloid_cells_vs_rest.pdf
+│       ├── tcell_gsea_dot_pseudobulk_Cycling_proliferating_CAR_T_cells_vs_rest.pdf
+│       ├── tcell_gsea_dot_pseudobulk_IFN_responsive_T_cells_vs_rest.pdf
+│       ├── tcell_gsea_dot_pseudobulk_NK_like_cytotoxic_lymphocytes_vs_rest.pdf
+│       ├── tcell_gsea_dot_pseudobulk_Naive_central_memory_T_cells_vs_rest.pdf
+│       ├── tcell_gsea_dot_pseudobulk_Quiescent_T_cells_vs_rest.pdf
+│       ├── tcell_gsea_dot_pseudobulk_Terminally_differentiated_cytotoxic_T_cells_vs_rest.pdf
+│       ├── tcell_gsea_dot_pseudobulk_Th2_like_inflammatory_T_cells_vs_rest.pdf
+│       ├── tcell_gsea_dot_pseudobulk_Treg_vs_rest.pdf
+│       ├── tcell_gsea_dot_pseudobulk_gamma_delta_T_cells_vs_rest.pdf
+│       ├── tcell_gsea_dot_pseudobulk_gamma_delta_Th17_like_T_cells_vs_rest.pdf
+│       ├── tcell_old_subtype_labels_on_reclustered_umap.pdf
+│       ├── tcell_old_subtype_marker_violinplots.pdf
+│       ├── tcell_reclustered_proportions_stacked_barplot.pdf
+│       ├── tcell_reclustered_umap.pdf
+│       ├── tcell_reclustered_umap_by_treatment.pdf
+│       ├── tcell_rename_clustered_umap.pdf
+│       ├── tcell_top_old_label_per_new_cluster_barplot.pdf
+│       ├── tcell_volcano_pseudobulk_Activated_CD4_effector_helper_like_T_cells_vs_rest.pdf
+│       ├── tcell_volcano_pseudobulk_Activated_effector_CD8_T_cells_stress_vs_rest.pdf
+│       ├── tcell_volcano_pseudobulk_Antigen_presenting_myeloid_cells_vs_rest.pdf
+│       ├── tcell_volcano_pseudobulk_Cycling_proliferating_CAR_T_cells_vs_rest.pdf
+│       ├── tcell_volcano_pseudobulk_IFN_responsive_T_cells_vs_rest.pdf
+│       ├── tcell_volcano_pseudobulk_NK_like_cytotoxic_lymphocytes_vs_rest.pdf
+│       ├── tcell_volcano_pseudobulk_Naive_central_memory_T_cells_vs_rest.pdf
+│       ├── tcell_volcano_pseudobulk_Quiescent_T_cells_vs_rest.pdf
+│       ├── tcell_volcano_pseudobulk_Terminally_differentiated_cytotoxic_T_cells_vs_rest.pdf
+│       ├── tcell_volcano_pseudobulk_Th2_like_inflammatory_T_cells_vs_rest.pdf
+│       ├── tcell_volcano_pseudobulk_Treg_vs_rest.pdf
+│       ├── tcell_volcano_pseudobulk_gamma_delta_T_cells_vs_rest.pdf
+│       └── tcell_volcano_pseudobulk_gamma_delta_Th17_like_T_cells_vs_rest.pdf
 ├── results
 │   ├── cart_lineage_proportions.tsv
 │   ├── dc
@@ -196,10 +223,37 @@ downstream-analyses/
 │   │   ├── myeloid_subtype_proportions.tsv
 │   │   └── myeloid_treatment_markers.csv
 │   └── tcell
-│       ├── filtered_tcell_reclustered_markers.csv
-│       ├── filtered_tcell_reclustered_proportions.tsv
-│       ├── filtered_tcell_reclustered_top30_markers_per_cluster.csv
-│       └── filtered_tcell_top_old_label_per_new_cluster.tsv
+│       ├── tcell_DESeq2_pseudobulk_Activated_CD4_effector_helper_like_T_cells_vs_rest.csv
+│       ├── tcell_DESeq2_pseudobulk_Activated_effector_CD8_T_cells_stress_vs_rest.csv
+│       ├── tcell_DESeq2_pseudobulk_Antigen_presenting_myeloid_cells_vs_rest.csv
+│       ├── tcell_DESeq2_pseudobulk_Cycling_proliferating_CAR_T_cells_vs_rest.csv
+│       ├── tcell_DESeq2_pseudobulk_IFN_responsive_T_cells_vs_rest.csv
+│       ├── tcell_DESeq2_pseudobulk_NK_like_cytotoxic_lymphocytes_vs_rest.csv
+│       ├── tcell_DESeq2_pseudobulk_Naive_central_memory_T_cells_vs_rest.csv
+│       ├── tcell_DESeq2_pseudobulk_Quiescent_T_cells_vs_rest.csv
+│       ├── tcell_DESeq2_pseudobulk_Terminally_differentiated_cytotoxic_T_cells_vs_rest.csv
+│       ├── tcell_DESeq2_pseudobulk_Th2_like_inflammatory_T_cells_vs_rest.csv
+│       ├── tcell_DESeq2_pseudobulk_Treg_vs_rest.csv
+│       ├── tcell_DESeq2_pseudobulk_gamma_delta_T_cells_vs_rest.csv
+│       ├── tcell_DESeq2_pseudobulk_gamma_delta_Th17_like_T_cells_vs_rest.csv
+│       ├── tcell_GSEA_pseudobulk_Activated_CD4_effector_helper_like_T_cells_vs_rest_hallmark.csv
+│       ├── tcell_GSEA_pseudobulk_Activated_effector_CD8_T_cells_stress_vs_rest_hallmark.csv
+│       ├── tcell_GSEA_pseudobulk_Antigen_presenting_myeloid_cells_vs_rest_hallmark.csv
+│       ├── tcell_GSEA_pseudobulk_Cycling_proliferating_CAR_T_cells_vs_rest_hallmark.csv
+│       ├── tcell_GSEA_pseudobulk_IFN_responsive_T_cells_vs_rest_hallmark.csv
+│       ├── tcell_GSEA_pseudobulk_NK_like_cytotoxic_lymphocytes_vs_rest_hallmark.csv
+│       ├── tcell_GSEA_pseudobulk_Naive_central_memory_T_cells_vs_rest_hallmark.csv
+│       ├── tcell_GSEA_pseudobulk_Quiescent_T_cells_vs_rest_hallmark.csv
+│       ├── tcell_GSEA_pseudobulk_Terminally_differentiated_cytotoxic_T_cells_vs_rest_hallmark.csv
+│       ├── tcell_GSEA_pseudobulk_Th2_like_inflammatory_T_cells_vs_rest_hallmark.csv
+│       ├── tcell_GSEA_pseudobulk_Treg_vs_rest_hallmark.csv
+│       ├── tcell_GSEA_pseudobulk_gamma_delta_T_cells_vs_rest_hallmark.csv
+│       ├── tcell_GSEA_pseudobulk_gamma_delta_Th17_like_T_cells_vs_rest_hallmark.csv
+│       ├── tcell_reclustered_markers.csv
+│       ├── tcell_reclustered_proportions.tsv
+│       ├── tcell_reclustered_top30_markers_per_cluster.csv
+│       ├── tcell_top_old_label_per_new_cluster.tsv
+│       └── cart_tcell_subtypes_v2.rds
 ├── run_module.sh
 └── util
     ├── dotplot_helpers.R
