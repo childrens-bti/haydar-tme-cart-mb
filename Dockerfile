@@ -67,7 +67,7 @@ RUN R -e 'options(Ncpus = max(1, parallel::detectCores()-1), repos = c(CRAN="htt
 # ---- Bioconductor packages ----
 RUN R -e 'if (!requireNamespace("BiocManager", quietly = TRUE)) install.packages("BiocManager", repos="https://cloud.r-project.org"); \
           BiocManager::install(c("biomaRt", "SingleR", "ComplexHeatmap", "dittoSeq", "DropletUtils", "Nebulosa", "celldex", \
-          "fgsea", "AUCell", "MAST", "UCell", "DESeq2", "EnhancedVolcano"), ask = FALSE, update = TRUE)'
+          "fgsea", "AUCell", "MAST", "UCell", "DESeq2", "EnhancedVolcano", "slingshot"), ask = FALSE, update = TRUE)'
 
 ## install GitHub packages
 RUN R -e "remotes::install_github('clauswilke/colorblindr', ref = '1ac3d4d62dad047b68bb66c06cee927a4517d678', dependencies = TRUE)"
@@ -81,6 +81,13 @@ RUN R -e 'remotes::install_github("jinworks/CellChat")'
 RUN R -e 'install.packages("cmdstanr", repos = c("https://stan-dev.r-universe.dev/", getOption("repos")))'
 RUN R -e 'cmdstanr::check_cmdstan_toolchain(fix = TRUE)'
 RUN R -e 'cmdstanr::install_cmdstan()'
+
+# Required for hdf5r (dependency of SeuratExtend)
+RUN apt-get update && apt-get -y --no-install-recommends install \
+    libhdf5-dev patch
+
+RUN R -e 'install.packages("hdf5r", type = "source")'
+RUN R -e 'remotes::install_github("huayc09/SeuratExtend", dependencies = TRUE)'
 
 WORKDIR /rocker-build/
 
