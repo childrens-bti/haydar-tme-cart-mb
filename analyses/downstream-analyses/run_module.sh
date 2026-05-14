@@ -28,4 +28,4 @@ Rscript -e "rmarkdown::render('06-tcell-reclustering.Rmd')"
 Rscript -e "rmarkdown::render('07-dc-reclustering.Rmd')"
 
 # Perform T cell trajectory analysis using Slingshot
-Rscript -e "rmarkdown::render('08-tcell-trajectory.Rmd')
+Rscript -e "rmarkdown::render('08-tcell-trajectory.Rmd')"

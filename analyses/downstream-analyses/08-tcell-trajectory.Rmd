@@ -36,6 +36,9 @@ dir.create(plot_dir, recursive = TRUE, showWarnings = FALSE)
 # Source custom theme
 source(file.path(root_dir, "figures", "theme.R"))
 
+# Source trajectory helper functions
+source(file.path(analysis_dir, "util", "trajectory_helpers.R"))
+
 # Analysis parameters
 subtype_label <- "tcell"
 ```
@@ -72,18 +75,34 @@ traj_obj <- RunSlingshot(
   start.clus = "Naïve / central-memory T cells")
 ```
 
-```{r}
+```{r extract-slingshot-pseudotime}
 sling <- traj_obj@misc$slingshot$CCA20$SlingPseudotime
 head(sling)
 ```
 
-```{r}
+```{r plot-slingshot-pseudotime}
 traj_obj@meta.data[,colnames(sling)] <- as.data.frame(sling)
 
-DimPlot2(traj_obj, reduction = "umap", features = colnames(sling), cols = "C", theme = NoAxes())
+p_slingshot_pseudotime <- DimPlot2(
+  traj_obj,
+  reduction = "umap",
+  features = colnames(sling),
+  cols = "C",
+  theme = NoAxes()
+)
+
+p_slingshot_pseudotime
+
+ggsave(
+  filename = file.path(plot_dir, "tcell_slingshot_pseudotime_umap.pdf"),
+  plot = p_slingshot_pseudotime,
+  width = 14,
+  height = 8,
+  device = cairo_pdf
+)
 ```
 
-```{r}
+```{r build-slingshot-pseudotime-table}
 sling_df <- as.data.frame(sling) %>%
   tibble::rownames_to_column("cell") %>%
   dplyr::left_join(
@@ -94,7 +113,7 @@ sling_df <- as.data.frame(sling) %>%
   )
 ```
 
-```{r}
+```{r summarize-slingshot-pseudotime}
 sling_summary <- sling_df %>%
   tidyr::pivot_longer(
     cols = starts_with("slingPseudotime"),
@@ -114,7 +133,7 @@ sling_summary <- sling_df %>%
 sling_summary
 ```
 
-```{r}
+```{r save-slingshot-pseudotime-summary}
 p_sling_summary <- ggplot(sling_summary, aes(x = median_pseudotime, y = reorder(tcell_subtype, median_pseudotime))) +
   geom_point(aes(size = n), color = "#2166AC") +
   facet_wrap(~ lineage, scales = "free_y") +
@@ -163,80 +182,6 @@ umap_df <- umap_df %>%
     by = "cell"
   )
 
-# -------------------------------------------------------------------------
-# Helper: build a smooth UMAP curve for each lineage using pseudotime order
-# -------------------------------------------------------------------------
-make_umap_curve_from_pseudotime <- function(umap_df, lineage_col, lineage_name, approx_points = 150) {
-  
-  lineage_cells <- umap_df %>%
-    dplyr::filter(!is.na(.data[[lineage_col]])) %>%
-    dplyr::mutate(pseudotime = .data[[lineage_col]]) %>%
-    dplyr::arrange(pseudotime) %>%
-    dplyr::select(cell, UMAP_1, UMAP_2, pseudotime)
-  
-  if (nrow(lineage_cells) < 4) {
-    return(
-      lineage_cells %>%
-        dplyr::mutate(lineage = lineage_name)
-    )
-  }
-  
-  # Bin cells along pseudotime to reduce noise and approximate a smooth trajectory
-  n_bins <- min(approx_points, nrow(lineage_cells))
-  
-  binned_curve <- lineage_cells %>%
-    dplyr::mutate(
-      pt_bin = ceiling(dplyr::row_number() / nrow(lineage_cells) * n_bins)
-    ) %>%
-    dplyr::group_by(pt_bin) %>%
-    dplyr::summarise(
-      pseudotime = median(pseudotime, na.rm = TRUE),
-      UMAP_1 = median(UMAP_1, na.rm = TRUE),
-      UMAP_2 = median(UMAP_2, na.rm = TRUE),
-      .groups = "drop"
-    ) %>%
-    dplyr::arrange(pseudotime)
-  
-  # Smooth the binned trajectory using base R smooth.spline
-  if (nrow(binned_curve) >= 5 && length(unique(binned_curve$pseudotime)) >= 5) {
-    
-    pt_grid <- seq(
-      min(binned_curve$pseudotime, na.rm = TRUE),
-      max(binned_curve$pseudotime, na.rm = TRUE),
-      length.out = approx_points
-    )
-    
-    smoothed_curve <- tryCatch({
-      fit_x <- smooth.spline(
-        x = binned_curve$pseudotime,
-        y = binned_curve$UMAP_1,
-        spar = 0.6
-      )
-      
-      fit_y <- smooth.spline(
-        x = binned_curve$pseudotime,
-        y = binned_curve$UMAP_2,
-        spar = 0.6
-      )
-      
-      tibble::tibble(
-        pseudotime = pt_grid,
-        UMAP_1 = predict(fit_x, pt_grid)$y,
-        UMAP_2 = predict(fit_y, pt_grid)$y,
-        lineage = lineage_name
-      )
-    }, error = function(e) {
-      binned_curve %>%
-        dplyr::mutate(lineage = lineage_name)
-    })
-    
-    return(smoothed_curve)
-  }
-  
-  binned_curve %>%
-    dplyr::mutate(lineage = lineage_name)
-}
-
 # Make UMAP curves for all lineages
 curve_df <- purrr::map2_dfr(
   pseudotime_cols,
@@ -250,23 +195,7 @@ curve_df <- purrr::map2_dfr(
 )
 
 # Approximate lineage nodes as subtype centroids among cells assigned to each lineage
-lineage_node_df <- purrr::map2_dfr(
-  pseudotime_cols,
-  paste0("Lineage ", seq_along(pseudotime_cols)),
-  function(lineage_col, lineage_name) {
-    umap_df %>%
-      dplyr::filter(!is.na(.data[[lineage_col]])) %>%
-      dplyr::group_by(tcell_subtype) %>%
-      dplyr::summarise(
-        n = dplyr::n(),
-        UMAP_1 = median(UMAP_1, na.rm = TRUE),
-        UMAP_2 = median(UMAP_2, na.rm = TRUE),
-        .groups = "drop"
-      ) %>%
-      dplyr::filter(n >= 10) %>%
-      dplyr::mutate(lineage = lineage_name)
-  }
-)
+lineage_node_df <- make_lineage_node_df(umap_df, pseudotime_cols, min_cells = 10)
 
 # Endpoint labels for overview plot
 lineage_endpoint_df <- curve_df %>%
@@ -274,9 +203,7 @@ lineage_endpoint_df <- curve_df %>%
   dplyr::slice_tail(n = 1) %>%
   dplyr::ungroup()
 
-# -------------------------------------------------------------------------
-# Overview plot: all 7 lineage curves on UMAP
-# -------------------------------------------------------------------------
+# Overview plot
 p_slingshot_overview <- ggplot(umap_df, aes(UMAP_1, UMAP_2)) +
   geom_point(
     aes(color = tcell_subtype),
@@ -325,63 +252,15 @@ ggsave(
   device = cairo_pdf
 )
 
-# -------------------------------------------------------------------------
-# One plot per lineage, similar to attached examples
-# -------------------------------------------------------------------------
-plot_one_sling_lineage <- function(lineage_id) {
-  
-  lineage_col <- pseudotime_cols[lineage_id]
-  lineage_name <- paste0("Lineage ", lineage_id)
-  
-  lineage_umap_df <- umap_df %>%
-    dplyr::filter(!is.na(.data[[lineage_col]]))
-  
-  crv_df <- curve_df %>%
-    dplyr::filter(lineage == lineage_name)
-  
-  node_df <- lineage_node_df %>%
-    dplyr::filter(lineage == lineage_name)
-  
-  ggplot() +
-    geom_point(
-      data = umap_df,
-      aes(UMAP_1, UMAP_2),
-      color = "grey88",
-      size = 0.35,
-      alpha = 0.6
-    ) +
-    geom_point(
-      data = lineage_umap_df,
-      aes(UMAP_1, UMAP_2, color = tcell_subtype),
-      size = 0.55,
-      alpha = 0.9
-    ) +
-    geom_path(
-      data = crv_df,
-      aes(UMAP_1, UMAP_2),
-      color = "black",
-      linewidth = 1.2,
-      lineend = "round"
-    ) +
-    geom_point(
-      data = node_df,
-      aes(UMAP_1, UMAP_2),
-      color = "black",
-      size = 3.5
-    ) +
-    theme_Publication() +
-    theme(
-      legend.position = "none",
-      panel.background = element_rect(fill = "white"),
-      plot.background = element_rect(fill = "white"),
-      panel.grid.major = element_blank(),
-      panel.grid.minor = element_blank()
-    ) +
-    labs(color = "T cell subtype") +
-    ggtitle(paste0("Slingshot ", lineage_name))
-}
-
-lineage_plots <- lapply(seq_along(pseudotime_cols), plot_one_sling_lineage)
+# One plot per lineage
+lineage_plots <- lapply(
+  seq_along(pseudotime_cols),
+  plot_one_sling_lineage,
+  pseudotime_cols = pseudotime_cols,
+  umap_df = umap_df,
+  curve_df = curve_df,
+  lineage_node_df = lineage_node_df
+)
 
 grDevices::cairo_pdf(
   filename = file.path(plot_dir, "tcell_slingshot_lineage_curves_each_lineage_umap.pdf"),
@@ -399,6 +278,110 @@ dev.off()
 
 # Show first lineage in notebook
 lineage_plots[[1]]
+```
+
+## Fast pseudotime differential expression screen
+```{r fast-spearman-pseudotime-gene-screen}
+genes_to_test <- VariableFeatures(traj_obj)
+
+pseudotime_gene_screen <- purrr::map_dfr(
+  pseudotime_cols,
+  ~ fast_spearman_pseudotime_test(
+    seu = traj_obj,
+    pseudotime_col = .x,
+    features = genes_to_test,
+    min_detected_frac = 0.02
+  )
+)
+
+utils::write.csv(
+  pseudotime_gene_screen,
+  file.path(results_dir, "tcell_slingshot_fast_spearman_pseudotime_gene_screen.csv"),
+  row.names = FALSE
+)
+
+top_pseudotime_genes <- pseudotime_gene_screen %>%
+  dplyr::filter(!is.na(p_adj)) %>%
+  dplyr::group_by(lineage) %>%
+  dplyr::slice_min(order_by = p_adj, n = 20, with_ties = FALSE) %>%
+  dplyr::ungroup()
+
+top_pseudotime_genes
+```
+
+## Gene trend curves and heatmaps
+```{r gene-trend-curves-and-heatmaps, fig.height=10, fig.width=12, message=FALSE, warning=FALSE}
+gene_trend_curve_plots <- list()
+gene_trend_heatmap_plots <- list()
+
+for (lineage_name in pseudotime_cols) {
+  
+  top_genes <- get_top_pseudotime_genes(
+    pseudotime_gene_screen,
+    lineage_name,
+    n = 40
+  )
+  
+  if (length(top_genes) == 0) {
+    next
+  }
+  
+  top_curve_genes <- head(top_genes, 12)
+  lineage_pseudotime <- as.data.frame(sling[, lineage_name, drop = FALSE])
+  
+  p_curve <- GeneTrendCurve.Slingshot(
+    traj_obj,
+    features = top_curve_genes,
+    pseudotime.data = lineage_pseudotime,
+    method = "smooth",
+    point = FALSE,
+    se = FALSE,
+    ncol = 4
+  )
+  
+  print(p_curve)
+  gene_trend_curve_plots[[lineage_name]] <- p_curve
+  
+  p_heat <- GeneTrendHeatmap.Slingshot(
+    traj_obj,
+    features = top_genes,
+    pseudotime.data = "CCA20",
+    lineage = lineage_name,
+    scale = TRUE,
+    sort = TRUE
+  )
+  
+  print(p_heat)
+  gene_trend_heatmap_plots[[lineage_name]] <- p_heat
+}
+
+grDevices::cairo_pdf(
+  filename = file.path(plot_dir, "tcell_slingshot_gene_trend_curves_all_lineages.pdf"),
+  width = 12,
+  height = 8,
+  onefile = TRUE,
+  family = "sans"
+)
+
+for (p in gene_trend_curve_plots) {
+  print(p)
+}
+
+dev.off()
+
+grDevices::cairo_pdf(
+  filename = file.path(plot_dir, "tcell_slingshot_gene_trend_heatmaps_all_lineages.pdf"),
+  width = 8,
+  height = 10,
+  onefile = TRUE,
+  family = "sans"
+)
+
+for (p in gene_trend_heatmap_plots) {
+  print(p)
+}
+
+dev.off()
 ```
 
 ## Session info
