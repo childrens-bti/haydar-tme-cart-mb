@@ -27,3 +27,5 @@ Rscript -e "rmarkdown::render('06-tcell-reclustering.Rmd')"
 # Perform DC re-clustering and run AUCell on Hallmark pathways
 Rscript -e "rmarkdown::render('07-dc-reclustering.Rmd')"
 
+# Perform T cell trajectory analysis using Slingshot
+Rscript -e "rmarkdown::render('08-tcell-trajectory.Rmd')"
