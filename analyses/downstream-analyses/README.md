@@ -147,9 +147,12 @@ downstream-analyses/
 │       ├── tcell_reclustered_umap.pdf
 │       ├── tcell_reclustered_umap_by_treatment.pdf
 │       ├── tcell_rename_clustered_umap.pdf
+│       ├── tcell_slingshot_gene_trend_curves_all_lineages.pdf
+│       ├── tcell_slingshot_gene_trend_heatmaps_all_lineages.pdf
 │       ├── tcell_slingshot_lineage_curves_each_lineage_umap.pdf
 │       ├── tcell_slingshot_lineage_curves_overview_umap.pdf
 │       ├── tcell_slingshot_pseudotime_all_lineages_summary.pdf
+│       ├── tcell_slingshot_pseudotime_umap.pdf
 │       ├── tcell_top_old_label_per_new_cluster_barplot.pdf
 │       ├── tcell_volcano_pseudobulk_Activated_CD4_effector_helper_like_T_cells_vs_rest.pdf
 │       ├── tcell_volcano_pseudobulk_Activated_effector_CD8_T_cells_stress_vs_rest.pdf
@@ -258,10 +261,12 @@ downstream-analyses/
 │       ├── tcell_reclustered_markers.csv
 │       ├── tcell_reclustered_proportions.tsv
 │       ├── tcell_reclustered_top30_markers_per_cluster.csv
+│       ├── tcell_slingshot_fast_spearman_pseudotime_gene_screen.csv
 │       ├── tcell_top_old_label_per_new_cluster.tsv
 │       └── cart_tcell_subtypes_v2.rds
 ├── run_module.sh
 └── util
     ├── dotplot_helpers.R
-    └── pseudobulk_gsea_helpers.R
+    ├── pseudobulk_gsea_helpers.R
+    └── trajectory_helpers.R
 ```
