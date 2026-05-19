@@ -96,7 +96,7 @@ p_slingshot_pseudotime
 ggsave(
   filename = file.path(plot_dir, "tcell_slingshot_pseudotime_umap.pdf"),
   plot = p_slingshot_pseudotime,
-  width = 14,
+  width = 12,
   height = 8,
   device = cairo_pdf
 )
@@ -182,6 +182,17 @@ umap_df <- umap_df %>%
     by = "cell"
   )
 
+subtype_levels <- levels(droplevels(umap_df$tcell_subtype))
+
+if (is.null(subtype_levels)) {
+  subtype_levels <- sort(unique(as.character(umap_df$tcell_subtype)))
+}
+
+subtype_colors <- setNames(
+  scales::hue_pal()(length(subtype_levels)),
+  subtype_levels
+)
+
 # Make UMAP curves for all lineages
 curve_df <- purrr::map2_dfr(
   pseudotime_cols,
@@ -203,6 +214,8 @@ lineage_endpoint_df <- curve_df %>%
   dplyr::slice_tail(n = 1) %>%
   dplyr::ungroup()
 
+lineage_arrow_df <- make_lineage_arrow_df(curve_df)
+
 # Overview plot
 p_slingshot_overview <- ggplot(umap_df, aes(UMAP_1, UMAP_2)) +
   geom_point(
@@ -218,6 +231,15 @@ p_slingshot_overview <- ggplot(umap_df, aes(UMAP_1, UMAP_2)) +
     linewidth = 1.1,
     lineend = "round"
   ) +
+  geom_segment(
+    data = lineage_arrow_df,
+    aes(x = UMAP_1, y = UMAP_2, xend = UMAP_1_end, yend = UMAP_2_end),
+    inherit.aes = FALSE,
+    color = "black",
+    linewidth = 1.1,
+    lineend = "round",
+    arrow = arrow(length = grid::unit(0.18, "inches"), type = "closed")
+  ) +
   geom_point(
     data = lineage_node_df,
     aes(UMAP_1, UMAP_2),
@@ -225,12 +247,26 @@ p_slingshot_overview <- ggplot(umap_df, aes(UMAP_1, UMAP_2)) +
     color = "black",
     size = 3
   ) +
-  ggrepel::geom_text_repel(
+  ggrepel::geom_label_repel(
     data = lineage_endpoint_df,
     aes(UMAP_1, UMAP_2, label = lineage),
     inherit.aes = FALSE,
     size = 3,
-    min.segment.length = 0
+    color = "black",
+    fill = ggplot2::alpha("white", 0.85),
+    label.size = 0.18,
+    label.padding = grid::unit(0.15, "lines"),
+    point.padding = grid::unit(0.35, "lines"),
+    box.padding = grid::unit(0.5, "lines"),
+    min.segment.length = 0,
+    segment.color = "grey45",
+    segment.size = 0.3,
+    force = 3,
+    force_pull = 0.2,
+    max.iter = 10000,
+    max.time = 2,
+    max.overlaps = Inf,
+    seed = 1234
   ) +
   theme_Publication() +
   theme(
@@ -239,8 +275,9 @@ p_slingshot_overview <- ggplot(umap_df, aes(UMAP_1, UMAP_2)) +
     panel.grid.major = element_blank(),
     panel.grid.minor = element_blank()
   ) +
+  scale_color_manual(values = subtype_colors, breaks = names(subtype_colors), drop = FALSE) +
   labs(color = "T cell subtype") +
-  ggtitle("Slingshot lineage curves on UMAP")
+  ggtitle("Lineage curves on UMAP")
 
 p_slingshot_overview
 
@@ -259,13 +296,15 @@ lineage_plots <- lapply(
   pseudotime_cols = pseudotime_cols,
   umap_df = umap_df,
   curve_df = curve_df,
-  lineage_node_df = lineage_node_df
+  lineage_node_df = lineage_node_df,
+  subtype_colors = subtype_colors,
+  show_subtype_labels = TRUE
 )
 
 grDevices::cairo_pdf(
   filename = file.path(plot_dir, "tcell_slingshot_lineage_curves_each_lineage_umap.pdf"),
-  width = 5,
-  height = 5,
+  width = 6,
+  height = 5.5,
   onefile = TRUE,
   family = "sans"
 )
@@ -275,9 +314,6 @@ for (p in lineage_plots) {
 }
 
 dev.off()
-
-# Show first lineage in notebook
-lineage_plots[[1]]
 ```
 
 ## Fast pseudotime differential expression screen
