@@ -140,7 +140,8 @@ plot_one_sling_lineage <- function(
   curve_df,
   lineage_node_df,
   subtype_colors = NULL,
-  show_subtype_labels = TRUE
+  show_subtype_labels = TRUE,
+  min_label_cells = 10
 ) {
   
   lineage_col <- pseudotime_cols[lineage_id]
@@ -165,7 +166,7 @@ plot_one_sling_lineage <- function(
       UMAP_2 = median(UMAP_2, na.rm = TRUE),
       .groups = "drop"
     ) %>%
-    dplyr::filter(n >= 10)
+    dplyr::filter(n >= min_label_cells)
   
   p <- ggplot2::ggplot() +
     ggplot2::geom_point(
