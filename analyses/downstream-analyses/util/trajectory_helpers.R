@@ -107,8 +107,42 @@ make_lineage_node_df <- function(umap_df, pseudotime_cols, min_cells = 10) {
   )
 }
 
+# Make one arrow segment per lineage, pointing from lower to higher pseudotime.
+make_lineage_arrow_df <- function(curve_df, arrow_start_frac = 0.68, arrow_end_frac = 0.82) {
+  curve_df %>%
+    dplyr::group_by(lineage) %>%
+    dplyr::arrange(pseudotime, .by_group = TRUE) %>%
+    dplyr::group_modify(function(.x, .y) {
+      n_points <- nrow(.x)
+      
+      if (n_points < 2) {
+        return(tibble::tibble())
+      }
+      
+      start_idx <- max(1, min(n_points - 1, round(n_points * arrow_start_frac)))
+      end_idx <- max(start_idx + 1, min(n_points, round(n_points * arrow_end_frac)))
+      
+      tibble::tibble(
+        UMAP_1 = .x$UMAP_1[start_idx],
+        UMAP_2 = .x$UMAP_2[start_idx],
+        UMAP_1_end = .x$UMAP_1[end_idx],
+        UMAP_2_end = .x$UMAP_2[end_idx]
+      )
+    }) %>%
+    dplyr::ungroup()
+}
+
 # Plot one Slingshot lineage on UMAP using the precomputed curve and node data.
-plot_one_sling_lineage <- function(lineage_id, pseudotime_cols, umap_df, curve_df, lineage_node_df) {
+plot_one_sling_lineage <- function(
+  lineage_id,
+  pseudotime_cols,
+  umap_df,
+  curve_df,
+  lineage_node_df,
+  subtype_colors = NULL,
+  show_subtype_labels = TRUE,
+  min_label_cells = 10
+) {
   
   lineage_col <- pseudotime_cols[lineage_id]
   lineage_name <- paste0("Lineage ", lineage_id)
@@ -122,7 +156,19 @@ plot_one_sling_lineage <- function(lineage_id, pseudotime_cols, umap_df, curve_d
   node_df <- lineage_node_df %>%
     dplyr::filter(lineage == lineage_name)
   
-  ggplot2::ggplot() +
+  arrow_df <- make_lineage_arrow_df(crv_df)
+  
+  label_df <- lineage_umap_df %>%
+    dplyr::group_by(tcell_subtype) %>%
+    dplyr::summarise(
+      n = dplyr::n(),
+      UMAP_1 = median(UMAP_1, na.rm = TRUE),
+      UMAP_2 = median(UMAP_2, na.rm = TRUE),
+      .groups = "drop"
+    ) %>%
+    dplyr::filter(n >= min_label_cells)
+  
+  p <- ggplot2::ggplot() +
     ggplot2::geom_point(
       data = umap_df,
       ggplot2::aes(UMAP_1, UMAP_2),
@@ -143,6 +189,15 @@ plot_one_sling_lineage <- function(lineage_id, pseudotime_cols, umap_df, curve_d
       linewidth = 1.2,
       lineend = "round"
     ) +
+    ggplot2::geom_segment(
+      data = arrow_df,
+      ggplot2::aes(x = UMAP_1, y = UMAP_2, xend = UMAP_1_end, yend = UMAP_2_end),
+      inherit.aes = FALSE,
+      color = "black",
+      linewidth = 1.2,
+      lineend = "round",
+      arrow = ggplot2::arrow(length = grid::unit(0.18, "inches"), type = "closed")
+    ) +
     ggplot2::geom_point(
       data = node_df,
       ggplot2::aes(UMAP_1, UMAP_2),
@@ -158,7 +213,43 @@ plot_one_sling_lineage <- function(lineage_id, pseudotime_cols, umap_df, curve_d
       panel.grid.minor = ggplot2::element_blank()
     ) +
     ggplot2::labs(color = "T cell subtype") +
-    ggplot2::ggtitle(paste0("Slingshot ", lineage_name))
+    ggplot2::ggtitle(lineage_name)
+  
+  if (!is.null(subtype_colors)) {
+    p <- p +
+      ggplot2::scale_color_manual(
+        values = subtype_colors,
+        breaks = names(subtype_colors),
+        drop = FALSE
+      )
+  }
+  
+  if (show_subtype_labels && nrow(label_df) > 0) {
+    p <- p +
+      ggrepel::geom_label_repel(
+        data = label_df,
+        ggplot2::aes(UMAP_1, UMAP_2, label = tcell_subtype),
+        inherit.aes = FALSE,
+        size = 2,
+        color = "black",
+        fill = ggplot2::alpha("white", 0.85),
+        label.size = 0.15,
+        label.padding = grid::unit(0.12, "lines"),
+        point.padding = grid::unit(0.25, "lines"),
+        box.padding = grid::unit(0.35, "lines"),
+        min.segment.length = 0,
+        segment.color = "grey45",
+        segment.size = 0.25,
+        force = 2,
+        force_pull = 0.25,
+        max.iter = 10000,
+        max.time = 2,
+        max.overlaps = Inf,
+        seed = 1234
+      )
+  }
+  
+  p
 }
 
 # Fast per-lineage pseudotime-gene screen.
