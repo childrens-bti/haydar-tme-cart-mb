@@ -75,6 +75,7 @@ RUN R -e "remotes::install_github('thomasp85/patchwork')"
 RUN R -e 'remotes::install_github("chris-mcginnis-ucsf/DoubletFinder")'
 RUN R -e 'remotes::install_github("immunogenomics/presto")'
 RUN R -e 'remotes::install_github("MangiolaLaboratory/sccomp")'
+RUN R -e 'remotes::install_github("MarioniLab/miloR")'
 RUN R -e 'remotes::install_github("jinworks/CellChat")'
 
 ## finish sccomp installation
