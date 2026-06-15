@@ -37,6 +37,13 @@ dir.create(plot_dir, recursive = TRUE, showWarnings = FALSE)
 
 # Source custom theme
 source(file.path(root_dir, "figures", "theme.R"))
+
+options(mc.cores = 1)
+
+set_seed <- function(seed = 1234) {
+  RNGkind(kind = "Mersenne-Twister", normal.kind = "Inversion", sample.kind = "Rejection")
+  set.seed(seed)
+}
 ```
 
 ## Parameters
@@ -53,6 +60,9 @@ analysis_label <- paste0(subtype_label, "_subtype")
 
 # CAR-only sccomp parameter names relative to baseline
 car_only_parameters <- paste0("condition", setdiff(car_levels, "41BB-L"))
+
+# Factor order and file labels for tumor-reference comparisons
+condition_levels_tumor_reference <- c("tumor", setdiff(condition_levels, "tumor"))
 
 cat("Input RDS:", input_rds, "\n")
 cat("Subtype label:", subtype_label, "\n")
@@ -75,7 +85,7 @@ stopifnot("condition" %in% colnames(obj@meta.data))
 ## 41BB-L is set as the reference condition
 ```{r composition-analysis-sccomp, message=FALSE, warning=FALSE}
 # set random seed
-set.seed(1234)
+set_seed(1234)
 
 # 41BB-L (first level) is used as the baseline reference
 sccomp_input <- obj@meta.data |>
@@ -118,6 +128,54 @@ write.table(
 sccomp_result |> 
   plot_1D_intervals(significance_statistic = c("FDR"))
 ggsave(file.path(plot_dir, paste0(analysis_label, "_composition_sccomp_41BBL_baseline.pdf")), width = 14, height = 6)
+```
+
+## Composition analysis using sccomp
+## tumor is set as the reference condition
+```{r composition-analysis-sccomp-tumor-reference, message=FALSE, warning=FALSE}
+# set random seed
+set_seed(1234)
+
+sccomp_input_tumor_reference <- obj@meta.data |>
+  tibble::rownames_to_column("cell") |>
+  dplyr::select(
+    cell,
+    sample = sample,
+    cell_group = all_of(cell_group_col),
+    condition
+  ) %>%
+  mutate(
+    condition = factor(condition, levels = condition_levels_tumor_reference)
+  ) %>%
+  as_tibble()
+
+cat("Reference condition for tumor-reference sccomp:", levels(sccomp_input_tumor_reference$condition)[1], "\n")
+cat("Cell group column used for analysis:", cell_group_col, "\n")
+
+sccomp_result_tumor_reference <- sccomp_input_tumor_reference |>
+  sccomp_estimate(
+    formula_composition = ~ condition,
+    .sample = sample,
+    .cell_group = cell_group,
+    bimodal_mean_variability_association = TRUE,
+    cores = 1,
+    verbose = FALSE
+  ) |>
+  sccomp_test()
+
+write.table(
+  sccomp_result_tumor_reference,
+  file = file.path(results_dir, paste0(analysis_label, "_composition_sccomp_tumor_baseline_results.tsv")),
+  sep = "\t",
+  quote = FALSE,
+  row.names = FALSE
+)
+```
+
+```{r visualize-sccomp-tumor-reference-results, fig.height=6, fig.width=12}
+sccomp_result_tumor_reference |>
+  plot_1D_intervals(significance_statistic = c("FDR"))
+ggsave(file.path(plot_dir, paste0(analysis_label, "_composition_sccomp_tumor_baseline.pdf")), width = 14, height = 6)
 ```
 
 ## Subtypes Not Significantly Altered vs 41BB-L (All Conditions)

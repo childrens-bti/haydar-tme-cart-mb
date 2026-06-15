@@ -10,7 +10,7 @@
 2. `02-lineage-plot.Rmd`: generates dot plot of top lineage markers and stacked barplot of lineage proportions across conditions.
 3. `03-myeloid-functional-marker-dotplots.Rmd`: performs differential expression analysis in myeloid cells by subcluster, subtype, and treatment condition, annotates marker genes with Hallmark pathways, and generates dot plots for visualization.
 4. `04-myeloid-pseudobulk-gsea.Rmd`: performs pseudobulk DESeq2‑based Hallmark GSEA for myeloid cells across conditions.
-5. `05-myeloid-composition-analysis.Rmd`: performs myeloid subtype composition analysis using sccomp with 41BB-L as the baseline reference and generates composition plots and stacked bar plots of subtype proportions across conditions.
+5. `05-myeloid-composition-analysis.Rmd`: performs myeloid subtype composition analysis using sccomp with 41BB-L and tumor as the baseline references and generates composition plots and stacked bar plots of subtype proportions across conditions.
 6. `06-tcell-reclustering.Rmd`: performs re-clustering of T cells after additional filtering and evaluates consistency with previous subtype annotations.
 7. `07-dc-reclustering.Rmd`: performs re-clustering of dendritic cells after additional filtering, evaluates consistency with previous subtype annotations, and runs AUCell to evaluate Hallmark pathway activity across updated DC clusters.
 8. `08-tcell-trajectory.Rmd`: performs Slingshot-based T-cell pseudotime analysis and generates UMAP visualizations of lineage trajectories.
@@ -118,6 +118,7 @@ downstream-analyses/
 │   │   ├── myeloid_dotplot_treatment_markers_panelE.pdf
 │   │   ├── myeloid_dotplot_treatment_markers_panelF.pdf
 │   │   ├── myeloid_subtype_composition_sccomp_41BBL_baseline.pdf
+│   │   ├── myeloid_subtype_composition_sccomp_tumor_baseline.pdf
 │   │   ├── myeloid_subtype_proportions_stacked_barplot.png
 │   │   ├── myeloid_umap_subcluster.pdf
 │   │   ├── myeloid_umap_subtype_cluster_labels.pdf
@@ -229,6 +230,7 @@ downstream-analyses/
 │   │   │   ├── myeloid_GSEA_pseudobulk_tumor_vs_allCAR_hallmark.csv
 │   │   │   └── myeloid_GSEA_pseudobulk_tumor_vs_rest_hallmark.csv
 │   │   ├── myeloid_subtype_composition_sccomp_41BBL_baseline_results.tsv
+│   │   ├── myeloid_subtype_composition_sccomp_tumor_baseline_results.tsv
 │   │   ├── myeloid_subtype_proportions.tsv
 │   │   └── myeloid_treatment_markers.csv
 │   └── tcell
