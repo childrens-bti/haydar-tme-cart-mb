@@ -270,5 +270,6 @@ downstream-analyses/
 └── util
     ├── dotplot_helpers.R
     ├── pseudobulk_gsea_helpers.R
+    ├── sccomp_helpers.R
     └── trajectory_helpers.R
 ```
