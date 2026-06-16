@@ -15,15 +15,12 @@ suppressPackageStartupMessages({
   library(tibble)
   library(Seurat)
   library(patchwork)
-  library(SeuratObject)
   library(ggplot2)
   library(msigdbr)
   library(fgsea)
   library(Matrix)
   library(DESeq2)
   library(stringr)
-  library(EnhancedVolcano)
-  library(purrr)
 })
 
 # Define directories
@@ -38,6 +35,7 @@ dir.create(plot_dir, recursive = TRUE, showWarnings = FALSE)
 
 # Source custom theme
 source(file.path(root_dir, "figures", "theme.R"))
+source(file.path(analysis_dir, "util", "dotplot_helpers.R"))
 source(file.path(analysis_dir, "util", "pseudobulk_gsea_helpers.R"))
 
 # Set seed for reproducibility
@@ -50,6 +48,11 @@ subtype_label <- "tcell"
 ## Load tcell object
 ```{r load-data}
 tcell_obj <- readRDS(file.path(data_dir, "cart_nkt_subtypes.rds"))
+
+condition_levels <- c("41BB-L", "B7H3", "CD28-41BB", "CD8-41BB", "STOP", "tumor")
+tcell_obj$condition <- factor(tcell_obj$condition, levels = condition_levels)
+
+figure2e_condition_levels <- c("41BB-L", "B7H3", "CD28-41BB", "CD8-41BB", "STOP")
 
 table(tcell_obj$tcell_subtype)
 ```
@@ -560,12 +563,113 @@ for (subtype in subtype_levels) {
 }
 ```
 
+## Define manual dot plot gene lists
+```{r define-manual-dotplot-genes}
+tcell_dotplot_core_categories <- list(
+  "Lineage" = c("Cd4", "Cd8a", "Foxp3", "Trdc"),
+  "Differentiation" = c("Sell", "Tcf7", "Lef1", "Cd44", "Ccr7", "Il7r"),
+  "Exhaustion" = c("Lag3", "Pdcd1", "Ctla4", "Havcr2", "Tox", "Ctla2a", "Tigit"),
+  "Cytolysis" = c("Eomes", "Gzmb", "Gzmk", "Gzma", "Gzmf", "Prf1"),
+  "T cell activation" = c(
+    "Lat", "Xcl1", "Ifngr1", "Cd69", "Tnfrsf9", "Tnfsf4", "Icos", "Cd28",
+    "Top2a", "Mki67", "Ccl5", "Ifitm1", "Ifng", "Zap70", "C1qc"
+  ),
+  "Chemotaxis" = c("Cxcr5", "S1pr1", "Klf2", "Ccr2", "Cxcl10", "Ccl3", "Cxcl9", "Cxcl16")
+)
+
+tcell_figure2e_categories <- tcell_dotplot_core_categories
+
+tcell_supplementary_figure5b_categories <- c(
+  tcell_dotplot_core_categories,
+  list(
+    "Other" = c("mt-Nd6", "Gzmc", "Rras2", "Aspm", "Ncapd2", "Klra4", "Klri1", "Scart1", "Il5", "Gzmg")
+  )
+)
+
+filter_dotplot_categories <- function(categories_list, obj) {
+  genes_present <- rownames(obj)
+  filtered_categories <- lapply(categories_list, function(genes) {
+    genes[genes %in% genes_present]
+  })
+  filtered_categories <- filtered_categories[lengths(filtered_categories) > 0]
+
+  missing_genes <- setdiff(unname(unlist(categories_list)), genes_present)
+  if (length(missing_genes) > 0) {
+    message("Skipping missing dot plot genes: ", paste(missing_genes, collapse = ", "))
+  }
+
+  filtered_categories
+}
+```
+
+## Manual marker dot plots for Figure 2E and Supplementary Figure 5B
+```{r manual-marker-dotplots, fig.height=6, fig.width=12, warning=FALSE}
+tcell_figure2e_dotplot_categories <- filter_dotplot_categories(
+  tcell_figure2e_categories,
+  tcell_obj
+)
+
+tcell_supplementary_figure5b_dotplot_categories <- filter_dotplot_categories(
+  tcell_supplementary_figure5b_categories,
+  tcell_obj
+)
+
+tcell_subtype_levels <- unname(new_cluster_ids)
+
+if (length(tcell_figure2e_dotplot_categories) > 0) {
+  tcell_obj_figure2e <- subset(
+    tcell_obj,
+    subset = condition %in% figure2e_condition_levels
+  )
+
+  make_manual_dotplot(
+    tcell_obj_figure2e,
+    group_by = "condition",
+    categories_list = tcell_figure2e_dotplot_categories,
+    file_name = "figure_2E_tcell_marker_dotplot_by_condition.pdf",
+    ylab_text = NULL,
+    y_levels = rev(figure2e_condition_levels),
+    width = 17,
+    height = 4.5,
+    cat_label_size = 5,
+    cat_height = 0.6,
+    cat_y_limits = c(-0.25, 0.05),
+    show_legend_titles = TRUE,
+    axis_text_x_size = 12,
+    axis_text_y_size = 12
+  )
+} else {
+  message("Skipping Figure 2E dot plot: tcell_figure2e_categories is empty or all genes are missing.")
+}
+
+if (length(tcell_supplementary_figure5b_dotplot_categories) > 0) {
+  make_manual_dotplot(
+    tcell_obj,
+    group_by = "tcell_subtype",
+    categories_list = tcell_supplementary_figure5b_dotplot_categories,
+    file_name = "supplementary_figure_5B_tcell_marker_dotplot_by_subtype.pdf",
+    ylab_text = NULL,
+    y_levels = rev(tcell_subtype_levels),
+    width = 19,
+    height = 6.5,
+    cat_label_size = 5,
+    cat_height = 0.6,
+    cat_y_limits = c(-0.25, 0.05),
+    show_legend_titles = TRUE,
+    axis_text_x_size = 12,
+    axis_text_y_size = 12
+  )
+} else {
+  message("Skipping Supplementary Figure 5B dot plot: tcell_supplementary_figure5b_categories is empty or all genes are missing.")
+}
+```
+
 ## Save object
-- Save updated T-cell object (v2) with refined subtype annotations and subtype-specific GSEA results.
+- Save updated T-cell object with refined subtype annotations and subtype-specific GSEA results.
 ```{r save-object}
 saveRDS(
   tcell_obj,
-  file.path(results_dir, "cart_tcell_subtypes_v2.rds")
+  file.path(results_dir, "cart_tcell_subtypes.rds")
 )
 ```
 

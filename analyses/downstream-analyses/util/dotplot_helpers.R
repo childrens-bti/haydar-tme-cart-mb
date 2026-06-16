@@ -112,8 +112,12 @@ make_dotplot_with_categories <- function(obj,
   p_final <- p_main / p_cat +
     plot_layout(heights = c(12, cat_height))
   
-  pdf(file = file.path(plot_dir, file_name),
-      width = width, height = height)
+  grDevices::cairo_pdf(
+    filename = file.path(plot_dir, file_name),
+    width = width,
+    height = height
+  )
+
   print(p_final)
   dev.off()
 }
