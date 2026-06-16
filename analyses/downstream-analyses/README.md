@@ -128,6 +128,8 @@ downstream-analyses/
 │   │   ├── umap_cd8_myeloid_subtypes.png
 │   │   └── umap_stop_myeloid_subtypes.png
 │   └── tcell
+│       ├── figure_2E_tcell_marker_dotplot_by_condition.pdf
+│       ├── supplementary_figure_5B_tcell_marker_dotplot_by_subtype.pdf
 │       ├── tcell_cluster_vs_old_subtype_heatmap.pdf
 │       ├── tcell_gsea_dot_pseudobulk_Activated_CD4_effector_helper_like_T_cells_vs_rest.pdf
 │       ├── tcell_gsea_dot_pseudobulk_Activated_effector_CD8_T_cells_stress_vs_rest.pdf
@@ -234,6 +236,7 @@ downstream-analyses/
 │   │   ├── myeloid_subtype_proportions.tsv
 │   │   └── myeloid_treatment_markers.csv
 │   └── tcell
+│       ├── cart_tcell_subtypes.rds
 │       ├── tcell_DESeq2_pseudobulk_Activated_CD4_effector_helper_like_T_cells_vs_rest.csv
 │       ├── tcell_DESeq2_pseudobulk_Activated_effector_CD8_T_cells_stress_vs_rest.csv
 │       ├── tcell_DESeq2_pseudobulk_Antigen_presenting_myeloid_cells_vs_rest.csv
@@ -264,8 +267,7 @@ downstream-analyses/
 │       ├── tcell_reclustered_proportions.tsv
 │       ├── tcell_reclustered_top30_markers_per_cluster.csv
 │       ├── tcell_slingshot_fast_spearman_pseudotime_gene_screen.csv
-│       ├── tcell_top_old_label_per_new_cluster.tsv
-│       └── cart_tcell_subtypes_v2.rds
+│       └── tcell_top_old_label_per_new_cluster.tsv
 ├── run_module.sh
 └── util
     ├── dotplot_helpers.R
