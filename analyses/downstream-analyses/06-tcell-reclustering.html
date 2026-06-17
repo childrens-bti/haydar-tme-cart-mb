@@ -11,7 +11,7 @@
 
 <meta name="author" content="Bicna Song" />
 
-<meta name="date" content="2026-06-16" />
+<meta name="date" content="2026-06-17" />
 
 <title>06-tcell-reclustering.Rmd</title>
 
@@ -352,7 +352,7 @@ display: none;
 
 <h1 class="title toc-ignore">06-tcell-reclustering.Rmd</h1>
 <h4 class="author">Bicna Song</h4>
-<h4 class="date">2026-06-16</h4>
+<h4 class="date">2026-06-17</h4>
 
 </div>
 
@@ -1158,11 +1158,16 @@ if (length(tcell_figure2e_dotplot_categories) &gt; 0) {
     cat_y_limits = c(-0.25, 0.05),
     show_legend_titles = TRUE,
     axis_text_x_size = 12,
-    axis_text_y_size = 12
+    axis_text_y_size = 12,
+    dot_size_range = c(0, 6),
+    dot_size_breaks = seq(0, 50, by = 10),
+    dot_size_limits = c(0, 50)
   )
 } else {
   message(&quot;Skipping Figure 2E dot plot: tcell_figure2e_categories is empty or all genes are missing.&quot;)
 }</code></pre>
+<pre><code>## Scale for size is already present.
+## Adding another scale for size, which will replace the existing scale.</code></pre>
 <pre><code>## png 
 ##   2</code></pre>
 <pre class="r"><code>if (length(tcell_supplementary_figure5b_dotplot_categories) &gt; 0) {
@@ -1180,11 +1185,16 @@ if (length(tcell_figure2e_dotplot_categories) &gt; 0) {
     cat_y_limits = c(-0.25, 0.05),
     show_legend_titles = TRUE,
     axis_text_x_size = 12,
-    axis_text_y_size = 12
+    axis_text_y_size = 12,
+    dot_size_range = c(0, 6),
+    dot_size_breaks = seq(0, 80, by = 20),
+    dot_size_limits = c(0, 80)
   )
 } else {
   message(&quot;Skipping Supplementary Figure 5B dot plot: tcell_supplementary_figure5b_categories is empty or all genes are missing.&quot;)
 }</code></pre>
+<pre><code>## Scale for size is already present.
+## Adding another scale for size, which will replace the existing scale.</code></pre>
 <pre><code>## png 
 ##   2</code></pre>
 </div>
