@@ -11,7 +11,7 @@
 
 <meta name="author" content="Bicna Song" />
 
-<meta name="date" content="2026-05-07" />
+<meta name="date" content="2026-06-17" />
 
 <title>06-tcell-reclustering.Rmd</title>
 
@@ -352,7 +352,7 @@ display: none;
 
 <h1 class="title toc-ignore">06-tcell-reclustering.Rmd</h1>
 <h4 class="author">Bicna Song</h4>
-<h4 class="date">2026-05-07</h4>
+<h4 class="date">2026-06-17</h4>
 
 </div>
 
@@ -394,6 +394,10 @@ subtype proportions</a></li>
 sets</a></li>
 <li><a href="#pseudobulk-gsea-each-tcell_subtype-vs-rest" id="toc-pseudobulk-gsea-each-tcell_subtype-vs-rest">Pseudobulk GSEA:
 each tcell_subtype vs rest</a></li>
+<li><a href="#define-manual-dot-plot-gene-lists" id="toc-define-manual-dot-plot-gene-lists">Define manual dot plot gene
+lists</a></li>
+<li><a href="#manual-marker-dot-plots-for-figure-2e-and-supplementary-figure-5b" id="toc-manual-marker-dot-plots-for-figure-2e-and-supplementary-figure-5b">Manual
+marker dot plots for Figure 2E and Supplementary Figure 5B</a></li>
 <li><a href="#save-object" id="toc-save-object">Save object</a></li>
 <li><a href="#session-info" id="toc-session-info">Session info</a></li>
 </ul>
@@ -407,15 +411,12 @@ each tcell_subtype vs rest</a></li>
   library(tibble)
   library(Seurat)
   library(patchwork)
-  library(SeuratObject)
   library(ggplot2)
   library(msigdbr)
   library(fgsea)
   library(Matrix)
   library(DESeq2)
   library(stringr)
-  library(EnhancedVolcano)
-  library(purrr)
 })
 
 # Define directories
@@ -430,6 +431,7 @@ dir.create(plot_dir, recursive = TRUE, showWarnings = FALSE)
 
 # Source custom theme
 source(file.path(root_dir, &quot;figures&quot;, &quot;theme.R&quot;))
+source(file.path(analysis_dir, &quot;util&quot;, &quot;dotplot_helpers.R&quot;))
 source(file.path(analysis_dir, &quot;util&quot;, &quot;pseudobulk_gsea_helpers.R&quot;))
 
 # Set seed for reproducibility
@@ -441,6 +443,11 @@ subtype_label &lt;- &quot;tcell&quot;</code></pre>
 <div id="load-tcell-object" class="section level2">
 <h2>Load tcell object</h2>
 <pre class="r"><code>tcell_obj &lt;- readRDS(file.path(data_dir, &quot;cart_nkt_subtypes.rds&quot;))
+
+condition_levels &lt;- c(&quot;41BB-L&quot;, &quot;B7H3&quot;, &quot;CD28-41BB&quot;, &quot;CD8-41BB&quot;, &quot;STOP&quot;, &quot;tumor&quot;)
+tcell_obj$condition &lt;- factor(tcell_obj$condition, levels = condition_levels)
+
+figure2e_condition_levels &lt;- c(&quot;41BB-L&quot;, &quot;B7H3&quot;, &quot;CD28-41BB&quot;, &quot;CD8-41BB&quot;, &quot;STOP&quot;)
 
 table(tcell_obj$tcell_subtype)</code></pre>
 <pre><code>## 
@@ -928,8 +935,7 @@ p_prop</code></pre>
 <pre><code>## Warning: The `category` argument of `msigdbr()` is deprecated as of msigdbr 10.0.0.
 ## ℹ Please use the `collection` argument instead.
 ## This warning is displayed once every 8 hours.
-## Call `lifecycle::last_lifecycle_warnings()` to see where this warning was
-## generated.</code></pre>
+## Call `lifecycle::last_lifecycle_warnings()` to see where this warning was generated.</code></pre>
 <pre class="r"><code>length(hallmark_pathways)</code></pre>
 <pre><code>## [1] 50</code></pre>
 </div>
@@ -1079,15 +1085,128 @@ for (subtype in subtype_levels) {
 ##       rest γδ T cells 
 ##         12         12</code></pre>
 </div>
+<div id="define-manual-dot-plot-gene-lists" class="section level2">
+<h2>Define manual dot plot gene lists</h2>
+<pre class="r"><code>tcell_dotplot_core_categories &lt;- list(
+  &quot;Lineage&quot; = c(&quot;Cd4&quot;, &quot;Cd8a&quot;, &quot;Foxp3&quot;, &quot;Trdc&quot;),
+  &quot;Differentiation&quot; = c(&quot;Sell&quot;, &quot;Tcf7&quot;, &quot;Lef1&quot;, &quot;Cd44&quot;, &quot;Ccr7&quot;, &quot;Il7r&quot;),
+  &quot;Exhaustion&quot; = c(&quot;Lag3&quot;, &quot;Pdcd1&quot;, &quot;Ctla4&quot;, &quot;Havcr2&quot;, &quot;Tox&quot;, &quot;Ctla2a&quot;, &quot;Tigit&quot;),
+  &quot;Cytolysis&quot; = c(&quot;Eomes&quot;, &quot;Gzmb&quot;, &quot;Gzmk&quot;, &quot;Gzma&quot;, &quot;Gzmf&quot;, &quot;Prf1&quot;),
+  &quot;T cell activation&quot; = c(
+    &quot;Lat&quot;, &quot;Xcl1&quot;, &quot;Ifngr1&quot;, &quot;Cd69&quot;, &quot;Tnfrsf9&quot;, &quot;Tnfsf4&quot;, &quot;Icos&quot;, &quot;Cd28&quot;,
+    &quot;Top2a&quot;, &quot;Mki67&quot;, &quot;Ccl5&quot;, &quot;Ifitm1&quot;, &quot;Ifng&quot;, &quot;Zap70&quot;, &quot;C1qc&quot;
+  ),
+  &quot;Chemotaxis&quot; = c(&quot;Cxcr5&quot;, &quot;S1pr1&quot;, &quot;Klf2&quot;, &quot;Ccr2&quot;, &quot;Cxcl10&quot;, &quot;Ccl3&quot;, &quot;Cxcl9&quot;, &quot;Cxcl16&quot;)
+)
+
+tcell_figure2e_categories &lt;- tcell_dotplot_core_categories
+
+tcell_supplementary_figure5b_categories &lt;- c(
+  tcell_dotplot_core_categories,
+  list(
+    &quot;Other&quot; = c(&quot;mt-Nd6&quot;, &quot;Gzmc&quot;, &quot;Rras2&quot;, &quot;Aspm&quot;, &quot;Ncapd2&quot;, &quot;Klra4&quot;, &quot;Klri1&quot;, &quot;Scart1&quot;, &quot;Il5&quot;, &quot;Gzmg&quot;)
+  )
+)
+
+filter_dotplot_categories &lt;- function(categories_list, obj) {
+  genes_present &lt;- rownames(obj)
+  filtered_categories &lt;- lapply(categories_list, function(genes) {
+    genes[genes %in% genes_present]
+  })
+  filtered_categories &lt;- filtered_categories[lengths(filtered_categories) &gt; 0]
+
+  missing_genes &lt;- setdiff(unname(unlist(categories_list)), genes_present)
+  if (length(missing_genes) &gt; 0) {
+    message(&quot;Skipping missing dot plot genes: &quot;, paste(missing_genes, collapse = &quot;, &quot;))
+  }
+
+  filtered_categories
+}</code></pre>
+</div>
+<div id="manual-marker-dot-plots-for-figure-2e-and-supplementary-figure-5b" class="section level2">
+<h2>Manual marker dot plots for Figure 2E and Supplementary Figure
+5B</h2>
+<pre class="r"><code>tcell_figure2e_dotplot_categories &lt;- filter_dotplot_categories(
+  tcell_figure2e_categories,
+  tcell_obj
+)
+
+tcell_supplementary_figure5b_dotplot_categories &lt;- filter_dotplot_categories(
+  tcell_supplementary_figure5b_categories,
+  tcell_obj
+)
+
+tcell_subtype_levels &lt;- unname(new_cluster_ids)
+
+if (length(tcell_figure2e_dotplot_categories) &gt; 0) {
+  tcell_obj_figure2e &lt;- subset(
+    tcell_obj,
+    subset = condition %in% figure2e_condition_levels
+  )
+
+  make_manual_dotplot(
+    tcell_obj_figure2e,
+    group_by = &quot;condition&quot;,
+    categories_list = tcell_figure2e_dotplot_categories,
+    file_name = &quot;figure_2E_tcell_marker_dotplot_by_condition.pdf&quot;,
+    ylab_text = NULL,
+    y_levels = rev(figure2e_condition_levels),
+    width = 17,
+    height = 4.5,
+    cat_label_size = 5,
+    cat_height = 0.6,
+    cat_y_limits = c(-0.25, 0.05),
+    show_legend_titles = TRUE,
+    axis_text_x_size = 12,
+    axis_text_y_size = 12,
+    dot_size_range = c(0, 6),
+    dot_size_breaks = seq(0, 50, by = 10),
+    dot_size_limits = c(0, 50)
+  )
+} else {
+  message(&quot;Skipping Figure 2E dot plot: tcell_figure2e_categories is empty or all genes are missing.&quot;)
+}</code></pre>
+<pre><code>## Scale for size is already present.
+## Adding another scale for size, which will replace the existing scale.</code></pre>
+<pre><code>## png 
+##   2</code></pre>
+<pre class="r"><code>if (length(tcell_supplementary_figure5b_dotplot_categories) &gt; 0) {
+  make_manual_dotplot(
+    tcell_obj,
+    group_by = &quot;tcell_subtype&quot;,
+    categories_list = tcell_supplementary_figure5b_dotplot_categories,
+    file_name = &quot;supplementary_figure_5B_tcell_marker_dotplot_by_subtype.pdf&quot;,
+    ylab_text = NULL,
+    y_levels = rev(tcell_subtype_levels),
+    width = 19,
+    height = 6.5,
+    cat_label_size = 5,
+    cat_height = 0.6,
+    cat_y_limits = c(-0.25, 0.05),
+    show_legend_titles = TRUE,
+    axis_text_x_size = 12,
+    axis_text_y_size = 12,
+    dot_size_range = c(0, 6),
+    dot_size_breaks = seq(0, 80, by = 20),
+    dot_size_limits = c(0, 80)
+  )
+} else {
+  message(&quot;Skipping Supplementary Figure 5B dot plot: tcell_supplementary_figure5b_categories is empty or all genes are missing.&quot;)
+}</code></pre>
+<pre><code>## Scale for size is already present.
+## Adding another scale for size, which will replace the existing scale.</code></pre>
+<pre><code>## png 
+##   2</code></pre>
+</div>
 <div id="save-object" class="section level2">
 <h2>Save object</h2>
 <ul>
-<li>Save updated T-cell object (v2) with refined subtype annotations and
+<li>Save updated T-cell object with refined subtype annotations and
 subtype-specific GSEA results.</li>
 </ul>
 <pre class="r"><code>saveRDS(
   tcell_obj,
-  file.path(results_dir, &quot;cart_tcell_subtypes_v2.rds&quot;)
+  file.path(results_dir, &quot;cart_tcell_subtypes.rds&quot;)
 )</code></pre>
 </div>
 <div id="session-info" class="section level2">
@@ -1118,64 +1237,63 @@ subtype-specific GSEA results.</li>
 ## 
 ## other attached packages:
 ##  [1] ggthemes_5.2.0              future_1.69.0              
-##  [3] purrr_1.0.2                 EnhancedVolcano_1.24.0     
-##  [5] ggrepel_0.9.6               stringr_1.5.1              
-##  [7] DESeq2_1.46.0               SummarizedExperiment_1.36.0
-##  [9] Biobase_2.66.0              MatrixGenerics_1.18.1      
-## [11] matrixStats_1.5.0           GenomicRanges_1.58.0       
-## [13] GenomeInfoDb_1.42.3         IRanges_2.40.1             
-## [15] S4Vectors_0.44.0            BiocGenerics_0.52.0        
-## [17] Matrix_1.7-4                fgsea_1.32.4               
-## [19] msigdbr_25.1.1              ggplot2_4.0.2              
-## [21] patchwork_1.3.2.9000        Seurat_5.4.0               
-## [23] SeuratObject_5.3.0          sp_2.2-1                   
-## [25] tibble_3.2.1                dplyr_1.1.4                
-## [27] rprojroot_2.1.1            
+##  [3] stringr_1.5.1               DESeq2_1.46.0              
+##  [5] SummarizedExperiment_1.36.0 Biobase_2.66.0             
+##  [7] MatrixGenerics_1.18.1       matrixStats_1.5.0          
+##  [9] GenomicRanges_1.58.0        GenomeInfoDb_1.42.3        
+## [11] IRanges_2.40.1              S4Vectors_0.44.0           
+## [13] BiocGenerics_0.52.0         Matrix_1.7-4               
+## [15] fgsea_1.32.4                msigdbr_25.1.1             
+## [17] ggplot2_4.0.3               patchwork_1.3.2.9000       
+## [19] Seurat_5.4.0                SeuratObject_5.3.0         
+## [21] sp_2.2-1                    tibble_3.2.1               
+## [23] dplyr_1.1.4                 rprojroot_2.1.1            
 ## 
 ## loaded via a namespace (and not attached):
 ##   [1] RcppAnnoy_0.0.23        splines_4.4.0           later_1.3.2            
-##   [4] polyclip_1.10-7         fastDummies_1.7.5       lifecycle_1.0.4        
-##   [7] globals_0.19.0          lattice_0.22-6          MASS_7.3-60.2          
+##   [4] polyclip_1.10-7         fastDummies_1.7.6       lifecycle_1.0.4        
+##   [7] globals_0.19.1          lattice_0.22-6          MASS_7.3-60.2          
 ##  [10] magrittr_2.0.3          limma_3.62.2            plotly_4.12.0          
 ##  [13] sass_0.4.9              rmarkdown_2.27          jquerylib_0.1.4        
-##  [16] yaml_2.3.12             httpuv_1.6.15           sctransform_0.4.3      
-##  [19] spam_2.11-3             spatstat.sparse_3.1-0   reticulate_1.45.0      
-##  [22] cowplot_1.2.0           pbapply_1.7-4           RColorBrewer_1.1-3     
-##  [25] abind_1.4-8             zlibbioc_1.52.0         Rtsne_0.17             
-##  [28] presto_1.0.0            GenomeInfoDbData_1.2.13 irlba_2.3.7            
-##  [31] listenv_0.10.0          spatstat.utils_3.2-1    goftest_1.2-3          
-##  [34] RSpectra_0.16-2         spatstat.random_3.4-4   fitdistrplus_1.2-6     
-##  [37] parallelly_1.46.1       codetools_0.2-20        DelayedArray_0.32.0    
-##  [40] tidyselect_1.2.1        UCSC.utils_1.2.0        farver_2.1.2           
-##  [43] spatstat.explore_3.7-0  jsonlite_2.0.0          progressr_0.18.0       
-##  [46] ggridges_0.5.7          survival_3.7-0          systemfonts_1.1.0      
-##  [49] tools_4.4.0             ragg_1.5.0              ica_1.0-3              
-##  [52] Rcpp_1.0.12             glue_1.7.0              gridExtra_2.3          
-##  [55] SparseArray_1.6.2       xfun_0.44               withr_3.0.2            
-##  [58] fastmap_1.2.0           fansi_1.0.6             digest_0.6.35          
-##  [61] R6_2.6.1                mime_0.12               textshaping_0.4.0      
-##  [64] scattermore_1.2         tensor_1.5.1            spatstat.data_3.1-9    
-##  [67] utf8_1.2.4              tidyr_1.3.1             generics_0.1.3         
-##  [70] data.table_1.15.4       httr_1.4.7              htmlwidgets_1.6.4      
-##  [73] S4Arrays_1.6.0          uwot_0.2.4              pkgconfig_2.0.3        
-##  [76] gtable_0.3.6            lmtest_0.9-40           S7_0.2.1               
-##  [79] XVector_0.46.0          htmltools_0.5.8.1       dotCall64_1.2          
-##  [82] scales_1.4.0            png_0.1-8               spatstat.univar_3.1-6  
-##  [85] knitr_1.47              rstudioapi_0.16.0       reshape2_1.4.5         
-##  [88] nlme_3.1-165            curl_7.0.0              cachem_1.1.0           
-##  [91] zoo_1.8-15              KernSmooth_2.23-24      parallel_4.4.0         
-##  [94] miniUI_0.1.2            vipor_0.4.7             ggrastr_1.0.2          
-##  [97] pillar_1.9.0            vctrs_0.6.5             RANN_2.6.2             
-## [100] promises_1.3.0          xtable_1.8-4            cluster_2.1.6          
-## [103] beeswarm_0.4.0          evaluate_1.0.5          cli_3.6.5              
-## [106] locfit_1.5-9.9          compiler_4.4.0          rlang_1.1.7            
-## [109] crayon_1.5.2            future.apply_1.20.2     labeling_0.4.3         
-## [112] plyr_1.8.9              ggbeeswarm_0.7.3        stringi_1.8.4          
-## [115] viridisLite_0.4.2       deldir_2.0-4            BiocParallel_1.40.2    
-## [118] assertthat_0.2.1        babelgene_22.9          lazyeval_0.2.2         
-## [121] spatstat.geom_3.7-0     RcppHNSW_0.6.0          statmod_1.5.0          
-## [124] shiny_1.8.1.1           highr_0.11              ROCR_1.0-12            
-## [127] igraph_2.2.2            bslib_0.7.0             fastmatch_1.1-4</code></pre>
+##  [16] yaml_2.3.8              httpuv_1.6.15           sctransform_0.4.3      
+##  [19] spam_2.11-4             spatstat.sparse_3.2-0   EnhancedVolcano_1.24.0 
+##  [22] reticulate_1.46.0       cowplot_1.2.0           pbapply_1.7-4          
+##  [25] RColorBrewer_1.1-3      abind_1.4-8             zlibbioc_1.52.0        
+##  [28] Rtsne_0.17              purrr_1.0.2             presto_1.0.0           
+##  [31] GenomeInfoDbData_1.2.13 ggrepel_0.9.8           irlba_2.3.7            
+##  [34] listenv_0.10.1          spatstat.utils_3.2-3    goftest_1.2-3          
+##  [37] RSpectra_0.16-2         spatstat.random_3.5-0   fitdistrplus_1.2-6     
+##  [40] parallelly_1.47.0       codetools_0.2-20        DelayedArray_0.32.0    
+##  [43] tidyselect_1.2.1        UCSC.utils_1.2.0        farver_2.1.2           
+##  [46] spatstat.explore_3.8-1  jsonlite_1.8.8          progressr_0.19.0       
+##  [49] ggridges_0.5.7          survival_3.7-0          systemfonts_1.1.0      
+##  [52] tools_4.4.0             ragg_1.3.2              ica_1.0-3              
+##  [55] Rcpp_1.1.1-1.1          glue_1.7.0              gridExtra_2.3          
+##  [58] SparseArray_1.6.2       xfun_0.44               withr_3.0.2            
+##  [61] fastmap_1.2.0           fansi_1.0.6             digest_0.6.35          
+##  [64] R6_2.5.1                mime_0.12               textshaping_0.4.0      
+##  [67] scattermore_1.2         tensor_1.5.1            spatstat.data_3.1-9    
+##  [70] utf8_1.2.4              tidyr_1.3.1             generics_0.1.3         
+##  [73] data.table_1.15.4       httr_1.4.7              htmlwidgets_1.6.4      
+##  [76] S4Arrays_1.6.0          uwot_0.2.4              pkgconfig_2.0.3        
+##  [79] gtable_0.3.6            lmtest_0.9-40           S7_0.2.2               
+##  [82] XVector_0.46.0          htmltools_0.5.8.1       dotCall64_1.2          
+##  [85] scales_1.4.0            png_0.1-9               spatstat.univar_3.2-0  
+##  [88] knitr_1.47              reshape2_1.4.5          nlme_3.1-165           
+##  [91] curl_5.2.1              cachem_1.1.0            zoo_1.8-15             
+##  [94] KernSmooth_2.23-24      parallel_4.4.0          miniUI_0.1.1.1         
+##  [97] vipor_0.4.7             ggrastr_1.0.2           pillar_1.9.0           
+## [100] vctrs_0.6.5             RANN_2.6.2              promises_1.3.0         
+## [103] xtable_1.8-4            cluster_2.1.6           beeswarm_0.4.0         
+## [106] evaluate_0.24.0         cli_3.6.2               locfit_1.5-9.9         
+## [109] compiler_4.4.0          rlang_1.2.0             crayon_1.5.2           
+## [112] future.apply_1.20.2     labeling_0.4.3          plyr_1.8.9             
+## [115] ggbeeswarm_0.7.3        stringi_1.8.4           viridisLite_0.4.2      
+## [118] deldir_2.0-4            BiocParallel_1.40.2     assertthat_0.2.1       
+## [121] babelgene_22.9          lazyeval_0.2.3          spatstat.geom_3.8-1    
+## [124] RcppHNSW_0.7.0          statmod_1.5.0           shiny_1.8.1.1          
+## [127] highr_0.11              ROCR_1.0-12             igraph_2.2.2           
+## [130] bslib_0.7.0             fastmatch_1.1-4</code></pre>
 </div>
 
 

@@ -17,7 +17,10 @@ make_dotplot_with_categories <- function(obj,
                                          show_legend_titles = TRUE,
                                          axis_text_x_size = 10,
                                          axis_text_y_size = 10,
-                                         axis_title_y_size = 11) {
+                                         axis_title_y_size = 11,
+                                         dot_size_range = NULL,
+                                         dot_size_breaks = waiver(),
+                                         dot_size_limits = NULL) {
   
   obj_plot <- obj
   
@@ -40,6 +43,13 @@ make_dotplot_with_categories <- function(obj,
     group.by = group_by,
     assay = "RNA"
   )
+
+  if (!is.null(dot_size_limits) && "pct.exp" %in% colnames(p_main$data)) {
+    p_main$data$pct.exp <- pmin(
+      pmax(p_main$data$pct.exp, min(dot_size_limits)),
+      max(dot_size_limits)
+    )
+  }
   
   if (!is.null(y_levels) && !is.null(y_axis_labels)) {
     p_main <- p_main + scale_y_discrete(
@@ -75,6 +85,15 @@ make_dotplot_with_categories <- function(obj,
       inherit.aes = FALSE
     )
   
+  if (!is.null(dot_size_range)) {
+    p_main <- p_main +
+      scale_size(
+        range = dot_size_range,
+        breaks = dot_size_breaks,
+        limits = dot_size_limits
+      )
+  }
+
   if (show_legend_titles) {
     p_main <- p_main +
       labs(
@@ -112,8 +131,11 @@ make_dotplot_with_categories <- function(obj,
   p_final <- p_main / p_cat +
     plot_layout(heights = c(12, cat_height))
   
-  pdf(file = file.path(plot_dir, file_name),
-      width = width, height = height)
+  grDevices::cairo_pdf(
+    filename = file.path(plot_dir, file_name),
+    width = width,
+    height = height
+  )
   print(p_final)
   dev.off()
 }
@@ -134,7 +156,10 @@ make_manual_dotplot <- function(obj,
                                 show_legend_titles = TRUE,
                                 axis_text_x_size = 10,
                                 axis_text_y_size = 10,
-                                axis_title_y_size = 11) {
+                                axis_title_y_size = 11,
+                                dot_size_range = NULL,
+                                dot_size_breaks = waiver(),
+                                dot_size_limits = NULL) {
   
   plot_df <- tibble(
     category = rep(names(categories_list), lengths(categories_list)),
@@ -176,7 +201,10 @@ make_manual_dotplot <- function(obj,
     show_legend_titles = show_legend_titles,
     axis_text_x_size = axis_text_x_size,
     axis_text_y_size = axis_text_y_size,
-    axis_title_y_size = axis_title_y_size
+    axis_title_y_size = axis_title_y_size,
+    dot_size_range = dot_size_range,
+    dot_size_breaks = dot_size_breaks,
+    dot_size_limits = dot_size_limits
   )
 }
 
@@ -240,4 +268,3 @@ prepare_hallmark_categories <- function(marker_df,
     category_labels = category_labels
   )
 }
-

@@ -45,7 +45,7 @@ subtype_label <- "tcell"
 
 ## Load v2 tcell object
 ```{r load-data}
-tcell_obj <- readRDS(file.path(results_dir, "cart_tcell_subtypes_v2.rds"))
+tcell_obj <- readRDS(file.path(data_dir, "cart_tcell_subtypes.rds"))
 
 table(tcell_obj$tcell_subtype)
 ```
