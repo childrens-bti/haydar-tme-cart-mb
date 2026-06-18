@@ -29,3 +29,9 @@ Rscript -e "rmarkdown::render('07-dc-reclustering.Rmd')"
 
 # Perform T cell trajectory analysis using Slingshot
 Rscript -e "rmarkdown::render('08-tcell-trajectory.Rmd')"
+
+# Run miloR neighborhood differential abundance testing for myeloid cells
+Rscript -e "rmarkdown::render('09-myeloid-milor-analysis.Rmd')"
+
+# Run miloR neighborhood differential abundance testing for refined T cells
+Rscript -e "rmarkdown::render('10-tcell-milor-analysis.Rmd')"

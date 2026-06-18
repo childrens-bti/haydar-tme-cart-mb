@@ -14,6 +14,8 @@
 6. `06-tcell-reclustering.Rmd`: performs re-clustering of T cells after additional filtering and evaluates consistency with previous subtype annotations.
 7. `07-dc-reclustering.Rmd`: performs re-clustering of dendritic cells after additional filtering, evaluates consistency with previous subtype annotations, and runs AUCell to evaluate Hallmark pathway activity across updated DC clusters.
 8. `08-tcell-trajectory.Rmd`: performs Slingshot-based T-cell pseudotime analysis and generates UMAP visualizations of lineage trajectories.
+9. `09-myeloid-milor-analysis.Rmd`: runs miloR neighborhood differential abundance testing for the myeloid population using tumor as the reference condition.
+10. `10-tcell-milor-analysis.Rmd`: runs miloR neighborhood differential abundance testing for the refined T cell population using tumor as the reference condition.
 
 ## Analysis module directory structure
 ```
@@ -34,6 +36,10 @@ downstream-analyses/
 ├── 07-dc-reclustering.html
 ├── 08-tcell-trajectory.Rmd
 ├── 08-tcell-trajectory.html
+├── 09-myeloid-milor-analysis.Rmd
+├── 09-myeloid-milor-analysis.html
+├── 10-tcell-milor-analysis.Rmd
+├── 10-tcell-milor-analysis.html
 ├── README.md
 ├── input
 │   ├── cart_lineage_markers.csv
@@ -119,6 +125,8 @@ downstream-analyses/
 │   │   ├── myeloid_dotplot_treatment_markers_panelF.pdf
 │   │   ├── myeloid_subtype_composition_sccomp_41BBL_baseline.pdf
 │   │   ├── myeloid_subtype_composition_sccomp_tumor_baseline.pdf
+│   │   ├── myeloid_subtype_milor_tumor_baseline_effect_dotplot.pdf
+│   │   ├── myeloid_subtype_milor_tumor_baseline_logFC_boxplot.pdf
 │   │   ├── myeloid_subtype_proportions_stacked_barplot.png
 │   │   ├── myeloid_umap_subcluster.pdf
 │   │   ├── myeloid_umap_subtype_cluster_labels.pdf
@@ -156,6 +164,8 @@ downstream-analyses/
 │       ├── tcell_slingshot_lineage_curves_overview_umap.pdf
 │       ├── tcell_slingshot_pseudotime_all_lineages_summary.pdf
 │       ├── tcell_slingshot_pseudotime_umap.pdf
+│       ├── tcell_subtype_milor_tumor_baseline_effect_dotplot.pdf
+│       ├── tcell_subtype_milor_tumor_baseline_logFC_boxplot.pdf
 │       ├── tcell_top_old_label_per_new_cluster_barplot.pdf
 │       ├── tcell_volcano_pseudobulk_Activated_CD4_effector_helper_like_T_cells_vs_rest.pdf
 │       ├── tcell_volcano_pseudobulk_Activated_effector_CD8_T_cells_stress_vs_rest.pdf
@@ -233,6 +243,9 @@ downstream-analyses/
 │   │   │   └── myeloid_GSEA_pseudobulk_tumor_vs_rest_hallmark.csv
 │   │   ├── myeloid_subtype_composition_sccomp_41BBL_baseline_results.tsv
 │   │   ├── myeloid_subtype_composition_sccomp_tumor_baseline_results.tsv
+│   │   ├── myeloid_subtype_milor_tumor_baseline_effect_summary.tsv
+│   │   ├── myeloid_subtype_milor_tumor_baseline_results.tsv
+│   │   ├── myeloid_subtype_milor_tumor_baseline_threshold_summary.tsv
 │   │   ├── myeloid_subtype_proportions.tsv
 │   │   └── myeloid_treatment_markers.csv
 │   └── tcell
@@ -267,10 +280,14 @@ downstream-analyses/
 │       ├── tcell_reclustered_proportions.tsv
 │       ├── tcell_reclustered_top30_markers_per_cluster.csv
 │       ├── tcell_slingshot_fast_spearman_pseudotime_gene_screen.csv
+│       ├── tcell_subtype_milor_tumor_baseline_effect_summary.tsv
+│       ├── tcell_subtype_milor_tumor_baseline_results.tsv
+│       ├── tcell_subtype_milor_tumor_baseline_threshold_summary.tsv
 │       └── tcell_top_old_label_per_new_cluster.tsv
 ├── run_module.sh
 └── util
     ├── dotplot_helpers.R
+    ├── milor_helpers.R
     ├── pseudobulk_gsea_helpers.R
     ├── sccomp_helpers.R
     └── trajectory_helpers.R
