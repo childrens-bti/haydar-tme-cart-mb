@@ -1,0 +1,246 @@
+---
+title: "10-tcell-milor-analysis"
+author: "Bicna Song"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: TRUE
+    toc_float: TRUE
+params:
+  input_rds: "cart_tcell_subtypes.rds"
+  subtype_label: "tcell"
+  condition_levels: !r c("41BB-L", "B7H3", "CD28-41BB", "CD8-41BB", "STOP", "tumor")
+  reference_condition: "tumor"
+  milo_reduction: "INTEGRATED.CCA"
+  milo_plot_reduction: "UMAP"
+  milo_dims: 20
+  milo_k: 30
+  milo_prop: 0.1
+  save_neighborhood_graphs: false
+---
+
+## Setup
+This block loads the packages required for converting the reclustered T cell Seurat object to a `SingleCellExperiment`, running miloR, and saving outputs.
+```{r load-packages, message=FALSE, warning=FALSE}
+suppressPackageStartupMessages({
+  library(rprojroot)
+  library(dplyr)
+  library(tibble)
+  library(Seurat)
+  library(SeuratObject)
+  library(SingleCellExperiment)
+  library(miloR)
+  library(ggplot2)
+})
+
+root_dir <- find_root(has_dir(".git"))
+analysis_dir <- file.path(root_dir, "analyses", "downstream-analyses")
+results_dir <- file.path(analysis_dir, "results", "tcell")
+plot_dir <- file.path(analysis_dir, "plots", "tcell")
+
+dir.create(results_dir, recursive = TRUE, showWarnings = FALSE)
+dir.create(plot_dir, recursive = TRUE, showWarnings = FALSE)
+
+source(file.path(analysis_dir, "util", "milor_helpers.R"))
+
+set_seed(1234)
+```
+
+## Parameters
+This block records the T cell input object, metadata columns, miloR graph settings, and tumor reference used for all contrasts.
+```{r parameters}
+input_rds <- params$input_rds
+subtype_label <- params$subtype_label
+condition_levels <- params$condition_levels
+reference_condition <- params$reference_condition
+milo_reduction <- params$milo_reduction
+milo_plot_reduction <- params$milo_plot_reduction
+milo_dims <- params$milo_dims
+milo_k <- params$milo_k
+milo_prop <- params$milo_prop
+save_neighborhood_graphs <- params$save_neighborhood_graphs
+
+cell_group_col <- paste0(subtype_label, "_subtype")
+analysis_label <- paste0(subtype_label, "_subtype")
+
+cat("Input RDS:", input_rds, "\n")
+cat("Cell group column:", cell_group_col, "\n")
+cat("Condition levels:", paste(condition_levels, collapse = ", "), "\n")
+cat("Reference condition:", reference_condition, "\n")
+cat("Milo reduction:", milo_reduction, "\n")
+cat("Milo plotting reduction:", milo_plot_reduction, "\n")
+cat("Milo dims:", milo_dims, "\n")
+cat("Milo k:", milo_k, "\n")
+cat("Milo neighborhood sampling proportion:", milo_prop, "\n")
+cat("Save native miloR neighborhood graphs:", save_neighborhood_graphs, "\n")
+```
+
+## Load T Cell Object
+This block loads the refined T cell Seurat object from the downstream results folder and checks that required metadata is present.
+```{r load-data}
+obj <- readRDS(file.path(results_dir, input_rds))
+
+stopifnot(cell_group_col %in% colnames(obj@meta.data))
+stopifnot("sample" %in% colnames(obj@meta.data))
+stopifnot("condition" %in% colnames(obj@meta.data))
+stopifnot(reference_condition %in% condition_levels)
+
+table(obj$condition)
+table(obj@meta.data[[cell_group_col]])
+```
+
+## Prepare SingleCellExperiment
+This block converts the Seurat object to a `SingleCellExperiment`, standardizes metadata names, and copies Seurat reductions if they were not transferred automatically.
+```{r prepare-single-cell-experiment}
+milo_prepared <- prepare_milo_sce(
+  obj = obj,
+  cell_group_col = cell_group_col,
+  condition_levels = condition_levels,
+  milo_reduction = milo_reduction,
+  milo_plot_reduction = milo_plot_reduction,
+  milo_dims = milo_dims
+)
+
+milo_sce <- milo_prepared$sce
+milo_d <- milo_prepared$d
+milo_layout <- milo_prepared$layout
+
+cat("Milo graph reduction:", milo_reduction, "\n")
+cat("Milo graph dimensions:", milo_d, "\n")
+cat("Milo plot layout:", milo_layout, "\n")
+```
+
+## Build Milo Neighborhoods
+This block builds the KNN graph, samples representative neighborhoods, and counts cells per biological sample for differential abundance testing.
+```{r build-milo-neighborhoods, message=FALSE, warning=FALSE}
+milo_obj <- build_milo_neighborhoods(
+  milo_sce = milo_sce,
+  milo_reduction = milo_reduction,
+  milo_d = milo_d,
+  milo_k = milo_k,
+  milo_prop = milo_prop,
+  plot_size_hist = TRUE
+)
+```
+
+## Build Design Matrix
+This block creates one row per sample for miloR and aligns the design table to the neighborhood count matrix.
+```{r build-design-matrix}
+milo_design <- build_milo_design(milo_obj, reference_condition)
+
+table(milo_design$condition)
+```
+
+## Test Neighborhood Differential Abundance
+This block tests each treatment condition against tumor and annotates neighborhoods by the dominant T cell subtype.
+```{r test-neighborhood-da, message=FALSE, warning=FALSE}
+milo_test <- run_milo_da(
+  milo_obj = milo_obj,
+  milo_design = milo_design,
+  condition_levels = condition_levels,
+  reference_condition = reference_condition,
+  milo_reduction = milo_reduction,
+  milo_d = milo_d
+)
+
+milo_obj <- milo_test$milo_obj
+milo_da_results <- milo_test$da_results
+
+write.table(
+  milo_da_results,
+  file = file.path(results_dir, paste0(analysis_label, "_milor_", safe_label(reference_condition), "_baseline_results.tsv")),
+  sep = "\t",
+  quote = FALSE,
+  row.names = FALSE
+)
+```
+
+## Summarize MiloR Trends by T Cell Subtype
+This block summarizes FDR-adjusted and nominal neighborhoods by annotated T cell subtype. The plots emphasize nominal `PValue` trends and effect sizes, and should not be interpreted as FDR-significant DA calls unless neighborhoods pass the adjusted thresholds.
+```{r summarize-neighborhood-da, fig.height=6, fig.width=8}
+milo_summary <- summarize_milo_da(milo_da_results)
+
+milo_da_results <- milo_summary$da_results
+milo_da_threshold_summary <- milo_summary$threshold_summary
+milo_da_effect_summary <- milo_summary$effect_summary
+
+write.table(
+  milo_da_threshold_summary,
+  file = file.path(results_dir, paste0(analysis_label, "_milor_", safe_label(reference_condition), "_baseline_threshold_summary.tsv")),
+  sep = "\t",
+  quote = FALSE,
+  row.names = FALSE
+)
+
+write.table(
+  milo_da_effect_summary,
+  file = file.path(results_dir, paste0(analysis_label, "_milor_", safe_label(reference_condition), "_baseline_effect_summary.tsv")),
+  sep = "\t",
+  quote = FALSE,
+  row.names = FALSE
+)
+
+print(milo_da_threshold_summary)
+
+if (all(milo_da_threshold_summary$n_nominal == 0)) {
+  cat("No neighborhoods pass nominal PValue < 0.05 in any contrast.\n")
+}
+if (all(milo_da_threshold_summary$n_spatial_fdr_0_05 == 0)) {
+  cat("No neighborhoods pass SpatialFDR < 0.05 in any contrast.\n")
+}
+
+p_milo_effect_dot <- plot_milo_effect_dot(
+  milo_da_effect_summary,
+  title = "T cell miloR exploratory nominal trends"
+)
+
+p_milo_effect_dot
+
+ggsave(
+  filename = file.path(plot_dir, paste0(analysis_label, "_milor_", safe_label(reference_condition), "_baseline_effect_dotplot.pdf")),
+  plot = p_milo_effect_dot,
+  width = 8,
+  height = 6,
+  device = cairo_pdf
+)
+
+p_milo_logfc_box <- plot_milo_logfc_box(
+  milo_da_results,
+  milo_da_effect_summary,
+  title = "T cell miloR logFC distributions"
+)
+
+p_milo_logfc_box
+
+ggsave(
+  filename = file.path(plot_dir, paste0(analysis_label, "_milor_", safe_label(reference_condition), "_baseline_logFC_boxplot.pdf")),
+  plot = p_milo_logfc_box,
+  width = 15,
+  height = 8,
+  device = cairo_pdf
+)
+```
+
+## Optional Native MiloR Neighborhood Graphs
+This optional block saves one native miloR neighborhood graph per contrast. These graphs are useful for exploratory QC but can be visually sparse when no neighborhoods pass the FDR threshold, so they are skipped by default.
+```{r visualize-neighborhood-da, fig.height=6, fig.width=7}
+if (isTRUE(save_neighborhood_graphs)) {
+  save_optional_milo_graphs(
+    milo_obj = milo_obj,
+    milo_da_results = milo_da_results,
+    milo_layout = milo_layout,
+    analysis_label = analysis_label,
+    reference_condition = reference_condition,
+    population_title = "T cell",
+    plot_dir = plot_dir
+  )
+} else {
+  cat("Skipping native miloR neighborhood graphs. Set params$save_neighborhood_graphs to TRUE to save them.\n")
+}
+```
+
+## Session Info
+This block records package versions and the R environment used for the miloR analysis.
+```{r session-info}
+sessionInfo()
+```
