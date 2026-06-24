@@ -16,6 +16,7 @@
 8. `08-tcell-trajectory.Rmd`: performs Slingshot-based T-cell pseudotime analysis and generates UMAP visualizations of lineage trajectories.
 9. `09-myeloid-milor-analysis.Rmd`: runs miloR neighborhood differential abundance testing for the myeloid population using tumor as the reference condition.
 10. `10-tcell-milor-analysis.Rmd`: runs miloR neighborhood differential abundance testing for the refined T cell population using tumor as the reference condition.
+11. `11-tcell-composition-analysis.Rmd`: performs refined T cell subtype composition analysis using sccomp with 41BB-L and tumor as the baseline references and generates composition plots.
 
 ## Analysis module directory structure
 ```
@@ -40,6 +41,8 @@ downstream-analyses/
 ├── 09-myeloid-milor-analysis.html
 ├── 10-tcell-milor-analysis.Rmd
 ├── 10-tcell-milor-analysis.html
+├── 11-tcell-composition-analysis.Rmd
+├── 11-tcell-composition-analysis.html
 ├── README.md
 ├── input
 │   ├── cart_lineage_markers.csv
@@ -166,6 +169,8 @@ downstream-analyses/
 │       ├── tcell_slingshot_pseudotime_umap.pdf
 │       ├── tcell_subtype_milor_tumor_baseline_effect_dotplot.pdf
 │       ├── tcell_subtype_milor_tumor_baseline_logFC_boxplot.pdf
+│       ├── tcell_subtype_composition_sccomp_41BBL_baseline.pdf
+│       ├── tcell_subtype_composition_sccomp_tumor_baseline.pdf
 │       ├── tcell_top_old_label_per_new_cluster_barplot.pdf
 │       ├── tcell_volcano_pseudobulk_Activated_CD4_effector_helper_like_T_cells_vs_rest.pdf
 │       ├── tcell_volcano_pseudobulk_Activated_effector_CD8_T_cells_stress_vs_rest.pdf
@@ -283,6 +288,8 @@ downstream-analyses/
 │       ├── tcell_subtype_milor_tumor_baseline_effect_summary.tsv
 │       ├── tcell_subtype_milor_tumor_baseline_results.tsv
 │       ├── tcell_subtype_milor_tumor_baseline_threshold_summary.tsv
+│       ├── tcell_subtype_composition_sccomp_41BBL_baseline_results.tsv
+│       ├── tcell_subtype_composition_sccomp_tumor_baseline_results.tsv
 │       └── tcell_top_old_label_per_new_cluster.tsv
 ├── run_module.sh
 └── util
