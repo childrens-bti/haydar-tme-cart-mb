@@ -35,3 +35,6 @@ Rscript -e "rmarkdown::render('09-myeloid-milor-analysis.Rmd')"
 
 # Run miloR neighborhood differential abundance testing for refined T cells
 Rscript -e "rmarkdown::render('10-tcell-milor-analysis.Rmd')"
+
+# Perform refined T cell subtype composition analysis using sccomp
+Rscript -e "rmarkdown::render('11-tcell-composition-analysis.Rmd')"
