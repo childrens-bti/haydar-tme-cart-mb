@@ -84,6 +84,7 @@ RUN R -e 'options(Ncpus = max(1, parallel::detectCores()-1)); \
             ComplexHeatmap = "2.22.0",      \
             dittoSeq = "1.18.0",            \
             DropletUtils = "1.26.0",        \
+            BiocParallel = "1.40.2",        \
             Nebulosa = "1.16.0",            \
             celldex = "1.16.0",             \
             fgsea = "1.32.4",               \
@@ -98,6 +99,10 @@ RUN R -e 'options(Ncpus = max(1, parallel::detectCores()-1)); \
           failed <- names(bioc_packages)[!vapply(names(bioc_packages), function(pkg) requireNamespace(pkg, quietly = TRUE) && identical(packageDescription(pkg)$Version, bioc_packages[[pkg]]), logical(1))]; \
           if (!identical(as.character(BiocManager::version()), "3.20")) stop("Bioconductor version check failed"); \
           if (length(failed)) stop("Bioconductor package version check failed: ", paste(failed, collapse = ", "))'
+
+RUN R -e 'options(Ncpus = max(1, parallel::detectCores()-1), repos = c(CRAN="https://cloud.r-project.org")); \
+          remotes::install_version("scGate", version = "1.7.2", upgrade = "never"); \
+          stopifnot(requireNamespace("scGate", quietly = TRUE), identical(packageDescription("scGate")$Version, "1.7.2"))'
 
 RUN R -e 'options(Ncpus = max(1, parallel::detectCores()-1), repos = c(CRAN="https://cloud.r-project.org")); \
           remotes::install_version("NMF", version = "0.27", upgrade = "never"); \
@@ -139,11 +144,11 @@ RUN R -e 'expected_versions <- c( \
             devtools = "2.4.5", \
             uwot = "0.2.4", RcppAnnoy = "0.0.23", scCustomize = "3.2.4", \
             SoupX = "1.6.2", instantiate = "0.2.3", msigdbr = "25.1.1", \
-            ggthemes = "5.2.0", NMF = "0.27", future = "1.69.0", \
+            ggthemes = "5.2.0", scGate = "1.7.2", NMF = "0.27", future = "1.69.0", \
             future.apply = "1.20.2", igraph = "2.2.2", \
             Biobase = "2.66.0", biomaRt = "2.62.1", SingleR = "2.8.0", \
             ComplexHeatmap = "2.22.0", dittoSeq = "1.18.0", DropletUtils = "1.26.0", \
-            Nebulosa = "1.16.0", celldex = "1.16.0", fgsea = "1.32.4", \
+            BiocParallel = "1.40.2", Nebulosa = "1.16.0", celldex = "1.16.0", fgsea = "1.32.4", \
             AUCell = "1.28.0", MAST = "1.32.0", UCell = "2.10.1", \
             DESeq2 = "1.46.0", EnhancedVolcano = "1.24.0", slingshot = "2.14.0", \
             colorblindr = "0.1.0", patchwork = "1.3.2.9000", DoubletFinder = "2.0.6", \
