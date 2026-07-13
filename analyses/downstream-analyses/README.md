@@ -17,6 +17,7 @@
 9. `09-myeloid-milor-analysis.Rmd`: runs miloR neighborhood differential abundance testing for the myeloid population using tumor as the reference condition.
 10. `10-tcell-milor-analysis.Rmd`: runs miloR neighborhood differential abundance testing for the refined T cell population using tumor as the reference condition.
 11. `11-tcell-composition-analysis.Rmd`: performs refined T cell subtype composition analysis using sccomp with 41BB-L and tumor as the baseline references and generates composition plots.
+12. `12-tcell-cd4-cd8-trajectory.Rmd`: identifies clean CD4-like and CD8-like T cells, annotates functional states, and runs condition-specific Slingshot trajectory analysis.
 
 ## Analysis module directory structure
 ```
@@ -43,6 +44,8 @@ downstream-analyses/
 ├── 10-tcell-milor-analysis.html
 ├── 11-tcell-composition-analysis.Rmd
 ├── 11-tcell-composition-analysis.html
+├── 12-tcell-cd4-cd8-trajectory.Rmd
+├── 12-tcell-cd4-cd8-trajectory.html
 ├── README.md
 ├── input
 │   ├── cart_lineage_markers.csv
@@ -141,6 +144,39 @@ downstream-analyses/
 │   └── tcell
 │       ├── figure_2E_tcell_marker_dotplot_by_condition.pdf
 │       ├── supplementary_figure_5B_tcell_marker_dotplot_by_subtype.pdf
+│       ├── tcell_CD4_like_41BB_L_slingshot_lineage_curves_each_lineage_umap.pdf
+│       ├── tcell_CD4_like_41BB_L_slingshot_pseudotime_all_lineages_summary.pdf
+│       ├── tcell_CD4_like_41BB_L_slingshot_pseudotime_umap.pdf
+│       ├── tcell_CD4_like_B7H3_slingshot_lineage_curves_each_lineage_umap.pdf
+│       ├── tcell_CD4_like_B7H3_slingshot_pseudotime_all_lineages_summary.pdf
+│       ├── tcell_CD4_like_B7H3_slingshot_pseudotime_umap.pdf
+│       ├── tcell_CD4_like_CD28_41BB_slingshot_lineage_curves_each_lineage_umap.pdf
+│       ├── tcell_CD4_like_CD28_41BB_slingshot_pseudotime_all_lineages_summary.pdf
+│       ├── tcell_CD4_like_CD28_41BB_slingshot_pseudotime_umap.pdf
+│       ├── tcell_CD4_like_CD8_41BB_slingshot_lineage_curves_each_lineage_umap.pdf
+│       ├── tcell_CD4_like_CD8_41BB_slingshot_pseudotime_all_lineages_summary.pdf
+│       ├── tcell_CD4_like_CD8_41BB_slingshot_pseudotime_umap.pdf
+│       ├── tcell_CD4_like_STOP_slingshot_lineage_curves_each_lineage_umap.pdf
+│       ├── tcell_CD4_like_STOP_slingshot_pseudotime_all_lineages_summary.pdf
+│       ├── tcell_CD4_like_STOP_slingshot_pseudotime_umap.pdf
+│       ├── tcell_CD8_like_41BB_L_slingshot_lineage_curves_each_lineage_umap.pdf
+│       ├── tcell_CD8_like_41BB_L_slingshot_pseudotime_all_lineages_summary.pdf
+│       ├── tcell_CD8_like_41BB_L_slingshot_pseudotime_umap.pdf
+│       ├── tcell_CD8_like_B7H3_slingshot_lineage_curves_each_lineage_umap.pdf
+│       ├── tcell_CD8_like_B7H3_slingshot_pseudotime_all_lineages_summary.pdf
+│       ├── tcell_CD8_like_B7H3_slingshot_pseudotime_umap.pdf
+│       ├── tcell_CD8_like_CD28_41BB_slingshot_lineage_curves_each_lineage_umap.pdf
+│       ├── tcell_CD8_like_CD28_41BB_slingshot_pseudotime_all_lineages_summary.pdf
+│       ├── tcell_CD8_like_CD28_41BB_slingshot_pseudotime_umap.pdf
+│       ├── tcell_CD8_like_CD8_41BB_slingshot_lineage_curves_each_lineage_umap.pdf
+│       ├── tcell_CD8_like_CD8_41BB_slingshot_pseudotime_all_lineages_summary.pdf
+│       ├── tcell_CD8_like_CD8_41BB_slingshot_pseudotime_umap.pdf
+│       ├── tcell_CD8_like_STOP_slingshot_lineage_curves_each_lineage_umap.pdf
+│       ├── tcell_CD8_like_STOP_slingshot_pseudotime_all_lineages_summary.pdf
+│       ├── tcell_CD8_like_STOP_slingshot_pseudotime_umap.pdf
+│       ├── tcell_cd4_cd8_marker_expression_and_groups.pdf
+│       ├── tcell_cd4_like_clustered_umap.pdf
+│       ├── tcell_cd8_like_clustered_umap.pdf
 │       ├── tcell_cluster_vs_old_subtype_heatmap.pdf
 │       ├── tcell_gsea_dot_pseudobulk_Activated_CD4_effector_helper_like_T_cells_vs_rest.pdf
 │       ├── tcell_gsea_dot_pseudobulk_Activated_effector_CD8_T_cells_stress_vs_rest.pdf
@@ -281,6 +317,10 @@ downstream-analyses/
 │       ├── tcell_GSEA_pseudobulk_Treg_vs_rest_hallmark.csv
 │       ├── tcell_GSEA_pseudobulk_gamma_delta_T_cells_vs_rest_hallmark.csv
 │       ├── tcell_GSEA_pseudobulk_gamma_delta_Th17_like_T_cells_vs_rest_hallmark.csv
+│       ├── tcell_cd4_cd8_cluster_annotations.csv
+│       ├── tcell_cd4_cd8_condition_slingshot_pseudotime_summary.csv
+│       ├── tcell_cd4_cd8_marker_scgate_concordance.csv
+│       ├── tcell_cd4_cd8_marker_score_summary.csv
 │       ├── tcell_reclustered_markers.csv
 │       ├── tcell_reclustered_proportions.tsv
 │       ├── tcell_reclustered_top30_markers_per_cluster.csv
@@ -297,5 +337,6 @@ downstream-analyses/
     ├── milor_helpers.R
     ├── pseudobulk_gsea_helpers.R
     ├── sccomp_helpers.R
+    ├── tcell_cd4_cd8_trajectory_helpers.R
     └── trajectory_helpers.R
 ```

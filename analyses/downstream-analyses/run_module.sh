@@ -38,3 +38,6 @@ Rscript -e "rmarkdown::render('10-tcell-milor-analysis.Rmd')"
 
 # Perform refined T cell subtype composition analysis using sccomp
 Rscript -e "rmarkdown::render('11-tcell-composition-analysis.Rmd')"
+
+# Perform CD4 and CD8 T cell trajectory analysis using Slingshot
+Rscript -e "rmarkdown::render('12-tcell-cd4-cd8-trajectory.Rmd')"
