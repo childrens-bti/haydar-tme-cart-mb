@@ -85,6 +85,7 @@ RUN R -e 'options(Ncpus = max(1, parallel::detectCores()-1)); \
             dittoSeq = "1.18.0",            \
             DropletUtils = "1.26.0",        \
             BiocParallel = "1.40.2",        \
+            BiocNeighbors = "2.0.1",        \
             Nebulosa = "1.16.0",            \
             celldex = "1.16.0",             \
             fgsea = "1.32.4",               \
@@ -122,6 +123,10 @@ RUN R -e 'remotes::install_github("immunogenomics/presto", ref = "7636b3d0465c46
 RUN R -e 'remotes::install_github("MangiolaLaboratory/sccomp", ref = "18a4be86f6497e96389339620ff0c3e7faa71492", upgrade = "never")'
 # miloR 2.9.1
 RUN R -e 'remotes::install_github("MarioniLab/miloR", ref = "ff744bbb5d793163b59f28483c1ad05192fddc15", upgrade = "never")'
+# STACAS 2.4.1
+RUN R -e 'remotes::install_github("carmonalab/STACAS", ref = "ea34e824e17df6316823db0a9b6322af0833e501", dependencies = TRUE, upgrade = "never")'
+# ProjecTILs 3.7.0
+RUN R -e 'remotes::install_github("carmonalab/ProjecTILs", ref = "1159e1778820180fd0233bbfc0d7f296e35bd25f", dependencies = TRUE, upgrade = "never")'
 
 ## finish sccomp installation
 # cmdstanr 0.9.0
@@ -148,11 +153,12 @@ RUN R -e 'expected_versions <- c( \
             future.apply = "1.20.2", igraph = "2.2.2", \
             Biobase = "2.66.0", biomaRt = "2.62.1", SingleR = "2.8.0", \
             ComplexHeatmap = "2.22.0", dittoSeq = "1.18.0", DropletUtils = "1.26.0", \
-            BiocParallel = "1.40.2", Nebulosa = "1.16.0", celldex = "1.16.0", fgsea = "1.32.4", \
+            BiocParallel = "1.40.2", BiocNeighbors = "2.0.1", Nebulosa = "1.16.0", celldex = "1.16.0", fgsea = "1.32.4", \
             AUCell = "1.28.0", MAST = "1.32.0", UCell = "2.10.1", \
             DESeq2 = "1.46.0", EnhancedVolcano = "1.24.0", slingshot = "2.14.0", \
             colorblindr = "0.1.0", patchwork = "1.3.2.9000", DoubletFinder = "2.0.6", \
             presto = "1.0.0", sccomp = "2.1.30", miloR = "2.9.1", \
+            STACAS = "2.4.1", ProjecTILs = "3.7.0", \
             cmdstanr = "0.9.0", hdf5r = "1.3.10", SeuratExtend = "1.2.10" \
           ); \
           expected_sha <- c( \
@@ -162,6 +168,8 @@ RUN R -e 'expected_versions <- c( \
             presto = "7636b3d0465c468c35853f82f1717d3a64b3c8f6", \
             sccomp = "18a4be86f6497e96389339620ff0c3e7faa71492", \
             miloR = "ff744bbb5d793163b59f28483c1ad05192fddc15", \
+            STACAS = "ea34e824e17df6316823db0a9b6322af0833e501", \
+            ProjecTILs = "1159e1778820180fd0233bbfc0d7f296e35bd25f", \
             cmdstanr = "da99e2ba954658bdad63bffb738c4444c33a4e0e", \
             SeuratExtend = "f567d9c22a43ac538aedca0e4630421a23bd568f" \
           ); \
