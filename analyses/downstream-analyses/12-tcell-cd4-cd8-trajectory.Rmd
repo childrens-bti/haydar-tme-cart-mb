@@ -8,7 +8,7 @@ output:
     toc_float: TRUE
 ---
 
-This module extends the T-cell trajectory analysis by first separating CD4-like and CD8-like cells using marker expression and ScGate support. Clean CD4-like and CD8-like objects are then created, clustered, and annotated separately. Slingshot is then run on condition-specific CD4-like and CD8-like subsets.
+This module extends the T-cell trajectory analysis by first separating CD4-like and CD8-like cells using marker expression and ScGate support. The marker-classified T-cell object is annotated with ProjecTILs using the mouse TIL reference before clean CD4-like and CD8-like objects are clustered and annotated separately. Slingshot is then run on condition-specific CD4-like and CD8-like subsets.
 
 ## Setup
 ```{r load-packages, message=FALSE, warning=FALSE}
@@ -39,7 +39,7 @@ set.seed(1234)
 ## Parameters
 This chunk records the input file, marker thresholds, Slingshot thresholds, and marker programs used throughout the analysis.
 
-CD4 and CD8 marker scores are used to identify CD4-like and CD8-like cells. The naive/memory score is used to choose the Slingshot root cluster. Functional-state marker programs are used to annotate CD4-like and CD8-like clusters.
+CD4 and CD8 marker scores are calculated from average marker expression and used to identify CD4-like and CD8-like cells. ProjecTILs labels and the naive/memory marker score are used to choose the Slingshot root cluster. Functional-state marker programs are also scored with average marker expression and kept as supporting evidence for CD4-like and CD8-like cluster annotation.
 
 ```{r parameters}
 input_rds <- "cart_tcell_subtypes.rds"
@@ -49,18 +49,10 @@ min_cells_for_slingshot <- 100
 min_clusters_for_slingshot <- 3
 min_cells_per_cluster <- 10
 
-cd4_markers <- c("Cd4")
-cd8_markers <- c("Cd8a", "Cd8b1")
-naive_memory_markers <- c("Tcf7", "Lef1", "Sell", "Ccr7", "Il7r")
-
 marker_programs <- list(
-  CD4 = cd4_markers,
-  CD8 = cd8_markers,
-  naive_memory = naive_memory_markers
-)
-
-functional_state_programs <- list(
-  naive_memory = naive_memory_markers,
+  CD4 = c("Cd4"),
+  CD8 = c("Cd8a", "Cd8b1"),
+  naive_memory = c("Tcf7", "Lef1", "Sell", "Ccr7", "Il7r"),
   activated = c("Cd69", "Il2ra", "Icos", "Tnfrsf4", "Tnfrsf9"),
   treg = c("Foxp3", "Il2ra", "Ctla4", "Tigit", "Ikzf2"),
   cytotoxic = c("Nkg7", "Gzmb", "Gzma", "Prf1", "Ifng", "Ccl5"),
@@ -119,13 +111,18 @@ This chunk classifies cells as CD4-like, CD8-like, or ambiguous using CD4 and CD
 ```{r marker-classification, fig.height=7, fig.width=10}
 tcell_obj <- classify_cd4_cd8(tcell_obj)
 
+score_cols <- purrr::map_chr(names(marker_programs), marker_score_column) %>%
+  intersect(colnames(tcell_obj@meta.data))
+
 marker_score_summary <- tcell_obj@meta.data %>%
   dplyr::group_by(condition, cd4_cd8_marker_group) %>%
   dplyr::summarise(
     n = dplyr::n(),
-    median_cd4_score = median(cd4_score, na.rm = TRUE),
-    median_cd8_score = median(cd8_score, na.rm = TRUE),
-    median_naive_memory_score = median(naive_memory_score, na.rm = TRUE),
+    dplyr::across(
+      dplyr::all_of(score_cols),
+      ~ median(.x, na.rm = TRUE),
+      .names = "median_{.col}"
+    ),
     .groups = "drop"
   )
 
@@ -137,7 +134,10 @@ write.csv(
 
 p_marker_feature <- FeaturePlot(
   tcell_obj,
-  features = available_features(tcell_obj, c(cd4_markers, cd8_markers, naive_memory_markers)),
+  features = available_features(
+    tcell_obj,
+    c(marker_programs$CD4, marker_programs$CD8, marker_programs$naive_memory)
+  ),
   reduction = "umap",
   ncol = 3
 )
@@ -169,10 +169,18 @@ p_marker_group
 p_marker_scatter
 
 ggsave(
-  file.path(plot_dir, "tcell_cd4_cd8_marker_expression_and_groups.pdf"),
-  plot = p_marker_feature / (p_marker_group | p_marker_scatter),
+  file.path(plot_dir, "tcell_cd4_cd8_marker_expression_umap.pdf"),
+  plot = p_marker_feature,
+  width = 10,
+  height = 7,
+  device = cairo_pdf
+)
+
+ggsave(
+  file.path(plot_dir, "tcell_cd4_cd8_marker_groups_and_score_scatter.pdf"),
+  plot = p_marker_group | p_marker_scatter,
   width = 12,
-  height = 14,
+  height = 5,
   device = cairo_pdf
 )
 ```
@@ -199,8 +207,50 @@ write.csv(
 )
 ```
 
+## ProjecTILs state annotation
+This chunk runs ProjecTILs on the marker-classified T-cell object using the default mouse tumor-infiltrating T-cell reference. These labels are used as reference-based support for ambiguous cells, cluster annotation, and naive-like Slingshot root selection.
+
+```{r projectils-annotation, fig.height=6, fig.width=8, message=FALSE, warning=FALSE}
+tcell_obj <- run_projectils_annotation(tcell_obj)
+
+projectils_counts <- tcell_obj@meta.data %>%
+  dplyr::count(
+    condition,
+    cd4_cd8_marker_group,
+    scgate_cd4_cd8_group,
+    projectils_label,
+    name = "n"
+  ) %>%
+  dplyr::arrange(condition, cd4_cd8_marker_group, scgate_cd4_cd8_group, dplyr::desc(n))
+
+write.csv(
+  projectils_counts,
+  file.path(results_dir, "tcell_cd4_cd8_projectils_labels_by_group.csv"),
+  row.names = FALSE
+)
+
+p_projectils <- DimPlot(
+  tcell_obj,
+  reduction = "umap",
+  group.by = "projectils_label",
+  label = TRUE,
+  repel = TRUE
+) +
+  ggtitle("ProjecTILs mouse TIL labels")
+
+p_projectils
+
+ggsave(
+  file.path(plot_dir, "tcell_cd4_cd8_projectils_labels_umap.pdf"),
+  plot = p_projectils,
+  width = 8,
+  height = 6,
+  device = cairo_pdf
+)
+```
+
 ## Prepare clean CD4/CD8 cells
-This chunk keeps cells with concordant marker-based and ScGate-supported CD4/CD8 identity and creates clean CD4-like and CD8-like Seurat objects for separate downstream analysis.
+This chunk keeps cells with concordant marker-based and ScGate-supported CD4/CD8 identity and carries ProjecTILs labels into the clean CD4-like and CD8-like trajectory inputs.
 
 ```{r prepare-clean-cd4-cd8-cells}
 clean_obj <- subset(
@@ -216,28 +266,28 @@ clean_cd8_obj <- subset(clean_obj, subset = cd4_cd8_marker_group == "CD8-like")
 ```
 
 ## Cluster and annotate CD4-like and CD8-like cells separately
-This chunk clusters the clean CD4-like and CD8-like objects once, annotates the new clusters using functional-state marker programs, previous T-cell subtype labels, and SingleR with both mouse references, and writes a compact cluster annotation table.
+This chunk clusters the clean CD4-like and CD8-like objects once using regular PCA. The clusters are annotated with ProjecTILs, average-expression functional-state marker programs, previous T-cell subtype labels, and SingleR with both mouse references, and a compact cluster annotation table is written.
 
-```{r cluster-cd4-cd8, fig.height=6, fig.width=10}
+```{r cluster-cd4-cd8, warning=FALSE, fig.height=6, fig.width=10}
 compartment_objects <- list()
 compartment_cluster_annotations <- list()
 for (compartment in c("CD4-like", "CD8-like")) {
   obj_compartment <- if (compartment == "CD4-like") clean_cd4_obj else clean_cd8_obj
-  
+
   obj_compartment <- cluster_subset(
     obj_compartment,
     safe_label(tolower(compartment))
   )
-  
+
   annotated_compartment <- annotate_clustered_object(
     obj_compartment,
     compartment = compartment
   )
-  
+
   obj_compartment <- annotated_compartment$obj
   compartment_objects[[compartment]] <- obj_compartment
   compartment_cluster_annotations[[compartment]] <- annotated_compartment$cluster_annotation
-  
+
   p <- DimPlot(
     obj_compartment,
     reduction = "umap",
@@ -246,9 +296,9 @@ for (compartment in c("CD4-like", "CD8-like")) {
     repel = TRUE
   ) +
     ggtitle(paste(compartment, "clustered UMAP"))
-  
+
   print(p)
-  
+
   ggsave(
     file.path(
       plot_dir,
@@ -259,7 +309,7 @@ for (compartment in c("CD4-like", "CD8-like")) {
     height = 6,
     device = cairo_pdf
   )
-  
+
 }
 
 compartment_cluster_annotation_df <- purrr::map_dfr(
@@ -277,6 +327,9 @@ compartment_cluster_annotation_summary <- compartment_cluster_annotation_df %>%
       "functional_state_label",
       "top_functional_state_program",
       "top_functional_state_score",
+      "projectils_label",
+      "projectils_label_prop",
+      "median_projectils_confidence",
       "top_previous_tcell_subtype",
       "top_previous_tcell_subtype_prop",
       "singler_immgen_label",
@@ -289,26 +342,24 @@ write.csv(
   file.path(results_dir, "tcell_cd4_cd8_cluster_annotations.csv"),
   row.names = FALSE
 )
-
-compartment_cluster_annotation_summary
 ```
 
 ## Run condition-specific Slingshot by CD4/CD8 group
-This chunk subsets the annotated CD4-like and CD8-like objects by condition and runs Slingshot using the CD4/CD8 Seurat clusters.
+This chunk subsets the annotated CD4-like and CD8-like objects by condition and runs Slingshot using the CD4/CD8 Seurat clusters and the same reduction used for CD4/CD8 clustering.
 
 ```{r slingshot-by-compartment-condition, message=FALSE, warning=FALSE}
 slingshot_results <- list()
 
 for (compartment in c("CD4-like", "CD8-like")) {
   compartment_obj <- compartment_objects[[compartment]]
-  
+
   for (condition in condition_levels) {
     subset_cells <- colnames(compartment_obj)[compartment_obj$condition == condition]
-    
+
     if (length(subset_cells) == 0) {
       next
     }
-    
+
     result_name <- paste(compartment, condition, sep = "_")
     slingshot_results[[result_name]] <- run_condition_slingshot(
       subset(compartment_obj, cells = subset_cells),
@@ -318,17 +369,36 @@ for (compartment in c("CD4-like", "CD8-like")) {
   }
 }
 
-slingshot_cluster_counts <- purrr::map_dfr(slingshot_results, "cluster_counts", .id = "analysis") %>%
+slingshot_qc <- purrr::imap_dfr(
+  slingshot_results,
+  function(x, analysis_name) {
+    x$cluster_counts %>%
+      dplyr::mutate(analysis = analysis_name) %>%
+      dplyr::left_join(
+        x$eligibility,
+        by = c("compartment", "condition")
+      )
+  }
+) %>%
   dplyr::select(
     dplyr::any_of(c(
       "analysis",
       "seurat_clusters",
       "n",
-      "retained_for_slingshot"
+      "retained_for_slingshot",
+      "root_cluster",
+      "root_cluster_selection",
+      "is_root_cluster",
+      "root_cluster_projectils_label",
+      "skip_reason"
     )
   ))
 
-slingshot_cluster_counts
+write.csv(
+  slingshot_qc,
+  file.path(results_dir, "tcell_cd4_cd8_condition_slingshot_qc.csv"),
+  row.names = FALSE
+)
 
 slingshot_summaries <- purrr::map_dfr(
   slingshot_results,
@@ -351,10 +421,13 @@ slingshot_summaries <- slingshot_summaries %>%
       "median_pseudotime",
       "mean_pseudotime",
       "functional_state_label",
+      "projectils_label",
+      "projectils_label_prop",
       "singler_immgen_label",
       "singler_mousernaseq_label",
       "top_previous_tcell_subtype",
-      "seurat_cluster_top_previous_tcell_subtype"
+      "seurat_cluster_top_previous_tcell_subtype",
+      "seurat_cluster_projectils_label"
     ))
   )
 
