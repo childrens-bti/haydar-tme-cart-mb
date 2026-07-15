@@ -174,7 +174,9 @@ downstream-analyses/
 │       ├── tcell_CD8_like_STOP_slingshot_lineage_curves_each_lineage_umap.pdf
 │       ├── tcell_CD8_like_STOP_slingshot_pseudotime_all_lineages_summary.pdf
 │       ├── tcell_CD8_like_STOP_slingshot_pseudotime_umap.pdf
-│       ├── tcell_cd4_cd8_marker_expression_and_groups.pdf
+│       ├── tcell_cd4_cd8_marker_expression_umap.pdf
+│       ├── tcell_cd4_cd8_marker_groups_and_score_scatter.pdf
+│       ├── tcell_cd4_cd8_projectils_labels_umap.pdf
 │       ├── tcell_cd4_like_clustered_umap.pdf
 │       ├── tcell_cd8_like_clustered_umap.pdf
 │       ├── tcell_cluster_vs_old_subtype_heatmap.pdf
@@ -319,8 +321,10 @@ downstream-analyses/
 │       ├── tcell_GSEA_pseudobulk_gamma_delta_Th17_like_T_cells_vs_rest_hallmark.csv
 │       ├── tcell_cd4_cd8_cluster_annotations.csv
 │       ├── tcell_cd4_cd8_condition_slingshot_pseudotime_summary.csv
+│       ├── tcell_cd4_cd8_condition_slingshot_qc.csv
 │       ├── tcell_cd4_cd8_marker_scgate_concordance.csv
 │       ├── tcell_cd4_cd8_marker_score_summary.csv
+│       ├── tcell_cd4_cd8_projectils_labels_by_group.csv
 │       ├── tcell_reclustered_markers.csv
 │       ├── tcell_reclustered_proportions.tsv
 │       ├── tcell_reclustered_top30_markers_per_cluster.csv
