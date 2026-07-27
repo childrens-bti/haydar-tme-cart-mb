@@ -53,8 +53,9 @@ analysis_label <- cell_group_col
 # CAR-only sccomp parameter names relative to baseline
 car_only_parameters <- paste0("condition", setdiff(car_levels, "41BB-L"))
 
-# Factor order and file labels for tumor-reference comparisons
+# Factor order and file labels for tumor- and STOP-reference comparisons
 condition_levels_tumor_reference <- c("tumor", setdiff(condition_levels, "tumor"))
+condition_levels_stop_reference <- c("STOP", setdiff(condition_levels, "STOP"))
 
 cat("Input RDS:", input_rds, "\n")
 cat("Subtype label:", subtype_label, "\n")
@@ -73,7 +74,6 @@ stopifnot("sample" %in% colnames(obj@meta.data))
 stopifnot("condition" %in% colnames(obj@meta.data))
 ```
 
-## Composition analysis using sccomp
 ## 41BB-L is set as the reference condition
 ```{r composition-analysis-sccomp, message=FALSE, warning=FALSE}
 sccomp_41bbl <- run_sccomp_composition(
@@ -96,7 +96,6 @@ sccomp_result |>
 ggsave(file.path(plot_dir, paste0(analysis_label, "_composition_sccomp_41BBL_baseline.pdf")), width = 14, height = 6)
 ```
 
-## Composition analysis using sccomp
 ## tumor is set as the reference condition
 ```{r composition-analysis-sccomp-tumor-reference, message=FALSE, warning=FALSE}
 sccomp_tumor_reference <- run_sccomp_composition(
@@ -117,6 +116,28 @@ sccomp_result_tumor_reference <- sccomp_tumor_reference$result
 sccomp_result_tumor_reference |>
   plot_1D_intervals(significance_statistic = c("FDR"))
 ggsave(file.path(plot_dir, paste0(analysis_label, "_composition_sccomp_tumor_baseline.pdf")), width = 14, height = 6)
+```
+
+## STOP is set as the reference condition
+```{r composition-analysis-sccomp-stop-reference, message=FALSE, warning=FALSE}
+sccomp_stop_reference <- run_sccomp_composition(
+  obj = obj,
+  cell_group_col = cell_group_col,
+  condition_levels = condition_levels_stop_reference,
+  analysis_label = analysis_label,
+  output_suffix = "STOP_baseline",
+  reference_label = "STOP-reference",
+  results_dir = results_dir
+)
+
+sccomp_input_stop_reference <- sccomp_stop_reference$input
+sccomp_result_stop_reference <- sccomp_stop_reference$result
+```
+
+```{r visualize-sccomp-stop-reference-results, fig.height=6, fig.width=12}
+sccomp_result_stop_reference |>
+  plot_1D_intervals(significance_statistic = c("FDR"))
+ggsave(file.path(plot_dir, paste0(analysis_label, "_composition_sccomp_STOP_baseline.pdf")), width = 14, height = 6)
 ```
 
 ## Subtypes Not Significantly Altered vs 41BB-L (All Conditions)
