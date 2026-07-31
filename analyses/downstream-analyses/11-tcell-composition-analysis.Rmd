@@ -46,6 +46,7 @@ cell_group_col <- paste0(subtype_label, "_subtype")
 analysis_label <- cell_group_col
 
 condition_levels_tumor_reference <- c("tumor", setdiff(condition_levels, "tumor"))
+condition_levels_stop_reference <- c("STOP", setdiff(condition_levels, "STOP"))
 
 cat("Input RDS:", input_rds, "\n")
 cat("Subtype label:", subtype_label, "\n")
@@ -66,7 +67,6 @@ table(obj$condition)
 table(obj@meta.data[[cell_group_col]])
 ```
 
-## Composition Analysis Using sccomp
 ## 41BB-L is set as the reference condition
 This block tests refined T cell subtype composition changes across conditions using 41BB-L as the reference condition.
 ```{r composition-analysis-sccomp-41bbl-reference, message=FALSE, warning=FALSE}
@@ -98,7 +98,6 @@ ggsave(
 )
 ```
 
-## Composition Analysis Using sccomp
 ## tumor is set as the reference condition
 This block repeats sccomp with tumor as the reference condition so treatment effects can be read directly as each condition relative to tumor.
 ```{r composition-analysis-sccomp-tumor-reference, message=FALSE, warning=FALSE}
@@ -124,6 +123,37 @@ sccomp_result_tumor_reference |>
 
 ggsave(
   file.path(plot_dir, paste0(analysis_label, "_composition_sccomp_tumor_baseline.pdf")),
+  width = 14,
+  height = 6,
+  device = cairo_pdf
+)
+```
+
+## STOP is set as the reference condition
+This block repeats sccomp with STOP as the reference condition so effects can be read directly as each condition relative to STOP.
+```{r composition-analysis-sccomp-stop-reference, message=FALSE, warning=FALSE}
+sccomp_stop_reference <- run_sccomp_composition(
+  obj = obj,
+  cell_group_col = cell_group_col,
+  condition_levels = condition_levels_stop_reference,
+  analysis_label = analysis_label,
+  output_suffix = "STOP_baseline",
+  reference_label = "STOP-reference",
+  results_dir = results_dir
+)
+
+sccomp_input_stop_reference <- sccomp_stop_reference$input
+sccomp_result_stop_reference <- sccomp_stop_reference$result
+```
+
+## Plot STOP Reference sccomp Results
+This block saves the STOP-reference sccomp interval plot using FDR as the significance statistic.
+```{r visualize-sccomp-stop-reference-results, fig.height=6, fig.width=12}
+sccomp_result_stop_reference |>
+  plot_1D_intervals(significance_statistic = c("FDR"))
+
+ggsave(
+  file.path(plot_dir, paste0(analysis_label, "_composition_sccomp_STOP_baseline.pdf")),
   width = 14,
   height = 6,
   device = cairo_pdf

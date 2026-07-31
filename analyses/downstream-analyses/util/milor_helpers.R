@@ -106,12 +106,12 @@ build_milo_design <- function(milo_obj, reference_condition) {
   milo_design <- milo_design[colnames(miloR::nhoodCounts(milo_obj)), , drop = FALSE]
 
   stopifnot(!any(is.na(milo_design$condition)))
-  stopifnot(reference_condition %in% as.character(milo_design$condition))
+  stopifnot(all(reference_condition %in% as.character(milo_design$condition)))
 
   milo_design
 }
 
-# Create explicit tumor-reference model contrasts using make.names-compatible condition labels.
+# Create explicit model contrasts against the selected reference using make.names-compatible condition labels.
 make_milo_contrasts <- function(condition_levels, reference_condition) {
   tibble::tibble(
     condition = condition_levels,
