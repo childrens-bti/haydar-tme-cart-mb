@@ -17,7 +17,16 @@
 9. `09-myeloid-milor-analysis.Rmd`: runs miloR neighborhood differential abundance testing for the myeloid population using tumor as the reference condition.
 10. `10-tcell-milor-analysis.Rmd`: runs miloR neighborhood differential abundance testing for the refined T cell population using tumor as the reference condition.
 11. `11-tcell-composition-analysis.Rmd`: performs refined T cell subtype composition analysis using sccomp with 41BB-L and tumor as the baseline references and generates composition plots.
-12. `12-tcell-cd4-cd8-trajectory.Rmd`: identifies clean CD4-like and CD8-like T cells, annotates functional states, and runs condition-specific Slingshot trajectory analysis.
+12. `12-tcell-cd4-cd8-annotation.Rmd`: identifies clean CD4-like and CD8-like T cells using marker expression and ScGate support, adds ProjecTILs and cluster-level annotations, calculates AUCell program scores, and saves prepared CD4-like and CD8-like Seurat objects.
+13. `13-tcell-cd4-cd8-slingshot.Rmd`: loads the prepared objects, runs condition-specific and all-condition Slingshot analyses, caches successful trajectory inference, and generates pseudotime, lineage, gene-trend, and AUCell program outputs.
+
+## CD4/CD8 trajectory workflow
+
+Script 12 writes annotation plots to `plots/tcell`, summary tables to `results/tcell`, and the prepared `tcell_cd4_like_trajectory_input.rds` and `tcell_cd8_like_trajectory_input.rds` objects used by script 13.
+
+Script 13 writes PDFs to `plots/tcell/CD4-trajectory` and `plots/tcell/CD8-trajectory`, with CSV tables and cached Slingshot RDS objects under the corresponding `results/tcell` directories. Valid caches are reused when `force_rerun_slingshot <- FALSE`; set it to `TRUE` to recompute trajectories. Cache validation includes the input RDS checksum, filtering thresholds, cache version, and relevant package versions.
+
+Condition-specific Slingshot runs require at least 100 retained cells and three retained clusters. The current tumor-only CD4-like and CD8-like subsets do not meet the cell threshold and are recorded as skipped in the QC tables; tumor cells remain included in the all-condition analyses. Each AUCell pseudotime PDF contains separate pages for cytotoxic, exhausted, naive-memory, and proliferating programs, with all four programs saved in one long-format CSV per Slingshot run.
 
 ## Analysis module directory structure
 ```
@@ -44,8 +53,10 @@ downstream-analyses/
 ├── 10-tcell-milor-analysis.html
 ├── 11-tcell-composition-analysis.Rmd
 ├── 11-tcell-composition-analysis.html
-├── 12-tcell-cd4-cd8-trajectory.Rmd
-├── 12-tcell-cd4-cd8-trajectory.html
+├── 12-tcell-cd4-cd8-annotation.Rmd
+├── 12-tcell-cd4-cd8-annotation.html
+├── 13-tcell-cd4-cd8-slingshot.Rmd
+├── 13-tcell-cd4-cd8-slingshot.html
 ├── README.md
 ├── input
 │   ├── cart_lineage_markers.csv
@@ -144,41 +155,27 @@ downstream-analyses/
 │   └── tcell
 │       ├── figure_2E_tcell_marker_dotplot_by_condition.pdf
 │       ├── supplementary_figure_5B_tcell_marker_dotplot_by_subtype.pdf
-│       ├── tcell_CD4_like_41BB_L_slingshot_lineage_curves_each_lineage_umap.pdf
-│       ├── tcell_CD4_like_41BB_L_slingshot_pseudotime_all_lineages_summary.pdf
-│       ├── tcell_CD4_like_41BB_L_slingshot_pseudotime_umap.pdf
-│       ├── tcell_CD4_like_B7H3_slingshot_lineage_curves_each_lineage_umap.pdf
-│       ├── tcell_CD4_like_B7H3_slingshot_pseudotime_all_lineages_summary.pdf
-│       ├── tcell_CD4_like_B7H3_slingshot_pseudotime_umap.pdf
-│       ├── tcell_CD4_like_CD28_41BB_slingshot_lineage_curves_each_lineage_umap.pdf
-│       ├── tcell_CD4_like_CD28_41BB_slingshot_pseudotime_all_lineages_summary.pdf
-│       ├── tcell_CD4_like_CD28_41BB_slingshot_pseudotime_umap.pdf
-│       ├── tcell_CD4_like_CD8_41BB_slingshot_lineage_curves_each_lineage_umap.pdf
-│       ├── tcell_CD4_like_CD8_41BB_slingshot_pseudotime_all_lineages_summary.pdf
-│       ├── tcell_CD4_like_CD8_41BB_slingshot_pseudotime_umap.pdf
-│       ├── tcell_CD4_like_STOP_slingshot_lineage_curves_each_lineage_umap.pdf
-│       ├── tcell_CD4_like_STOP_slingshot_pseudotime_all_lineages_summary.pdf
-│       ├── tcell_CD4_like_STOP_slingshot_pseudotime_umap.pdf
-│       ├── tcell_CD8_like_41BB_L_slingshot_lineage_curves_each_lineage_umap.pdf
-│       ├── tcell_CD8_like_41BB_L_slingshot_pseudotime_all_lineages_summary.pdf
-│       ├── tcell_CD8_like_41BB_L_slingshot_pseudotime_umap.pdf
-│       ├── tcell_CD8_like_B7H3_slingshot_lineage_curves_each_lineage_umap.pdf
-│       ├── tcell_CD8_like_B7H3_slingshot_pseudotime_all_lineages_summary.pdf
-│       ├── tcell_CD8_like_B7H3_slingshot_pseudotime_umap.pdf
-│       ├── tcell_CD8_like_CD28_41BB_slingshot_lineage_curves_each_lineage_umap.pdf
-│       ├── tcell_CD8_like_CD28_41BB_slingshot_pseudotime_all_lineages_summary.pdf
-│       ├── tcell_CD8_like_CD28_41BB_slingshot_pseudotime_umap.pdf
-│       ├── tcell_CD8_like_CD8_41BB_slingshot_lineage_curves_each_lineage_umap.pdf
-│       ├── tcell_CD8_like_CD8_41BB_slingshot_pseudotime_all_lineages_summary.pdf
-│       ├── tcell_CD8_like_CD8_41BB_slingshot_pseudotime_umap.pdf
-│       ├── tcell_CD8_like_STOP_slingshot_lineage_curves_each_lineage_umap.pdf
-│       ├── tcell_CD8_like_STOP_slingshot_pseudotime_all_lineages_summary.pdf
-│       ├── tcell_CD8_like_STOP_slingshot_pseudotime_umap.pdf
+│       ├── CD4-trajectory
+│       │   ├── tcell_CD4_like_<condition>_slingshot_aucell_program_pseudotime_tracks.pdf
+│       │   ├── tcell_CD4_like_<condition>_slingshot_gene_trend_curves_all_lineages.pdf
+│       │   ├── tcell_CD4_like_<condition>_slingshot_lineage_curves_each_lineage_umap.pdf
+│       │   ├── tcell_CD4_like_<condition>_slingshot_pseudotime_all_lineages_summary.pdf
+│       │   └── tcell_CD4_like_<condition>_slingshot_pseudotime_umap.pdf
+│       ├── CD8-trajectory
+│       │   ├── tcell_CD8_like_<condition>_slingshot_aucell_program_pseudotime_tracks.pdf
+│       │   ├── tcell_CD8_like_<condition>_slingshot_gene_trend_curves_all_lineages.pdf
+│       │   ├── tcell_CD8_like_<condition>_slingshot_lineage_curves_each_lineage_umap.pdf
+│       │   ├── tcell_CD8_like_<condition>_slingshot_pseudotime_all_lineages_summary.pdf
+│       │   └── tcell_CD8_like_<condition>_slingshot_pseudotime_umap.pdf
 │       ├── tcell_cd4_cd8_marker_expression_umap.pdf
 │       ├── tcell_cd4_cd8_marker_groups_and_score_scatter.pdf
 │       ├── tcell_cd4_cd8_projectils_labels_umap.pdf
 │       ├── tcell_cd4_like_clustered_umap.pdf
+│       ├── tcell_cd4_like_clustered_umap_by_condition.pdf
+│       ├── tcell_cd4_like_clustered_umap_by_projectils.pdf
 │       ├── tcell_cd8_like_clustered_umap.pdf
+│       ├── tcell_cd8_like_clustered_umap_by_condition.pdf
+│       ├── tcell_cd8_like_clustered_umap_by_projectils.pdf
 │       ├── tcell_cluster_vs_old_subtype_heatmap.pdf
 │       ├── tcell_gsea_dot_pseudobulk_Activated_CD4_effector_helper_like_T_cells_vs_rest.pdf
 │       ├── tcell_gsea_dot_pseudobulk_Activated_effector_CD8_T_cells_stress_vs_rest.pdf
@@ -293,6 +290,20 @@ downstream-analyses/
 │   │   └── myeloid_treatment_markers.csv
 │   └── tcell
 │       ├── cart_tcell_subtypes.rds
+│       ├── CD4-trajectory
+│       │   ├── tcell_CD4_like_<analysis>_slingshot_aucell_program_pseudotime_tracks.csv
+│       │   ├── tcell_CD4_like_<analysis>_slingshot_result.rds
+│       │   ├── tcell_CD4_like_all_conditions_slingshot_pseudotime_summary.csv
+│       │   ├── tcell_CD4_like_all_conditions_slingshot_qc.csv
+│       │   ├── tcell_CD4_like_condition_slingshot_pseudotime_summary.csv
+│       │   └── tcell_CD4_like_condition_slingshot_qc.csv
+│       ├── CD8-trajectory
+│       │   ├── tcell_CD8_like_<analysis>_slingshot_aucell_program_pseudotime_tracks.csv
+│       │   ├── tcell_CD8_like_<analysis>_slingshot_result.rds
+│       │   ├── tcell_CD8_like_all_conditions_slingshot_pseudotime_summary.csv
+│       │   ├── tcell_CD8_like_all_conditions_slingshot_qc.csv
+│       │   ├── tcell_CD8_like_condition_slingshot_pseudotime_summary.csv
+│       │   └── tcell_CD8_like_condition_slingshot_qc.csv
 │       ├── tcell_DESeq2_pseudobulk_Activated_CD4_effector_helper_like_T_cells_vs_rest.csv
 │       ├── tcell_DESeq2_pseudobulk_Activated_effector_CD8_T_cells_stress_vs_rest.csv
 │       ├── tcell_DESeq2_pseudobulk_Antigen_presenting_myeloid_cells_vs_rest.csv
@@ -320,11 +331,11 @@ downstream-analyses/
 │       ├── tcell_GSEA_pseudobulk_gamma_delta_T_cells_vs_rest_hallmark.csv
 │       ├── tcell_GSEA_pseudobulk_gamma_delta_Th17_like_T_cells_vs_rest_hallmark.csv
 │       ├── tcell_cd4_cd8_cluster_annotations.csv
-│       ├── tcell_cd4_cd8_condition_slingshot_pseudotime_summary.csv
-│       ├── tcell_cd4_cd8_condition_slingshot_qc.csv
 │       ├── tcell_cd4_cd8_marker_scgate_concordance.csv
 │       ├── tcell_cd4_cd8_marker_score_summary.csv
 │       ├── tcell_cd4_cd8_projectils_labels_by_group.csv
+│       ├── tcell_cd4_like_trajectory_input.rds
+│       ├── tcell_cd8_like_trajectory_input.rds
 │       ├── tcell_reclustered_markers.csv
 │       ├── tcell_reclustered_proportions.tsv
 │       ├── tcell_reclustered_top30_markers_per_cluster.csv

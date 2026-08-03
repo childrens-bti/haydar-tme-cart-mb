@@ -1,0 +1,375 @@
+---
+title: "13-tcell-cd4-cd8-slingshot"
+author: "Bicna Song"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: TRUE
+    toc_float: TRUE
+---
+
+This module loads the CD4-like and CD8-like trajectory input objects saved by script 12 and runs Slingshot on condition-specific subsets and all conditions together. PDFs are written under `plot/tcell/{CD4,CD8}-trajectory`; CSV and RDS files are written under `results/tcell/{CD4,CD8}-trajectory`.
+
+## Setup
+```{r load-packages, message=FALSE, warning=FALSE}
+suppressPackageStartupMessages({
+  library(rprojroot)
+  library(dplyr)
+  library(purrr)
+  library(Seurat)
+  library(SingleCellExperiment)
+  library(SeuratExtend)
+  library(ggplot2)
+  library(patchwork)
+})
+
+root_dir <- find_root(has_dir(".git"))
+analysis_dir <- file.path(root_dir, "analyses", "downstream-analyses")
+plot_base_dir <- file.path(analysis_dir, "plots", "tcell")
+results_base_dir <- file.path(analysis_dir, "results", "tcell")
+
+source(file.path(root_dir, "figures", "theme.R"))
+source(file.path(analysis_dir, "util", "trajectory_helpers.R"))
+source(file.path(analysis_dir, "util", "tcell_cd4_cd8_trajectory_helpers.R"))
+
+set.seed(1234)
+```
+
+## Parameters
+This chunk records the Slingshot thresholds, cache controls, input RDS files, marker genes for gene trends, and AUCell programs used for trajectory summaries. Set `force_rerun_slingshot` to `TRUE` to ignore valid caches and recompute trajectories.
+
+```{r parameters}
+cd4_input_rds <- file.path(results_base_dir, "tcell_cd4_like_trajectory_input.rds")
+cd8_input_rds <- file.path(results_base_dir, "tcell_cd8_like_trajectory_input.rds")
+
+trajectory_plot_dirs <- list(
+  `CD4-like` = file.path(plot_base_dir, "CD4-trajectory"),
+  `CD8-like` = file.path(plot_base_dir, "CD8-trajectory")
+)
+trajectory_results_dirs <- list(
+  `CD4-like` = file.path(results_base_dir, "CD4-trajectory"),
+  `CD8-like` = file.path(results_base_dir, "CD8-trajectory")
+)
+
+purrr::walk(trajectory_plot_dirs, dir.create, recursive = TRUE, showWarnings = FALSE)
+purrr::walk(trajectory_results_dirs, dir.create, recursive = TRUE, showWarnings = FALSE)
+
+min_cells_for_slingshot <- 100
+min_clusters_for_slingshot <- 3
+min_cells_per_cluster <- 10
+force_rerun_slingshot <- FALSE
+slingshot_cache_version <- 1L
+
+marker_programs <- list(
+  CD4 = c("Cd4"),
+  CD8 = c("Cd8a", "Cd8b1"),
+  naive_memory = c("Tcf7", "Lef1", "Sell", "Ccr7", "Il7r"),
+  activated = c("Cd69", "Il2ra", "Icos", "Tnfrsf4", "Tnfrsf9"),
+  treg = c("Foxp3", "Il2ra", "Ctla4", "Tigit", "Ikzf2"),
+  cytotoxic = c("Nkg7", "Gzmb", "Gzma", "Prf1", "Ifng", "Ccl5"),
+  exhausted = c("Pdcd1", "Lag3", "Havcr2", "Tox", "Tigit", "Ctla4"),
+  proliferating = c("Mki67", "Top2a", "Cdk1", "Ccnb1", "Ccnb2"),
+  ifn_response = c("Ifit1", "Ifit3", "Isg15", "Oas1a", "Oas3", "Zbp1"),
+  stress_response = c("Hspa1a", "Hspa1b", "Dnajb1", "Jun", "Fos")
+)
+
+slingshot_gene_trend_genes <- unique(c(
+  "Pdcd1", "Tox", "Lag3", "Havcr2", "Ctla4",
+  "Tcf7", "Lef1", "Ccr7", "Il7r",
+  "Mki67", "Top2a",
+  "Gzmb", "Prf1", "Ifng", "Ccl5"
+))
+
+aucell_programs <- marker_programs[c(
+  "exhausted",
+  "proliferating",
+  "naive_memory",
+  "cytotoxic"
+)]
+
+cat("CD4 input RDS:", cd4_input_rds, "\n")
+cat("CD8 input RDS:", cd8_input_rds, "\n")
+cat("CD4 trajectory plot dir:", trajectory_plot_dirs[["CD4-like"]], "\n")
+cat("CD4 trajectory results dir:", trajectory_results_dirs[["CD4-like"]], "\n")
+cat("CD8 trajectory plot dir:", trajectory_plot_dirs[["CD8-like"]], "\n")
+cat("CD8 trajectory results dir:", trajectory_results_dirs[["CD8-like"]], "\n")
+cat("Minimum cells for Slingshot:", min_cells_for_slingshot, "\n")
+cat("Minimum clusters for Slingshot:", min_clusters_for_slingshot, "\n")
+cat("Minimum cells per Slingshot cluster:", min_cells_per_cluster, "\n")
+cat("Force Slingshot rerun:", force_rerun_slingshot, "\n")
+cat("Slingshot cache version:", slingshot_cache_version, "\n")
+```
+
+## Load trajectory input objects
+This chunk loads the prepared CD4-like and CD8-like objects from script 12 and records checksums used to invalidate stale Slingshot caches.
+
+```{r load-trajectory-inputs}
+if (!file.exists(cd4_input_rds)) {
+  stop("CD4 trajectory input RDS was not found: ", cd4_input_rds)
+}
+
+if (!file.exists(cd8_input_rds)) {
+  stop("CD8 trajectory input RDS was not found: ", cd8_input_rds)
+}
+
+trajectory_input_md5 <- c(
+  `CD4-like` = unname(tools::md5sum(cd4_input_rds)),
+  `CD8-like` = unname(tools::md5sum(cd8_input_rds))
+)
+
+compartment_objects <- list(
+  `CD4-like` = readRDS(cd4_input_rds),
+  `CD8-like` = readRDS(cd8_input_rds)
+)
+
+condition_levels <- compartment_objects %>%
+  purrr::map(~ {
+    condition <- .x$condition
+    if (is.factor(condition)) {
+      levels(droplevels(condition))
+    } else {
+      unique(as.character(condition))
+    }
+  }) %>%
+  unlist(use.names = FALSE) %>%
+  unique() %>%
+  sort()
+
+cat("Conditions:", paste(condition_levels, collapse = ", "), "\n")
+```
+
+## Helper for one compartment
+This helper loads a valid cached Slingshot result when available or runs and caches Slingshot otherwise. Figures and tables are regenerated from the loaded or newly computed result.
+
+```{r slingshot-compartment-helper}
+run_compartment_trajectories <- function(
+  compartment,
+  compartment_obj,
+  output_plot_dir,
+  output_results_dir,
+  input_rds_md5
+) {
+  compartment_label <- safe_label(compartment)
+  subtype_colors <- make_tcell_subtype_palette(
+    compartment_obj$seurat_cluster_projectils_label
+  )
+  cache_context <- list(
+    analysis_cache_version = slingshot_cache_version,
+    input_rds_md5 = input_rds_md5
+  )
+  slingshot_results <- list()
+
+  for (condition in condition_levels) {
+    subset_cells <- colnames(compartment_obj)[compartment_obj$condition == condition]
+
+    if (length(subset_cells) == 0) {
+      next
+    }
+
+    result_name <- paste(compartment, condition, sep = "_")
+    condition_cache_file <- file.path(
+      output_results_dir,
+      paste0("tcell_", safe_label(result_name), "_slingshot_result.rds")
+    )
+    slingshot_results[[result_name]] <- run_condition_slingshot(
+      subset(compartment_obj, cells = subset_cells),
+      compartment = compartment,
+      condition = condition,
+      gene_trend_genes = slingshot_gene_trend_genes,
+      aucell_programs = aucell_programs,
+      plot_aucell_pseudotime = TRUE,
+      subtype_colors = subtype_colors,
+      cache_file = condition_cache_file,
+      cache_context = cache_context,
+      force_rerun_slingshot = force_rerun_slingshot,
+      output_plot_dir = output_plot_dir,
+      output_results_dir = output_results_dir
+    )
+  }
+
+  slingshot_qc <- purrr::imap_dfr(
+    slingshot_results,
+    function(x, analysis_name) {
+      x$cluster_counts %>%
+        dplyr::mutate(analysis = analysis_name) %>%
+        dplyr::left_join(
+          x$eligibility,
+          by = c("compartment", "condition")
+        )
+    }
+  ) %>%
+    dplyr::select(
+      dplyr::any_of(c(
+        "analysis",
+        "seurat_clusters",
+        "n",
+        "retained_for_slingshot",
+        "root_cluster",
+        "root_cluster_selection",
+        "is_root_cluster",
+        "root_cluster_projectils_label",
+        "skip_reason"
+      ))
+    )
+
+  write.csv(
+    slingshot_qc,
+    file.path(output_results_dir, paste0("tcell_", compartment_label, "_condition_slingshot_qc.csv")),
+    row.names = FALSE
+  )
+
+  slingshot_summaries <- purrr::map_dfr(
+    slingshot_results,
+    function(x) {
+      if (is.null(x$sling_summary)) {
+        return(NULL)
+      }
+      x$sling_summary
+    },
+    .id = "analysis"
+  )
+
+  slingshot_summaries <- slingshot_summaries %>%
+    dplyr::select(
+      dplyr::any_of(c(
+        "analysis",
+        "seurat_clusters",
+        "n",
+        "lineage",
+        "median_pseudotime",
+        "mean_pseudotime",
+        "functional_state_label",
+        "projectils_label",
+        "projectils_label_prop",
+        "singler_immgen_label",
+        "singler_mousernaseq_label",
+        "top_previous_tcell_subtype",
+        "seurat_cluster_top_previous_tcell_subtype",
+        "seurat_cluster_projectils_label"
+      ))
+    )
+
+  write.csv(
+    slingshot_summaries,
+    file.path(output_results_dir, paste0("tcell_", compartment_label, "_condition_slingshot_pseudotime_summary.csv")),
+    row.names = FALSE
+  )
+
+  all_conditions_name <- paste(compartment, "all_conditions", sep = "_")
+  all_conditions_cache_file <- file.path(
+    output_results_dir,
+    paste0("tcell_", safe_label(all_conditions_name), "_slingshot_result.rds")
+  )
+  slingshot_combined_results <- list()
+  slingshot_combined_results[[all_conditions_name]] <- run_condition_slingshot(
+    compartment_obj,
+    compartment = compartment,
+    condition = "all_conditions",
+    gene_trend_genes = slingshot_gene_trend_genes,
+    aucell_programs = aucell_programs,
+    plot_aucell_pseudotime = TRUE,
+    subtype_colors = subtype_colors,
+    cache_file = all_conditions_cache_file,
+    cache_context = cache_context,
+    force_rerun_slingshot = force_rerun_slingshot,
+    output_plot_dir = output_plot_dir,
+    output_results_dir = output_results_dir
+  )
+
+  slingshot_combined_qc <- purrr::imap_dfr(
+    slingshot_combined_results,
+    function(x, analysis_name) {
+      x$cluster_counts %>%
+        dplyr::mutate(analysis = analysis_name) %>%
+        dplyr::left_join(
+          x$eligibility,
+          by = c("compartment", "condition")
+        )
+    }
+  ) %>%
+    dplyr::select(
+      dplyr::any_of(c(
+        "analysis",
+        "seurat_clusters",
+        "n",
+        "retained_for_slingshot",
+        "root_cluster",
+        "root_cluster_selection",
+        "is_root_cluster",
+        "root_cluster_projectils_label",
+        "skip_reason"
+      ))
+    )
+
+  write.csv(
+    slingshot_combined_qc,
+    file.path(output_results_dir, paste0("tcell_", compartment_label, "_all_conditions_slingshot_qc.csv")),
+    row.names = FALSE
+  )
+
+  slingshot_combined_summaries <- purrr::map_dfr(
+    slingshot_combined_results,
+    function(x) {
+      if (is.null(x$sling_summary)) {
+        return(NULL)
+      }
+      x$sling_summary
+    },
+    .id = "analysis"
+  )
+
+  slingshot_combined_summaries <- slingshot_combined_summaries %>%
+    dplyr::select(
+      dplyr::any_of(c(
+        "analysis",
+        "seurat_clusters",
+        "n",
+        "lineage",
+        "median_pseudotime",
+        "mean_pseudotime",
+        "functional_state_label",
+        "projectils_label",
+        "projectils_label_prop",
+        "singler_immgen_label",
+        "singler_mousernaseq_label",
+        "top_previous_tcell_subtype",
+        "seurat_cluster_top_previous_tcell_subtype",
+        "seurat_cluster_projectils_label"
+      ))
+    )
+
+  write.csv(
+    slingshot_combined_summaries,
+    file.path(output_results_dir, paste0("tcell_", compartment_label, "_all_conditions_slingshot_pseudotime_summary.csv")),
+    row.names = FALSE
+  )
+
+  list(
+    condition_specific = slingshot_results,
+    all_conditions = slingshot_combined_results
+  )
+}
+```
+
+## Run Slingshot trajectories
+This chunk runs the cache-aware compartment-specific trajectory workflow, writing PDFs to the compartment plot directory and CSV/RDS files to the matching results directory.
+
+```{r run-slingshot-trajectories, message=FALSE, warning=FALSE}
+trajectory_results <- purrr::imap(
+  compartment_objects,
+  function(compartment_obj, compartment) {
+    run_compartment_trajectories(
+      compartment = compartment,
+      compartment_obj = compartment_obj,
+      output_plot_dir = trajectory_plot_dirs[[compartment]],
+      output_results_dir = trajectory_results_dirs[[compartment]],
+      input_rds_md5 = trajectory_input_md5[[compartment]]
+    )
+  }
+)
+```
+
+## Session info
+```{r session-info}
+sessionInfo()
+```

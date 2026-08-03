@@ -1,0 +1,43 @@
+"analysis","seurat_clusters","n","retained_for_slingshot","root_cluster","root_cluster_selection","is_root_cluster","root_cluster_projectils_label","skip_reason"
+"CD8-like_41BB-L","0",64,TRUE,"2","ProjecTILs naive/memory label",FALSE,NA,NA
+"CD8-like_41BB-L","1",99,TRUE,"2","ProjecTILs naive/memory label",FALSE,NA,NA
+"CD8-like_41BB-L","2",36,TRUE,"2","ProjecTILs naive/memory label",TRUE,"CD8_EffectorMemory",NA
+"CD8-like_41BB-L","3",2,FALSE,"2","ProjecTILs naive/memory label",FALSE,NA,NA
+"CD8-like_41BB-L","4",20,TRUE,"2","ProjecTILs naive/memory label",FALSE,NA,NA
+"CD8-like_41BB-L","5",32,TRUE,"2","ProjecTILs naive/memory label",FALSE,NA,NA
+"CD8-like_41BB-L","6",7,FALSE,"2","ProjecTILs naive/memory label",FALSE,NA,NA
+"CD8-like_B7H3","0",237,TRUE,"6","ProjecTILs naive/memory label",FALSE,NA,NA
+"CD8-like_B7H3","1",211,TRUE,"6","ProjecTILs naive/memory label",FALSE,NA,NA
+"CD8-like_B7H3","2",113,TRUE,"6","ProjecTILs naive/memory label",FALSE,NA,NA
+"CD8-like_B7H3","3",1,FALSE,"6","ProjecTILs naive/memory label",FALSE,NA,NA
+"CD8-like_B7H3","4",37,TRUE,"6","ProjecTILs naive/memory label",FALSE,NA,NA
+"CD8-like_B7H3","5",96,TRUE,"6","ProjecTILs naive/memory label",FALSE,NA,NA
+"CD8-like_B7H3","6",14,TRUE,"6","ProjecTILs naive/memory label",TRUE,"CD8_NaiveLike",NA
+"CD8-like_CD28-41BB","0",38,TRUE,"6","ProjecTILs naive/memory label",FALSE,NA,NA
+"CD8-like_CD28-41BB","1",7,FALSE,"6","ProjecTILs naive/memory label",FALSE,NA,NA
+"CD8-like_CD28-41BB","2",31,TRUE,"6","ProjecTILs naive/memory label",FALSE,NA,NA
+"CD8-like_CD28-41BB","3",25,TRUE,"6","ProjecTILs naive/memory label",FALSE,NA,NA
+"CD8-like_CD28-41BB","4",14,TRUE,"6","ProjecTILs naive/memory label",FALSE,NA,NA
+"CD8-like_CD28-41BB","5",13,TRUE,"6","ProjecTILs naive/memory label",FALSE,NA,NA
+"CD8-like_CD28-41BB","6",19,TRUE,"6","ProjecTILs naive/memory label",TRUE,"CD8_NaiveLike",NA
+"CD8-like_CD8-41BB","0",145,TRUE,"6","ProjecTILs naive/memory label",FALSE,NA,NA
+"CD8-like_CD8-41BB","1",6,FALSE,"6","ProjecTILs naive/memory label",FALSE,NA,NA
+"CD8-like_CD8-41BB","2",43,TRUE,"6","ProjecTILs naive/memory label",FALSE,NA,NA
+"CD8-like_CD8-41BB","3",231,TRUE,"6","ProjecTILs naive/memory label",FALSE,NA,NA
+"CD8-like_CD8-41BB","4",164,TRUE,"6","ProjecTILs naive/memory label",FALSE,NA,NA
+"CD8-like_CD8-41BB","5",48,TRUE,"6","ProjecTILs naive/memory label",FALSE,NA,NA
+"CD8-like_CD8-41BB","6",65,TRUE,"6","ProjecTILs naive/memory label",TRUE,"CD8_NaiveLike",NA
+"CD8-like_STOP","0",82,TRUE,"6","ProjecTILs naive/memory label",FALSE,NA,NA
+"CD8-like_STOP","1",24,TRUE,"6","ProjecTILs naive/memory label",FALSE,NA,NA
+"CD8-like_STOP","2",67,TRUE,"6","ProjecTILs naive/memory label",FALSE,NA,NA
+"CD8-like_STOP","3",11,TRUE,"6","ProjecTILs naive/memory label",FALSE,NA,NA
+"CD8-like_STOP","4",25,TRUE,"6","ProjecTILs naive/memory label",FALSE,NA,NA
+"CD8-like_STOP","5",14,TRUE,"6","ProjecTILs naive/memory label",FALSE,NA,NA
+"CD8-like_STOP","6",15,TRUE,"6","ProjecTILs naive/memory label",TRUE,"CD8_NaiveLike",NA
+"CD8-like_tumor","0",18,TRUE,NA,NA,NA,NA,"Too few cells after removing small clusters"
+"CD8-like_tumor","1",2,FALSE,NA,NA,NA,NA,"Too few cells after removing small clusters"
+"CD8-like_tumor","2",12,TRUE,NA,NA,NA,NA,"Too few cells after removing small clusters"
+"CD8-like_tumor","3",11,TRUE,NA,NA,NA,NA,"Too few cells after removing small clusters"
+"CD8-like_tumor","4",10,TRUE,NA,NA,NA,NA,"Too few cells after removing small clusters"
+"CD8-like_tumor","5",11,TRUE,NA,NA,NA,NA,"Too few cells after removing small clusters"
+"CD8-like_tumor","6",18,TRUE,NA,NA,NA,NA,"Too few cells after removing small clusters"

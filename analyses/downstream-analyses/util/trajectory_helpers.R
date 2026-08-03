@@ -12,6 +12,199 @@ get_log_data <- function(seu, assay = SeuratObject::DefaultAssay(seu)) {
   )
 }
 
+
+# Save marker-gene trend curve PDFs for one Slingshot run.
+plot_slingshot_gene_trends <- function(
+  obj,
+  sling,
+  genes,
+  analysis_label,
+  plot_dir
+) {
+  marker_lookup <- tibble::tibble(gene = unique(genes)) %>%
+    dplyr::filter(gene %in% rownames(obj))
+
+  if (nrow(marker_lookup) == 0 || ncol(sling) == 0) {
+    return(NULL)
+  }
+
+  curve_file <- file.path(
+    plot_dir,
+    paste0("tcell_", analysis_label, "_slingshot_gene_trend_curves_all_lineages.pdf")
+  )
+
+  curve_plots <- list()
+  trend_genes <- marker_lookup$gene
+
+  for (lineage_name in colnames(sling)) {
+    lineage_pseudotime <- as.data.frame(sling[, lineage_name, drop = FALSE])
+
+    p_curve <- tryCatch(
+      GeneTrendCurve.Slingshot(
+        obj,
+        features = trend_genes,
+        pseudotime.data = lineage_pseudotime,
+        method = "smooth",
+        point = FALSE,
+        se = FALSE,
+        ncol = min(4, length(trend_genes))
+      ),
+      error = function(e) {
+        message("Skipping gene trend curve for ", analysis_label, " ", lineage_name, ": ", e$message)
+        NULL
+      }
+    )
+
+    if (!is.null(p_curve)) {
+      curve_plots[[lineage_name]] <- p_curve
+    }
+  }
+
+  if (length(curve_plots) > 0) {
+    grDevices::cairo_pdf(
+      filename = curve_file,
+      width = 12,
+      height = 8,
+      onefile = TRUE,
+      family = "sans"
+    )
+
+    for (p in curve_plots) {
+      print(p)
+    }
+
+    grDevices::dev.off()
+  } else {
+    curve_file <- NA_character_
+  }
+
+  tibble::tibble(curve_file = curve_file)
+}
+
+plot_aucell_pseudotime_tracks <- function(
+  obj,
+  sling,
+  aucell_programs,
+  analysis_label,
+  plot_dir,
+  results_dir
+) {
+  score_cols <- purrr::map_chr(names(aucell_programs), aucell_score_column)
+  names(score_cols) <- names(aucell_programs)
+  score_cols <- score_cols[score_cols %in% colnames(obj@meta.data)]
+
+  if (length(score_cols) == 0 || ncol(sling) == 0) {
+    return(NULL)
+  }
+
+  score_df <- obj@meta.data %>%
+    tibble::rownames_to_column("cell") %>%
+    dplyr::select(
+      cell,
+      condition,
+      dplyr::all_of(unname(score_cols))
+    ) %>%
+    tidyr::pivot_longer(
+      cols = dplyr::all_of(unname(score_cols)),
+      names_to = "score_column",
+      values_to = "aucell_score"
+    ) %>%
+    dplyr::mutate(
+      program = names(score_cols)[match(score_column, unname(score_cols))]
+    )
+
+  pseudotime_df <- as.data.frame(sling) %>%
+    tibble::rownames_to_column("cell") %>%
+    tidyr::pivot_longer(
+      cols = dplyr::all_of(colnames(sling)),
+      names_to = "lineage",
+      values_to = "pseudotime"
+    ) %>%
+    dplyr::filter(!is.na(pseudotime))
+
+  track_df <- pseudotime_df %>%
+    dplyr::left_join(score_df, by = "cell") %>%
+    dplyr::filter(!is.na(aucell_score))
+
+  if (nrow(track_df) == 0) {
+    return(NULL)
+  }
+
+  program_names <- c("cytotoxic", "exhausted", "naive_memory", "proliferating") %>%
+    intersect(unique(track_df$program))
+
+  plot_file <- file.path(
+    plot_dir,
+    paste0(
+      "tcell_", analysis_label,
+      "_slingshot_aucell_program_pseudotime_tracks.pdf"
+    )
+  )
+  score_table_file <- file.path(
+    results_dir,
+    paste0(
+      "tcell_", analysis_label,
+      "_slingshot_aucell_program_pseudotime_tracks.csv"
+    )
+  )
+  write.csv(track_df, score_table_file, row.names = FALSE)
+
+  grDevices::cairo_pdf(
+    filename = plot_file,
+    width = max(7, 4 * dplyr::n_distinct(track_df$lineage)),
+    height = 4.8,
+    onefile = TRUE,
+    family = "sans"
+  )
+
+  tryCatch(
+    purrr::walk(
+      program_names,
+      function(program_name) {
+        program_df <- track_df %>%
+          dplyr::filter(program == program_name)
+        program_title <- program_name %>%
+          stringr::str_replace_all("_", " ") %>%
+          stringr::str_to_title()
+
+        p <- ggplot2::ggplot(
+          program_df,
+          ggplot2::aes(
+            x = pseudotime,
+            y = aucell_score,
+            color = condition,
+            group = condition
+          )
+        ) +
+          ggplot2::geom_smooth(method = "loess", formula = y ~ x, se = FALSE, linewidth = 0.9, span = 0.75) +
+          ggplot2::facet_wrap(~ lineage, scales = "free_x", nrow = 1) +
+          theme_Publication() +
+          ggplot2::theme(
+            axis.text.x = ggplot2::element_text(size = 8),
+            axis.text.y = ggplot2::element_text(size = 8),
+            strip.text = ggplot2::element_text(size = 9),
+            legend.position = "right"
+          ) +
+          ggplot2::labs(
+            title = paste(program_title, "AUCell across pseudotime"),
+            x = "Slingshot pseudotime",
+            y = "AUCell score",
+            color = "Condition"
+          )
+
+        print(p)
+      }
+    ),
+    finally = grDevices::dev.off()
+  )
+
+  tibble::tibble(
+    aucell_pseudotime_table_file = score_table_file,
+    aucell_pseudotime_plot_file = plot_file
+  )
+}
+
+
 # Approximate a smooth UMAP trajectory for one Slingshot lineage.
 # Cells are ordered by pseudotime, binned to reduce noise, and smoothed with
 # base R splines. This is for visualization only; Slingshot itself was run in
@@ -213,7 +406,7 @@ plot_one_sling_lineage <- function(
       panel.grid.minor = ggplot2::element_blank()
     ) +
     ggplot2::labs(color = "T cell subtype") +
-    ggplot2::ggtitle(lineage_name)
+    ggplot2::ggtitle(paste(lineage_name, "UMAP"))
   
   if (!is.null(subtype_colors)) {
     p <- p +

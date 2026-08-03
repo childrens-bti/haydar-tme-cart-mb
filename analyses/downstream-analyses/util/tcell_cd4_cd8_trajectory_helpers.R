@@ -1,8 +1,8 @@
 # Helper functions for CD4/CD8 T-cell trajectory analysis.
 #
-# These functions support `12-tcell-cd4-cd8-trajectory.Rmd` by keeping marker
-# scoring, SingleR/ScGate annotation summaries, clustering, and Slingshot
-# execution outside the main report.
+# These functions support the CD4/CD8 annotation and Slingshot reports by
+# keeping marker scoring, annotation summaries, clustering, and trajectory
+# execution outside the main reports.
 
 # Return features that are present in the Seurat object.
 available_features <- function(obj, features) {
@@ -14,6 +14,17 @@ safe_label <- function(x) {
   x %>%
     stringr::str_replace_all("[^A-Za-z0-9]+", "_") %>%
     stringr::str_replace_all("^_|_$", "")
+}
+
+# Assign stable colors from the complete set of cluster-level T-cell labels.
+make_tcell_subtype_palette <- function(labels) {
+  label_levels <- sort(unique(stats::na.omit(as.character(labels))))
+
+  if (length(label_levels) == 0) {
+    return(stats::setNames(character(), character()))
+  }
+
+  stats::setNames(scales::hue_pal()(length(label_levels)), label_levels)
 }
 
 # Calculate an average log-normalized expression score for one marker set.
@@ -37,6 +48,10 @@ marker_score_column <- function(program_name) {
   paste0("state_", program_name, "_score")
 }
 
+aucell_score_column <- function(program_name) {
+  paste0("aucell_", program_name, "_score")
+}
+
 # Add marker-program scores used for CD4/CD8 calling and functional-state summaries.
 add_marker_program_scores <- function(obj) {
   for (program_name in names(marker_programs)) {
@@ -44,6 +59,35 @@ add_marker_program_scores <- function(obj) {
       obj,
       marker_programs[[program_name]]
     )
+  }
+
+  obj
+}
+
+add_aucell_program_scores <- function(obj, aucell_programs) {
+  aucell_programs <- purrr::map(aucell_programs, ~ available_features(obj, .x))
+  aucell_programs <- aucell_programs[lengths(aucell_programs) > 0]
+
+  if (length(aucell_programs) == 0) {
+    return(obj)
+  }
+
+  expr <- get_log_data(obj)
+  rankings <- AUCell::AUCell_buildRankings(
+    expr,
+    plotStats = FALSE,
+    verbose = FALSE
+  )
+  auc <- AUCell::AUCell_calcAUC(
+    aucell_programs,
+    rankings,
+    aucMaxRank = ceiling(0.05 * nrow(rankings)),
+    verbose = FALSE
+  )
+  auc_mat <- SummarizedExperiment::assay(auc)
+
+  for (program_name in rownames(auc_mat)) {
+    obj[[aucell_score_column(program_name)]] <- as.numeric(auc_mat[program_name, colnames(obj)])
   }
 
   obj
@@ -239,10 +283,16 @@ run_singler_annotations <- function(obj) {
 run_projectils_annotation <- function(obj) {
   obj$projectils_label <- NA_character_
   obj$projectils_confidence <- NA_real_
+  obj$projectils_label_column <- NA_character_
+  obj$projectils_confidence_column <- NA_character_
 
   if (!requireNamespace("ProjecTILs", quietly = TRUE)) {
     warning("ProjecTILs is not installed. Skipping ProjecTILs annotation.")
     return(obj)
+  }
+
+  if ("RNA" %in% names(obj@assays)) {
+    SeuratObject::DefaultAssay(obj) <- "RNA"
   }
 
   projectils_data <- new.env(parent = emptyenv())
@@ -295,21 +345,78 @@ run_projectils_annotation <- function(obj) {
   }
 
   common_cells <- intersect(colnames(obj), colnames(obj_projectils))
+  if (length(common_cells) == 0) {
+    warning("ProjecTILs returned an object with no cell names in common with the input object.")
+    return(obj)
+  }
 
-  if ("functional.cluster" %in% colnames(obj_projectils@meta.data)) {
+  projectils_meta_cols <- colnames(obj_projectils@meta.data)
+  label_candidates <- c(
+    "functional.cluster",
+    "functional.cluster.label",
+    "functional_cluster",
+    "ProjecTILs.functional.cluster",
+    "projectils_label",
+    "predicted.celltype",
+    "predicted.id",
+    "celltype",
+    "cell_type"
+  )
+  label_col <- label_candidates[label_candidates %in% projectils_meta_cols][1]
+
+  if (is.na(label_col)) {
+    label_col <- projectils_meta_cols[
+      stringr::str_detect(
+        tolower(projectils_meta_cols),
+        "functional.*cluster|cluster.*functional|projectils.*label|predicted|cell.*type"
+      )
+    ][1]
+  }
+
+  if (!is.na(label_col)) {
     projectils_label_map <- stats::setNames(
-      as.character(obj_projectils$functional.cluster),
+      as.character(obj_projectils@meta.data[[label_col]]),
       colnames(obj_projectils)
     )
     obj$projectils_label[common_cells] <- unname(projectils_label_map[common_cells])
+    obj$projectils_label_column[common_cells] <- label_col
+  } else {
+    warning(
+      "ProjecTILs annotation completed, but no label column was found. Available metadata columns: ",
+      paste(projectils_meta_cols, collapse = ", ")
+    )
   }
 
-  if ("functional.cluster.conf" %in% colnames(obj_projectils@meta.data)) {
+  confidence_candidates <- c(
+    "functional.cluster.conf",
+    "functional.cluster.confidence",
+    "functional_cluster_conf",
+    "ProjecTILs.functional.cluster.conf",
+    "projectils_confidence",
+    "prediction.score.max",
+    "predicted.score",
+    "confidence"
+  )
+  confidence_col <- confidence_candidates[confidence_candidates %in% projectils_meta_cols][1]
+
+  if (is.na(confidence_col)) {
+    confidence_col <- projectils_meta_cols[
+      stringr::str_detect(tolower(projectils_meta_cols), "conf|score|prob") &
+        vapply(obj_projectils@meta.data, is.numeric, logical(1))
+    ][1]
+  }
+
+  if (!is.na(confidence_col)) {
     projectils_confidence_map <- stats::setNames(
-      as.numeric(obj_projectils$functional.cluster.conf),
+      as.numeric(obj_projectils@meta.data[[confidence_col]]),
       colnames(obj_projectils)
     )
     obj$projectils_confidence[common_cells] <- unname(projectils_confidence_map[common_cells])
+    obj$projectils_confidence_column[common_cells] <- confidence_col
+  }
+
+  if (all(is.na(obj$projectils_label))) {
+    warning("ProjecTILs annotation did not assign any non-NA labels.")
   }
 
   obj
@@ -714,95 +821,186 @@ prepare_slingshot_subset <- function(obj, compartment, condition) {
   )
 }
 
-# Run Slingshot on one condition subset using Seurat clusters.
-run_condition_slingshot <- function(obj, compartment, condition) {
+# Run Slingshot on one condition subset or all-condition compartment using Seurat clusters.
+run_condition_slingshot <- function(
+  obj,
+  compartment,
+  condition,
+  gene_trend_genes,
+  aucell_programs = NULL,
+  plot_aucell_pseudotime = FALSE,
+  subtype_colors = NULL,
+  cache_file = NULL,
+  cache_context = list(),
+  force_rerun_slingshot = FALSE,
+  output_plot_dir = plot_dir,
+  output_results_dir = results_dir
+) {
   label <- safe_label(paste(compartment, condition, sep = "_"))
   plot_label <- paste(compartment, condition)
   message("Processing ", label)
 
-  slingshot_subset <- prepare_slingshot_subset(
-    obj,
-    compartment = compartment,
-    condition = condition
+  expected_cache_metadata <- c(
+    list(
+      cache_format_version = 1L,
+      compartment = compartment,
+      condition = condition,
+      min_cells_for_slingshot = min_cells_for_slingshot,
+      min_clusters_for_slingshot = min_clusters_for_slingshot,
+      min_cells_per_cluster = min_cells_per_cluster,
+      slingshot_package_version = as.character(utils::packageVersion("slingshot")),
+      seurat_extend_package_version = as.character(utils::packageVersion("SeuratExtend"))
+    ),
+    cache_context
   )
 
-  cluster_counts <- slingshot_subset$cluster_counts
-  eligibility <- slingshot_subset$eligibility
+  cached_inference <- NULL
+  if (!force_rerun_slingshot && !is.null(cache_file) && file.exists(cache_file)) {
+    cached_inference <- tryCatch(
+      readRDS(cache_file),
+      error = function(e) {
+        warning("Could not read Slingshot cache for ", label, ": ", conditionMessage(e))
+        NULL
+      }
+    )
 
-  if (!slingshot_subset$slingshot_run) {
-    message("Skipping Slingshot for ", label, ": not enough cells or clusters.")
-    cluster_counts <- cluster_counts %>%
-      dplyr::mutate(
-        is_root_cluster = NA,
-        root_cluster_projectils_label = NA_character_
+    cache_is_valid <- !is.null(cached_inference) &&
+      is.list(cached_inference) &&
+      identical(cached_inference$cache_metadata, expected_cache_metadata) &&
+      all(c("obj", "cluster_counts", "eligibility", "sling") %in% names(cached_inference))
+
+    if (!cache_is_valid) {
+      message("Ignoring stale or incomplete Slingshot cache for ", label)
+      cached_inference <- NULL
+    }
+  }
+
+  used_cached_slingshot <- !is.null(cached_inference)
+  if (used_cached_slingshot) {
+    message("Using cached Slingshot result for ", label)
+    obj <- cached_inference$obj
+    cluster_counts <- cached_inference$cluster_counts
+    eligibility <- cached_inference$eligibility
+    sling <- cached_inference$sling
+
+    cached_root_cluster <- cached_inference$root_cluster
+    if (is.null(cached_root_cluster) && "root_cluster" %in% colnames(eligibility)) {
+      cached_root_cluster <- eligibility$root_cluster
+    }
+
+    if ((is.null(cached_root_cluster) || all(is.na(cached_root_cluster))) &&
+        "is_root_cluster" %in% colnames(cluster_counts)) {
+      cached_root_cluster <- cluster_counts %>%
+        dplyr::filter(!is.na(is_root_cluster) & is_root_cluster) %>%
+        dplyr::pull(seurat_clusters)
+    }
+
+    if (length(cached_root_cluster) == 0 || all(is.na(cached_root_cluster))) {
+      stop("Cached Slingshot result is missing its root cluster: ", cache_file)
+    }
+
+    root_cluster <- as.character(cached_root_cluster[[1]])
+  } else {
+    slingshot_subset <- prepare_slingshot_subset(
+      obj,
+      compartment = compartment,
+      condition = condition
+    )
+
+    cluster_counts <- slingshot_subset$cluster_counts
+    eligibility <- slingshot_subset$eligibility
+
+    if (!slingshot_subset$slingshot_run) {
+      message("Skipping Slingshot for ", label, ": not enough cells or clusters.")
+      cluster_counts <- cluster_counts %>%
+        dplyr::mutate(
+          is_root_cluster = NA,
+          root_cluster_projectils_label = NA_character_
+        )
+
+      return(list(
+        obj = obj,
+        cluster_counts = cluster_counts,
+        eligibility = eligibility,
+        sling_summary = NULL
+      ))
+    }
+
+    obj <- slingshot_subset$obj
+    root_info <- get_root_cluster_info(obj)
+    root_cluster <- root_info$root_cluster[[1]]
+
+    if (is.na(root_cluster)) {
+      message("Skipping Slingshot for ", label, ": no naive-like root cluster was identified.")
+      eligibility$skip_reason <- "No naive-like root cluster identified"
+      cluster_counts <- cluster_counts %>%
+        dplyr::mutate(
+          is_root_cluster = NA,
+          root_cluster_projectils_label = NA_character_
+        )
+
+      return(list(
+        obj = obj,
+        cluster_counts = cluster_counts,
+        eligibility = eligibility,
+        sling_summary = NULL
+      ))
+    }
+
+    root_projectils_label <- root_info$root_cluster_projectils_label[[1]]
+    eligibility$root_cluster <- root_cluster
+    eligibility$root_cluster_selection <- root_info$root_cluster_selection[[1]]
+    eligibility$root_cluster_naive_memory_score <- root_info$root_cluster_naive_memory_score[[1]]
+    cluster_counts <- add_root_cluster_qc(cluster_counts, root_cluster, root_projectils_label)
+
+    stored_reduction <- obj@misc$cd4_cd8_cluster_reduction
+
+    if (is.null(stored_reduction) ||
+        length(stored_reduction) == 0 ||
+        !stored_reduction %in% names(obj@reductions)) {
+      stored_reduction <- "pca"
+    }
+
+    stored_dims <- obj@misc$cd4_cd8_cluster_dims
+
+    if (is.null(stored_dims) || length(stored_dims) == 0) {
+      stored_dims <- ncol(Embeddings(obj, stored_reduction))
+    }
+
+    sling_dims <- min(stored_dims, ncol(Embeddings(obj, stored_reduction)))
+
+    obj[["SLING"]] <- SeuratObject::CreateDimReducObject(
+      embeddings = Embeddings(obj, stored_reduction)[, seq_len(sling_dims), drop = FALSE],
+      key = "SLING_",
+      assay = DefaultAssay(obj)
+    )
+
+    obj <- RunSlingshot(
+      obj,
+      group.by = "seurat_clusters",
+      reducedDim = "SLING",
+      start.clus = root_cluster
+    )
+
+    sling <- obj@misc$slingshot$SLING$SlingPseudotime
+    obj@meta.data[, colnames(sling)] <- as.data.frame(sling)
+
+    if (!is.null(cache_file)) {
+      dir.create(dirname(cache_file), recursive = TRUE, showWarnings = FALSE)
+      saveRDS(
+        list(
+          cache_metadata = expected_cache_metadata,
+          obj = obj,
+          cluster_counts = cluster_counts,
+          eligibility = eligibility,
+          sling = sling,
+          root_cluster = root_cluster
+        ),
+        cache_file
       )
-
-    return(list(
-      obj = obj,
-      cluster_counts = cluster_counts,
-      eligibility = eligibility,
-      sling_summary = NULL
-    ))
+      message("Saved Slingshot result cache: ", cache_file)
+    }
   }
-
-  obj <- slingshot_subset$obj
-  root_info <- get_root_cluster_info(obj)
-  root_cluster <- root_info$root_cluster[[1]]
-
-  if (is.na(root_cluster)) {
-    message("Skipping Slingshot for ", label, ": no naive-like root cluster was identified.")
-    eligibility$skip_reason <- "No naive-like root cluster identified"
-    cluster_counts <- cluster_counts %>%
-      dplyr::mutate(
-        is_root_cluster = NA,
-        root_cluster_projectils_label = NA_character_
-      )
-
-    return(list(
-      obj = obj,
-      cluster_counts = cluster_counts,
-      eligibility = eligibility,
-      sling_summary = NULL
-    ))
-  }
-
-  root_projectils_label <- root_info$root_cluster_projectils_label[[1]]
-  eligibility$root_cluster <- root_cluster
-  eligibility$root_cluster_selection <- root_info$root_cluster_selection[[1]]
-  eligibility$root_cluster_naive_memory_score <- root_info$root_cluster_naive_memory_score[[1]]
-  cluster_counts <- add_root_cluster_qc(cluster_counts, root_cluster, root_projectils_label)
-
-  stored_reduction <- obj@misc$cd4_cd8_cluster_reduction
-
-  if (is.null(stored_reduction) ||
-      length(stored_reduction) == 0 ||
-      !stored_reduction %in% names(obj@reductions)) {
-    stored_reduction <- "pca"
-  }
-
-  stored_dims <- obj@misc$cd4_cd8_cluster_dims
-
-  if (is.null(stored_dims) || length(stored_dims) == 0) {
-    stored_dims <- ncol(Embeddings(obj, stored_reduction))
-  }
-
-  sling_dims <- min(stored_dims, ncol(Embeddings(obj, stored_reduction)))
-
-  obj[["SLING"]] <- SeuratObject::CreateDimReducObject(
-    embeddings = Embeddings(obj, stored_reduction)[, seq_len(sling_dims), drop = FALSE],
-    key = "SLING_",
-    assay = DefaultAssay(obj)
-  )
-
-  obj <- RunSlingshot(
-    obj,
-    group.by = "seurat_clusters",
-    reducedDim = "SLING",
-    start.clus = root_cluster
-  )
-
-  sling <- obj@misc$slingshot$SLING$SlingPseudotime
-  obj@meta.data[, colnames(sling)] <- as.data.frame(sling)
 
   if (!"functional_state_label" %in% colnames(obj@meta.data)) {
     obj$functional_state_label <- NA_character_
@@ -880,15 +1078,15 @@ run_condition_slingshot <- function(obj, compartment, condition) {
     ) %>%
     dplyr::left_join(cluster_labels, by = "seurat_clusters") %>%
     dplyr::mutate(
-      root_cluster = root_cluster,
+      root_cluster = .env$root_cluster,
       seurat_cluster_top_previous_tcell_subtype = paste0(
         as.character(seurat_clusters),
-        ":",
+        ": ",
         dplyr::coalesce(top_previous_tcell_subtype, "Unannotated")
       ),
       seurat_cluster_projectils_label = paste0(
         as.character(seurat_clusters),
-        ":",
+        ": ",
         dplyr::coalesce(projectils_label, top_previous_tcell_subtype, "Unannotated")
       )
     )
@@ -919,7 +1117,7 @@ run_condition_slingshot <- function(obj, compartment, condition) {
   )
 
   grDevices::cairo_pdf(
-    filename = file.path(plot_dir, paste0("tcell_", label, "_slingshot_pseudotime_umap.pdf")),
+    filename = file.path(output_plot_dir, paste0("tcell_", label, "_slingshot_pseudotime_umap.pdf")),
     width = 6,
     height = 5,
     onefile = TRUE,
@@ -971,7 +1169,7 @@ run_condition_slingshot <- function(obj, compartment, condition) {
   )
 
   grDevices::cairo_pdf(
-    filename = file.path(plot_dir, paste0("tcell_", label, "_slingshot_pseudotime_all_lineages_summary.pdf")),
+    filename = file.path(output_plot_dir, paste0("tcell_", label, "_slingshot_pseudotime_all_lineages_summary.pdf")),
     width = 7,
     height = summary_plot_height,
     onefile = TRUE,
@@ -1007,16 +1205,15 @@ run_condition_slingshot <- function(obj, compartment, condition) {
     dplyr::mutate(
       tcell_subtype = paste0(
         seurat_clusters,
-        ":",
+        ": ",
         dplyr::coalesce(cluster_projectils_label, top_previous_tcell_subtype, "Unannotated")
       )
     )
 
   subtype_levels <- sort(unique(as.character(umap_df$tcell_subtype)))
-  subtype_colors <- stats::setNames(
-    scales::hue_pal()(length(subtype_levels)),
-    subtype_levels
-  )
+  if (is.null(subtype_colors)) {
+    subtype_colors <- make_tcell_subtype_palette(subtype_levels)
+  }
 
   curve_df <- purrr::map2_dfr(
     lineage_cols,
@@ -1042,7 +1239,7 @@ run_condition_slingshot <- function(obj, compartment, condition) {
   )
 
   grDevices::cairo_pdf(
-    filename = file.path(plot_dir, paste0("tcell_", label, "_slingshot_lineage_curves_each_lineage_umap.pdf")),
+    filename = file.path(output_plot_dir, paste0("tcell_", label, "_slingshot_lineage_curves_each_lineage_umap.pdf")),
     width = 6,
     height = 5.5,
     onefile = TRUE,
@@ -1055,10 +1252,34 @@ run_condition_slingshot <- function(obj, compartment, condition) {
 
   grDevices::dev.off()
 
+  gene_trends <- plot_slingshot_gene_trends(
+    obj = obj,
+    sling = sling,
+    genes = gene_trend_genes,
+    analysis_label = label,
+    plot_dir = output_plot_dir
+  )
+
+  aucell_pseudotime <- NULL
+  if (plot_aucell_pseudotime && !is.null(aucell_programs)) {
+    aucell_pseudotime <- plot_aucell_pseudotime_tracks(
+      obj = obj,
+      sling = sling,
+      aucell_programs = aucell_programs,
+      analysis_label = label,
+      plot_dir = output_plot_dir,
+      results_dir = output_results_dir
+    )
+  }
+
   list(
     obj = obj,
     cluster_counts = cluster_counts,
     eligibility = eligibility,
-    sling_summary = sling_df
+    sling_summary = sling_df,
+    gene_trends = gene_trends,
+    aucell_pseudotime = aucell_pseudotime,
+    cache_file = cache_file,
+    used_cached_slingshot = used_cached_slingshot
   )
 }
