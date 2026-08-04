@@ -8,7 +8,7 @@ output:
     toc_float: TRUE
 ---
 
-This module loads the CD4-like and CD8-like trajectory input objects saved by script 12 and runs Slingshot on condition-specific subsets and all conditions together. PDFs are written under `plot/tcell/{CD4,CD8}-trajectory`; CSV and RDS files are written under `results/tcell/{CD4,CD8}-trajectory`.
+This module loads the CD4-like and CD8-like trajectory input objects saved by script 12 and runs Slingshot on condition-specific subsets and all conditions together. PDFs are written under `plots/tcell/{CD4,CD8}-trajectory`; CSV and RDS files are written under `results/tcell/{CD4,CD8}-trajectory`.
 
 ## Setup
 ```{r load-packages, message=FALSE, warning=FALSE}
@@ -58,7 +58,7 @@ min_cells_for_slingshot <- 100
 min_clusters_for_slingshot <- 3
 min_cells_per_cluster <- 10
 force_rerun_slingshot <- FALSE
-slingshot_cache_version <- 1L
+slingshot_cache_version <- 2L
 
 marker_programs <- list(
   CD4 = c("Cd4"),

@@ -697,7 +697,7 @@ get_root_cluster_info <- function(obj) {
     dplyr::mutate(
       projectils_naive_like = stringr::str_detect(
         tolower(dplyr::coalesce(projectils_label, "")),
-        "naive|memory|tcm|tn"
+        "naive"
       ),
       has_naive_memory_score = is.finite(median_naive_memory_score) &
         median_naive_memory_score > 0
@@ -756,6 +756,66 @@ add_root_cluster_qc <- function(cluster_counts, root_cluster, root_projectils_la
         NA_character_
       )
     )
+}
+
+# Extract cell-aligned pseudotime and curve weights for tradeSeq.
+get_slingshot_trade_seq_inputs <- function(obj, plotting_pseudotime, reduction_name = "SLING") {
+  slingshot_result <- obj@misc$slingshot[[reduction_name]]
+
+  if (is.null(slingshot_result$SlingshotDataSet)) {
+    stop("SlingshotDataSet is unavailable for reduction ", reduction_name)
+  }
+
+  trade_seq_pseudotime <- as.matrix(
+    slingshot::slingPseudotime(slingshot_result$SlingshotDataSet, na = FALSE)
+  )
+  curve_weights <- as.matrix(
+    slingshot::slingCurveWeights(slingshot_result$SlingshotDataSet)
+  )
+  cell_order <- rownames(plotting_pseudotime)
+
+  align_cells <- function(x, value_name) {
+    if (!is.null(rownames(x)) && all(cell_order %in% rownames(x))) {
+      return(x[cell_order, , drop = FALSE])
+    }
+    if (nrow(x) == length(cell_order)) {
+      rownames(x) <- cell_order
+      return(x)
+    }
+    stop(value_name, " and plotting pseudotime have different cell counts")
+  }
+
+  trade_seq_pseudotime <- align_cells(trade_seq_pseudotime, "tradeSeq pseudotime")
+  curve_weights <- align_cells(curve_weights, "Slingshot curve weights")
+
+  if (ncol(trade_seq_pseudotime) != ncol(plotting_pseudotime) ||
+      ncol(curve_weights) != ncol(plotting_pseudotime)) {
+    stop("Slingshot pseudotime and curve weights have different lineage counts")
+  }
+
+  colnames(trade_seq_pseudotime) <- colnames(plotting_pseudotime)
+  colnames(curve_weights) <- colnames(plotting_pseudotime)
+
+  list(
+    pseudotime = trade_seq_pseudotime,
+    cell_weights = curve_weights
+  )
+}
+
+# Assign each cell to the lineage with its largest Slingshot curve weight.
+get_slingshot_lineage_assignments <- function(curve_weights) {
+  weight_matrix <- curve_weights
+  weight_matrix[is.na(weight_matrix)] <- 0
+  has_lineage <- rowSums(weight_matrix) > 0
+  primary_lineage <- rep(NA_character_, nrow(weight_matrix))
+  primary_lineage[has_lineage] <- colnames(weight_matrix)[
+    max.col(weight_matrix[has_lineage, , drop = FALSE], ties.method = "first")
+  ]
+
+  tibble::tibble(
+    cell = rownames(weight_matrix),
+    primary_lineage = primary_lineage
+  )
 }
 
 # Keep Seurat clusters with enough cells and summarize Slingshot eligibility.
@@ -842,7 +902,7 @@ run_condition_slingshot <- function(
 
   expected_cache_metadata <- c(
     list(
-      cache_format_version = 1L,
+      cache_format_version = 2L,
       compartment = compartment,
       condition = condition,
       min_cells_for_slingshot = min_cells_for_slingshot,
@@ -867,7 +927,7 @@ run_condition_slingshot <- function(
     cache_is_valid <- !is.null(cached_inference) &&
       is.list(cached_inference) &&
       identical(cached_inference$cache_metadata, expected_cache_metadata) &&
-      all(c("obj", "cluster_counts", "eligibility", "sling") %in% names(cached_inference))
+      all(c("obj", "cluster_counts", "eligibility", "sling", "curve_weights", "trade_seq_pseudotime") %in% names(cached_inference))
 
     if (!cache_is_valid) {
       message("Ignoring stale or incomplete Slingshot cache for ", label)
@@ -882,6 +942,16 @@ run_condition_slingshot <- function(
     cluster_counts <- cached_inference$cluster_counts
     eligibility <- cached_inference$eligibility
     sling <- cached_inference$sling
+    curve_weights <- cached_inference$curve_weights
+    trade_seq_pseudotime <- cached_inference$trade_seq_pseudotime
+    lineage_assignments <- cached_inference$lineage_assignments
+
+    if (is.null(lineage_assignments)) {
+      lineage_assignments <- get_slingshot_lineage_assignments(curve_weights)
+      cached_inference$lineage_assignments <- lineage_assignments
+      saveRDS(cached_inference, cache_file)
+      message("Added lineage assignments to Slingshot cache: ", cache_file)
+    }
 
     cached_root_cluster <- cached_inference$root_cluster
     if (is.null(cached_root_cluster) && "root_cluster" %in% colnames(eligibility)) {
@@ -984,6 +1054,10 @@ run_condition_slingshot <- function(
 
     sling <- obj@misc$slingshot$SLING$SlingPseudotime
     obj@meta.data[, colnames(sling)] <- as.data.frame(sling)
+    trade_seq_inputs <- get_slingshot_trade_seq_inputs(obj, sling)
+    trade_seq_pseudotime <- trade_seq_inputs$pseudotime
+    curve_weights <- trade_seq_inputs$cell_weights
+    lineage_assignments <- get_slingshot_lineage_assignments(curve_weights)
 
     if (!is.null(cache_file)) {
       dir.create(dirname(cache_file), recursive = TRUE, showWarnings = FALSE)
@@ -994,6 +1068,9 @@ run_condition_slingshot <- function(
           cluster_counts = cluster_counts,
           eligibility = eligibility,
           sling = sling,
+          curve_weights = curve_weights,
+          trade_seq_pseudotime = trade_seq_pseudotime,
+          lineage_assignments = lineage_assignments,
           root_cluster = root_cluster
         ),
         cache_file
@@ -1280,6 +1357,7 @@ run_condition_slingshot <- function(
     gene_trends = gene_trends,
     aucell_pseudotime = aucell_pseudotime,
     cache_file = cache_file,
+    lineage_assignments = lineage_assignments,
     used_cached_slingshot = used_cached_slingshot
   )
 }

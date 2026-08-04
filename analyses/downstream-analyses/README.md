@@ -20,14 +20,6 @@
 12. `12-tcell-cd4-cd8-annotation.Rmd`: identifies clean CD4-like and CD8-like T cells using marker expression and ScGate support, adds ProjecTILs and cluster-level annotations, calculates AUCell program scores, and saves prepared CD4-like and CD8-like Seurat objects.
 13. `13-tcell-cd4-cd8-slingshot.Rmd`: loads the prepared objects, runs condition-specific and all-condition Slingshot analyses, caches successful trajectory inference, and generates pseudotime, lineage, gene-trend, and AUCell program outputs.
 
-## CD4/CD8 trajectory workflow
-
-Script 12 writes annotation plots to `plots/tcell`, summary tables to `results/tcell`, and the prepared `tcell_cd4_like_trajectory_input.rds` and `tcell_cd8_like_trajectory_input.rds` objects used by script 13.
-
-Script 13 writes PDFs to `plots/tcell/CD4-trajectory` and `plots/tcell/CD8-trajectory`, with CSV tables and cached Slingshot RDS objects under the corresponding `results/tcell` directories. Valid caches are reused when `force_rerun_slingshot <- FALSE`; set it to `TRUE` to recompute trajectories. Cache validation includes the input RDS checksum, filtering thresholds, cache version, and relevant package versions.
-
-Condition-specific Slingshot runs require at least 100 retained cells and three retained clusters. The current tumor-only CD4-like and CD8-like subsets do not meet the cell threshold and are recorded as skipped in the QC tables; tumor cells remain included in the all-condition analyses. Each AUCell pseudotime PDF contains separate pages for cytotoxic, exhausted, naive-memory, and proliferating programs, with all four programs saved in one long-format CSV per Slingshot run.
-
 ## Analysis module directory structure
 ```
 downstream-analyses/

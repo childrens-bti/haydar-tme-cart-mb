@@ -1,11 +1,11 @@
 "analysis","seurat_clusters","n","retained_for_slingshot","root_cluster","root_cluster_selection","is_root_cluster","root_cluster_projectils_label","skip_reason"
-"CD8-like_41BB-L","0",64,TRUE,"2","ProjecTILs naive/memory label",FALSE,NA,NA
-"CD8-like_41BB-L","1",99,TRUE,"2","ProjecTILs naive/memory label",FALSE,NA,NA
-"CD8-like_41BB-L","2",36,TRUE,"2","ProjecTILs naive/memory label",TRUE,"CD8_EffectorMemory",NA
-"CD8-like_41BB-L","3",2,FALSE,"2","ProjecTILs naive/memory label",FALSE,NA,NA
-"CD8-like_41BB-L","4",20,TRUE,"2","ProjecTILs naive/memory label",FALSE,NA,NA
-"CD8-like_41BB-L","5",32,TRUE,"2","ProjecTILs naive/memory label",FALSE,NA,NA
-"CD8-like_41BB-L","6",7,FALSE,"2","ProjecTILs naive/memory label",FALSE,NA,NA
+"CD8-like_41BB-L","0",64,TRUE,"0","ProjecTILs naive/memory label",TRUE,"CD8_NaiveLike",NA
+"CD8-like_41BB-L","1",99,TRUE,"0","ProjecTILs naive/memory label",FALSE,NA,NA
+"CD8-like_41BB-L","2",36,TRUE,"0","ProjecTILs naive/memory label",FALSE,NA,NA
+"CD8-like_41BB-L","3",2,FALSE,"0","ProjecTILs naive/memory label",FALSE,NA,NA
+"CD8-like_41BB-L","4",20,TRUE,"0","ProjecTILs naive/memory label",FALSE,NA,NA
+"CD8-like_41BB-L","5",32,TRUE,"0","ProjecTILs naive/memory label",FALSE,NA,NA
+"CD8-like_41BB-L","6",7,FALSE,"0","ProjecTILs naive/memory label",FALSE,NA,NA
 "CD8-like_B7H3","0",237,TRUE,"6","ProjecTILs naive/memory label",FALSE,NA,NA
 "CD8-like_B7H3","1",211,TRUE,"6","ProjecTILs naive/memory label",FALSE,NA,NA
 "CD8-like_B7H3","2",113,TRUE,"6","ProjecTILs naive/memory label",FALSE,NA,NA
