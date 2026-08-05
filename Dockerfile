@@ -94,7 +94,9 @@ RUN R -e 'options(Ncpus = max(1, parallel::detectCores()-1)); \
             UCell = "2.10.1",               \
             DESeq2 = "1.46.0",              \
             EnhancedVolcano = "1.24.0",     \
-            slingshot = "2.14.0"            \
+            slingshot = "2.14.0",           \
+            tradeSeq = "1.20.0",            \
+            condiments = "1.14.0"           \
           ); \
           BiocManager::install(names(bioc_packages), ask = FALSE, update = FALSE); \
           failed <- names(bioc_packages)[!vapply(names(bioc_packages), function(pkg) requireNamespace(pkg, quietly = TRUE) && identical(packageDescription(pkg)$Version, bioc_packages[[pkg]]), logical(1))]; \
@@ -156,6 +158,7 @@ RUN R -e 'expected_versions <- c( \
             BiocParallel = "1.40.2", BiocNeighbors = "2.0.1", Nebulosa = "1.16.0", celldex = "1.16.0", fgsea = "1.32.4", \
             AUCell = "1.28.0", MAST = "1.32.0", UCell = "2.10.1", \
             DESeq2 = "1.46.0", EnhancedVolcano = "1.24.0", slingshot = "2.14.0", \
+            tradeSeq = "1.20.0", condiments = "1.14.0", \
             colorblindr = "0.1.0", patchwork = "1.3.2.9000", DoubletFinder = "2.0.6", \
             presto = "1.0.0", sccomp = "2.1.30", miloR = "2.9.1", \
             STACAS = "2.4.1", ProjecTILs = "3.7.0", \
