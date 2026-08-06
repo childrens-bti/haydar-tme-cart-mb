@@ -1,0 +1,36 @@
+"analysis","seurat_clusters","n","retained_for_slingshot","root_cluster","root_cluster_selection","is_root_cluster","root_cluster_projectils_label","skip_reason"
+"CD4-like_41BB-L","0",133,TRUE,"3","naive/memory marker score",FALSE,NA,NA
+"CD4-like_41BB-L","1",46,TRUE,"3","naive/memory marker score",FALSE,NA,NA
+"CD4-like_41BB-L","2",108,TRUE,"3","naive/memory marker score",FALSE,NA,NA
+"CD4-like_41BB-L","3",32,TRUE,"3","naive/memory marker score",TRUE,"Th1",NA
+"CD4-like_41BB-L","4",17,TRUE,"3","naive/memory marker score",FALSE,NA,NA
+"CD4-like_41BB-L","5",2,FALSE,"3","naive/memory marker score",FALSE,NA,NA
+"CD4-like_B7H3","0",261,TRUE,"3","naive/memory marker score",FALSE,NA,NA
+"CD4-like_B7H3","1",134,TRUE,"3","naive/memory marker score",FALSE,NA,NA
+"CD4-like_B7H3","2",80,TRUE,"3","naive/memory marker score",FALSE,NA,NA
+"CD4-like_B7H3","3",50,TRUE,"3","naive/memory marker score",TRUE,"Th1",NA
+"CD4-like_B7H3","4",31,TRUE,"3","naive/memory marker score",FALSE,NA,NA
+"CD4-like_CD28-41BB","0",121,TRUE,"3","naive/memory marker score",FALSE,NA,NA
+"CD4-like_CD28-41BB","1",38,TRUE,"3","naive/memory marker score",FALSE,NA,NA
+"CD4-like_CD28-41BB","2",66,TRUE,"3","naive/memory marker score",FALSE,NA,NA
+"CD4-like_CD28-41BB","3",37,TRUE,"3","naive/memory marker score",TRUE,"Th1",NA
+"CD4-like_CD28-41BB","4",7,FALSE,"3","naive/memory marker score",FALSE,NA,NA
+"CD4-like_CD28-41BB","5",3,FALSE,"3","naive/memory marker score",FALSE,NA,NA
+"CD4-like_CD8-41BB","0",169,TRUE,"3","naive/memory marker score",FALSE,NA,NA
+"CD4-like_CD8-41BB","1",228,TRUE,"3","naive/memory marker score",FALSE,NA,NA
+"CD4-like_CD8-41BB","2",180,TRUE,"3","naive/memory marker score",FALSE,NA,NA
+"CD4-like_CD8-41BB","3",131,TRUE,"3","naive/memory marker score",TRUE,"Th1",NA
+"CD4-like_CD8-41BB","4",14,TRUE,"3","naive/memory marker score",FALSE,NA,NA
+"CD4-like_CD8-41BB","5",130,TRUE,"3","naive/memory marker score",FALSE,NA,NA
+"CD4-like_STOP","0",107,TRUE,"3","naive/memory marker score",FALSE,NA,NA
+"CD4-like_STOP","1",60,TRUE,"3","naive/memory marker score",FALSE,NA,NA
+"CD4-like_STOP","2",64,TRUE,"3","naive/memory marker score",FALSE,NA,NA
+"CD4-like_STOP","3",53,TRUE,"3","naive/memory marker score",TRUE,"Th1",NA
+"CD4-like_STOP","4",116,TRUE,"3","naive/memory marker score",FALSE,NA,NA
+"CD4-like_STOP","5",2,FALSE,"3","naive/memory marker score",FALSE,NA,NA
+"CD4-like_tumor","0",58,TRUE,NA,NA,NA,NA,"Too few cells after removing small clusters"
+"CD4-like_tumor","1",1,FALSE,NA,NA,NA,NA,"Too few cells after removing small clusters"
+"CD4-like_tumor","2",6,FALSE,NA,NA,NA,NA,"Too few cells after removing small clusters"
+"CD4-like_tumor","3",18,TRUE,NA,NA,NA,NA,"Too few cells after removing small clusters"
+"CD4-like_tumor","4",1,FALSE,NA,NA,NA,NA,"Too few cells after removing small clusters"
+"CD4-like_tumor","5",1,FALSE,NA,NA,NA,NA,"Too few cells after removing small clusters"
