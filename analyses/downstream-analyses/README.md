@@ -19,6 +19,7 @@
 11. `11-tcell-composition-analysis.Rmd`: performs refined T cell subtype composition analysis using sccomp with 41BB-L and tumor as the baseline references and generates composition plots.
 12. `12-tcell-cd4-cd8-annotation.Rmd`: identifies clean CD4-like and CD8-like T cells using marker expression and ScGate support, adds ProjecTILs and cluster-level annotations, calculates AUCell program scores, and saves prepared CD4-like and CD8-like Seurat objects.
 13. `13-tcell-cd4-cd8-slingshot.Rmd`: loads the prepared objects, runs condition-specific and all-condition Slingshot analyses, caches successful trajectory inference, and generates pseudotime, lineage, gene-trend, and AUCell program outputs.
+14. `14-kdm6b-expression-subcluster-definition.Rmd`: compares sample-level pseudobulk Kdm6b expression across all cells, T cells, and myeloid cells; visualizes Kdm6b within myeloid cells; and ranks numeric myeloid subclusters to define Kdm6b-high and Kdm6b-low groups.
 
 ## Analysis module directory structure
 ```
@@ -49,6 +50,8 @@ downstream-analyses/
 ├── 12-tcell-cd4-cd8-annotation.html
 ├── 13-tcell-cd4-cd8-slingshot.Rmd
 ├── 13-tcell-cd4-cd8-slingshot.html
+├── 14-kdm6b-expression-subcluster-definition.Rmd
+├── 14-kdm6b-expression-subcluster-definition.html
 ├── README.md
 ├── input
 │   ├── cart_lineage_markers.csv
@@ -120,6 +123,11 @@ downstream-analyses/
 │   │   │   ├── myeloid_volcano_pseudobulk_cDC1_vs_rest.pdf
 │   │   │   ├── myeloid_volcano_pseudobulk_tumor_vs_allCAR.pdf
 │   │   │   └── myeloid_volcano_pseudobulk_tumor_vs_rest.pdf
+│   │   ├── kdm6b
+│   │   │   ├── kdm6b_myeloid_featureplot.pdf
+│   │   │   ├── kdm6b_myeloid_violin_by_subcluster.pdf
+│   │   │   ├── kdm6b_pseudobulk_expression_by_compartment.pdf
+│   │   │   └── kdm6b_subcluster_ranking.pdf
 │   │   ├── myeloid_dotplot_subcluster_markers.pdf
 │   │   ├── myeloid_dotplot_subcluster_markers_panelE.pdf
 │   │   ├── myeloid_dotplot_subcluster_markers_panelF.pdf
@@ -133,7 +141,10 @@ downstream-analyses/
 │   │   ├── myeloid_dotplot_treatment_markers_panelE.pdf
 │   │   ├── myeloid_dotplot_treatment_markers_panelF.pdf
 │   │   ├── myeloid_subtype_composition_sccomp_41BBL_baseline.pdf
+│   │   ├── myeloid_subtype_composition_sccomp_STOP_baseline.pdf
 │   │   ├── myeloid_subtype_composition_sccomp_tumor_baseline.pdf
+│   │   ├── myeloid_subtype_milor_STOP_baseline_effect_dotplot.pdf
+│   │   ├── myeloid_subtype_milor_STOP_baseline_logFC_boxplot.pdf
 │   │   ├── myeloid_subtype_milor_tumor_baseline_effect_dotplot.pdf
 │   │   ├── myeloid_subtype_milor_tumor_baseline_logFC_boxplot.pdf
 │   │   ├── myeloid_subtype_proportions_stacked_barplot.png
@@ -194,9 +205,12 @@ downstream-analyses/
 │       ├── tcell_slingshot_lineage_curves_overview_umap.pdf
 │       ├── tcell_slingshot_pseudotime_all_lineages_summary.pdf
 │       ├── tcell_slingshot_pseudotime_umap.pdf
+│       ├── tcell_subtype_milor_STOP_baseline_effect_dotplot.pdf
+│       ├── tcell_subtype_milor_STOP_baseline_logFC_boxplot.pdf
 │       ├── tcell_subtype_milor_tumor_baseline_effect_dotplot.pdf
 │       ├── tcell_subtype_milor_tumor_baseline_logFC_boxplot.pdf
 │       ├── tcell_subtype_composition_sccomp_41BBL_baseline.pdf
+│       ├── tcell_subtype_composition_sccomp_STOP_baseline.pdf
 │       ├── tcell_subtype_composition_sccomp_tumor_baseline.pdf
 │       ├── tcell_top_old_label_per_new_cluster_barplot.pdf
 │       ├── tcell_volcano_pseudobulk_Activated_CD4_effector_helper_like_T_cells_vs_rest.pdf
@@ -273,8 +287,15 @@ downstream-analyses/
 │   │   │   ├── myeloid_GSEA_pseudobulk_cDC1_vs_rest_hallmark.csv
 │   │   │   ├── myeloid_GSEA_pseudobulk_tumor_vs_allCAR_hallmark.csv
 │   │   │   └── myeloid_GSEA_pseudobulk_tumor_vs_rest_hallmark.csv
+│   │   ├── kdm6b
+│   │   │   ├── kdm6b_pseudobulk_by_sample.tsv
+│   │   │   └── kdm6b_subcluster_ranking_and_groups.tsv
 │   │   ├── myeloid_subtype_composition_sccomp_41BBL_baseline_results.tsv
+│   │   ├── myeloid_subtype_composition_sccomp_STOP_baseline_results.tsv
 │   │   ├── myeloid_subtype_composition_sccomp_tumor_baseline_results.tsv
+│   │   ├── myeloid_subtype_milor_STOP_baseline_effect_summary.tsv
+│   │   ├── myeloid_subtype_milor_STOP_baseline_results.tsv
+│   │   ├── myeloid_subtype_milor_STOP_baseline_threshold_summary.tsv
 │   │   ├── myeloid_subtype_milor_tumor_baseline_effect_summary.tsv
 │   │   ├── myeloid_subtype_milor_tumor_baseline_results.tsv
 │   │   ├── myeloid_subtype_milor_tumor_baseline_threshold_summary.tsv
@@ -326,21 +347,24 @@ downstream-analyses/
 │       ├── tcell_cd4_cd8_marker_scgate_concordance.csv
 │       ├── tcell_cd4_cd8_marker_score_summary.csv
 │       ├── tcell_cd4_cd8_projectils_labels_by_group.csv
-│       ├── tcell_cd4_like_trajectory_input.rds
-│       ├── tcell_cd8_like_trajectory_input.rds
 │       ├── tcell_reclustered_markers.csv
 │       ├── tcell_reclustered_proportions.tsv
 │       ├── tcell_reclustered_top30_markers_per_cluster.csv
 │       ├── tcell_slingshot_fast_spearman_pseudotime_gene_screen.csv
+│       ├── tcell_subtype_milor_STOP_baseline_effect_summary.tsv
+│       ├── tcell_subtype_milor_STOP_baseline_results.tsv
+│       ├── tcell_subtype_milor_STOP_baseline_threshold_summary.tsv
 │       ├── tcell_subtype_milor_tumor_baseline_effect_summary.tsv
 │       ├── tcell_subtype_milor_tumor_baseline_results.tsv
 │       ├── tcell_subtype_milor_tumor_baseline_threshold_summary.tsv
 │       ├── tcell_subtype_composition_sccomp_41BBL_baseline_results.tsv
+│       ├── tcell_subtype_composition_sccomp_STOP_baseline_results.tsv
 │       ├── tcell_subtype_composition_sccomp_tumor_baseline_results.tsv
 │       └── tcell_top_old_label_per_new_cluster.tsv
 ├── run_module.sh
 └── util
     ├── dotplot_helpers.R
+    ├── kdm6b_expression_helpers.R
     ├── milor_helpers.R
     ├── pseudobulk_gsea_helpers.R
     ├── sccomp_helpers.R
