@@ -21,6 +21,7 @@
 13. `13-tcell-cd4-cd8-slingshot.Rmd`: loads the prepared objects, runs condition-specific and all-condition Slingshot analyses, caches successful trajectory inference, and generates pseudotime, lineage, gene-trend, and AUCell program outputs.
 14. `14-kdm6b-expression-subcluster-definition.Rmd`: compares sample-level pseudobulk Kdm6b expression across all cells, T cells, and myeloid cells; visualizes Kdm6b within myeloid cells; and ranks numeric myeloid subclusters to define Kdm6b-high and Kdm6b-low groups.
 15. `15-kdm6b-myeloid-subcluster-abundance.Rmd`: quantifies myeloid subcluster proportions, tests all 16 numeric subclusters with sccomp using 41BB-L as the reference, and summarizes differential abundance for Kdm6b-high and Kdm6b-low subclusters.
+16. `16-kdm6b-myeloid-transcriptional-comparison.Rmd`: compares Kdm6b-high and Kdm6b-low myeloid subclusters using paired sample-level pseudobulk profiles, DESeq2 differential expression, Hallmark GSEA, and a heatmap of the top genes in each direction.
 
 ## Analysis module directory structure
 ```
@@ -55,6 +56,8 @@ downstream-analyses/
 ├── 14-kdm6b-expression-subcluster-definition.html
 ├── 15-kdm6b-myeloid-subcluster-abundance.Rmd
 ├── 15-kdm6b-myeloid-subcluster-abundance.html
+├── 16-kdm6b-myeloid-transcriptional-comparison.Rmd
+├── 16-kdm6b-myeloid-transcriptional-comparison.html
 ├── README.md
 ├── input
 │   ├── cart_lineage_markers.csv
@@ -132,6 +135,8 @@ downstream-analyses/
 │   │   │   ├── kdm6b_myeloid_violin_by_subcluster.pdf
 │   │   │   ├── kdm6b_pseudobulk_expression_by_compartment.pdf
 │   │   │   ├── kdm6b_subcluster_ranking.pdf
+│   │   │   ├── myeloid_kdm6b_high_vs_low_hallmark_gsea_dotplot.pdf
+│   │   │   ├── myeloid_kdm6b_high_vs_low_pseudobulk_gene_heatmap.pdf
 │   │   │   ├── myeloid_subcluster_composition_sccomp_41BBL_baseline.pdf
 │   │   │   └── myeloid_subcluster_proportions_stacked_barplot.png
 │   │   ├── myeloid_dotplot_subcluster_markers.pdf
@@ -297,6 +302,9 @@ downstream-analyses/
 │   │   │   ├── kdm6b_high_low_subcluster_differential_abundance.tsv
 │   │   │   ├── kdm6b_pseudobulk_by_sample.tsv
 │   │   │   ├── kdm6b_subcluster_ranking_and_groups.tsv
+│   │   │   ├── myeloid_kdm6b_high_vs_low_hallmark_gsea.tsv
+│   │   │   ├── myeloid_kdm6b_high_vs_low_heatmap_genes.tsv
+│   │   │   ├── myeloid_kdm6b_high_vs_low_paired_deseq2.tsv
 │   │   │   └── myeloid_subcluster_composition_sccomp_41BBL_baseline_results.tsv
 │   │   ├── myeloid_subtype_composition_sccomp_41BBL_baseline_results.tsv
 │   │   ├── myeloid_subtype_composition_sccomp_STOP_baseline_results.tsv

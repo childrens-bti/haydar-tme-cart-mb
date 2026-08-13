@@ -50,3 +50,6 @@ Rscript -e "rmarkdown::render('14-kdm6b-expression-subcluster-definition.Rmd')"
 
 # Test differential abundance of myeloid subclusters using sccomp
 Rscript -e "rmarkdown::render('15-kdm6b-myeloid-subcluster-abundance.Rmd')"
+
+# Compare transcriptional profiles of Kdm6b-high and Kdm6b-low myeloid subclusters
+Rscript -e "rmarkdown::render('16-kdm6b-myeloid-transcriptional-comparison.Rmd')"
