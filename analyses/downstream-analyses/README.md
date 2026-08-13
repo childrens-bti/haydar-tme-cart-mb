@@ -20,6 +20,7 @@
 12. `12-tcell-cd4-cd8-annotation.Rmd`: identifies clean CD4-like and CD8-like T cells using marker expression and ScGate support, adds ProjecTILs and cluster-level annotations, calculates AUCell program scores, and saves prepared CD4-like and CD8-like Seurat objects.
 13. `13-tcell-cd4-cd8-slingshot.Rmd`: loads the prepared objects, runs condition-specific and all-condition Slingshot analyses, caches successful trajectory inference, and generates pseudotime, lineage, gene-trend, and AUCell program outputs.
 14. `14-kdm6b-expression-subcluster-definition.Rmd`: compares sample-level pseudobulk Kdm6b expression across all cells, T cells, and myeloid cells; visualizes Kdm6b within myeloid cells; and ranks numeric myeloid subclusters to define Kdm6b-high and Kdm6b-low groups.
+15. `15-kdm6b-myeloid-subcluster-abundance.Rmd`: quantifies myeloid subcluster proportions, tests all 16 numeric subclusters with sccomp using 41BB-L as the reference, and summarizes differential abundance for Kdm6b-high and Kdm6b-low subclusters.
 
 ## Analysis module directory structure
 ```
@@ -52,6 +53,8 @@ downstream-analyses/
 ├── 13-tcell-cd4-cd8-slingshot.html
 ├── 14-kdm6b-expression-subcluster-definition.Rmd
 ├── 14-kdm6b-expression-subcluster-definition.html
+├── 15-kdm6b-myeloid-subcluster-abundance.Rmd
+├── 15-kdm6b-myeloid-subcluster-abundance.html
 ├── README.md
 ├── input
 │   ├── cart_lineage_markers.csv
@@ -124,10 +127,13 @@ downstream-analyses/
 │   │   │   ├── myeloid_volcano_pseudobulk_tumor_vs_allCAR.pdf
 │   │   │   └── myeloid_volcano_pseudobulk_tumor_vs_rest.pdf
 │   │   ├── kdm6b
+│   │   │   ├── kdm6b_high_low_subcluster_enrichment_across_conditions.pdf
 │   │   │   ├── kdm6b_myeloid_featureplot.pdf
 │   │   │   ├── kdm6b_myeloid_violin_by_subcluster.pdf
 │   │   │   ├── kdm6b_pseudobulk_expression_by_compartment.pdf
-│   │   │   └── kdm6b_subcluster_ranking.pdf
+│   │   │   ├── kdm6b_subcluster_ranking.pdf
+│   │   │   ├── myeloid_subcluster_composition_sccomp_41BBL_baseline.pdf
+│   │   │   └── myeloid_subcluster_proportions_stacked_barplot.png
 │   │   ├── myeloid_dotplot_subcluster_markers.pdf
 │   │   ├── myeloid_dotplot_subcluster_markers_panelE.pdf
 │   │   ├── myeloid_dotplot_subcluster_markers_panelF.pdf
@@ -288,8 +294,10 @@ downstream-analyses/
 │   │   │   ├── myeloid_GSEA_pseudobulk_tumor_vs_allCAR_hallmark.csv
 │   │   │   └── myeloid_GSEA_pseudobulk_tumor_vs_rest_hallmark.csv
 │   │   ├── kdm6b
+│   │   │   ├── kdm6b_high_low_subcluster_differential_abundance.tsv
 │   │   │   ├── kdm6b_pseudobulk_by_sample.tsv
-│   │   │   └── kdm6b_subcluster_ranking_and_groups.tsv
+│   │   │   ├── kdm6b_subcluster_ranking_and_groups.tsv
+│   │   │   └── myeloid_subcluster_composition_sccomp_41BBL_baseline_results.tsv
 │   │   ├── myeloid_subtype_composition_sccomp_41BBL_baseline_results.tsv
 │   │   ├── myeloid_subtype_composition_sccomp_STOP_baseline_results.tsv
 │   │   ├── myeloid_subtype_composition_sccomp_tumor_baseline_results.tsv
