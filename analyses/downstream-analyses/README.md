@@ -22,6 +22,7 @@
 14. `14-kdm6b-expression-subcluster-definition.Rmd`: compares sample-level pseudobulk Kdm6b expression across all cells, T cells, and myeloid cells; visualizes Kdm6b within myeloid cells; and ranks numeric myeloid subclusters to define Kdm6b-high and Kdm6b-low groups.
 15. `15-kdm6b-myeloid-subcluster-abundance.Rmd`: quantifies myeloid subcluster proportions, tests all 16 numeric subclusters with sccomp using 41BB-L as the reference, and summarizes differential abundance for Kdm6b-high and Kdm6b-low subclusters.
 16. `16-kdm6b-myeloid-transcriptional-comparison.Rmd`: compares Kdm6b-high and Kdm6b-low myeloid subclusters using paired sample-level pseudobulk profiles, DESeq2 differential expression, Hallmark GSEA, and a heatmap of the top genes in each direction.
+17. `17-kdm6b-myeloid-gene-correlations.Rmd`: calculates mean log-normalized expression per sample across all myeloid cells, correlates sample-level Kdm6b and immune-program expression using Spearman correlation, and generates program-specific correlation dot plots and faceted sample-level scatter plots for antigen presentation, inflammatory activation, and T-cell recruitment.
 
 ## Analysis module directory structure
 ```
@@ -58,6 +59,8 @@ downstream-analyses/
 ├── 15-kdm6b-myeloid-subcluster-abundance.html
 ├── 16-kdm6b-myeloid-transcriptional-comparison.Rmd
 ├── 16-kdm6b-myeloid-transcriptional-comparison.html
+├── 17-kdm6b-myeloid-gene-correlations.Rmd
+├── 17-kdm6b-myeloid-gene-correlations.html
 ├── README.md
 ├── input
 │   ├── cart_lineage_markers.csv
@@ -138,6 +141,12 @@ downstream-analyses/
 │   │   │   ├── myeloid_kdm6b_high_vs_low_hallmark_gsea_dotplot.pdf
 │   │   │   ├── myeloid_kdm6b_high_vs_low_pseudobulk_gene_heatmap.pdf
 │   │   │   ├── myeloid_subcluster_composition_sccomp_41BBL_baseline.pdf
+│   │   │   ├── myeloid_kdm6b_correlation_antigen_presentation_scatterplots.pdf
+│   │   │   ├── myeloid_kdm6b_correlation_inflammatory_activation_scatterplots.pdf
+│   │   │   ├── myeloid_kdm6b_correlation_t_cell_recruitment_scatterplots.pdf
+│   │   │   ├── myeloid_kdm6b_correlation_antigen_presentation_dotplot.pdf
+│   │   │   ├── myeloid_kdm6b_correlation_inflammatory_activation_dotplot.pdf
+│   │   │   ├── myeloid_kdm6b_correlation_t_cell_recruitment_dotplot.pdf
 │   │   │   └── myeloid_subcluster_proportions_stacked_barplot.png
 │   │   ├── myeloid_dotplot_subcluster_markers.pdf
 │   │   ├── myeloid_dotplot_subcluster_markers_panelE.pdf
@@ -305,6 +314,8 @@ downstream-analyses/
 │   │   │   ├── myeloid_kdm6b_high_vs_low_hallmark_gsea.tsv
 │   │   │   ├── myeloid_kdm6b_high_vs_low_heatmap_genes.tsv
 │   │   │   ├── myeloid_kdm6b_high_vs_low_paired_deseq2.tsv
+│   │   │   ├── myeloid_kdm6b_gene_correlation_summary.tsv
+│   │   │   ├── myeloid_kdm6b_gene_mean_expression_by_sample.tsv
 │   │   │   └── myeloid_subcluster_composition_sccomp_41BBL_baseline_results.tsv
 │   │   ├── myeloid_subtype_composition_sccomp_41BBL_baseline_results.tsv
 │   │   ├── myeloid_subtype_composition_sccomp_STOP_baseline_results.tsv
