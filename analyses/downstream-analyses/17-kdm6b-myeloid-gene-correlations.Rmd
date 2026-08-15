@@ -1,0 +1,397 @@
+---
+title: "17-kdm6b-myeloid-gene-correlations"
+author: "Bicna Song"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: TRUE
+    toc_float: TRUE
+params:
+  input_rds: "cart_myeloid_subtypes.rds"
+---
+
+This analysis measures the association between `Kdm6b` and selected immune-program
+genes across the full myeloid compartment. It does not subset cells by
+Kdm6b-high or Kdm6b-low subcluster.
+
+Mean log-normalized expression is calculated for `Kdm6b` and each gene of
+interest within each biological sample. Spearman correlation is then calculated
+across the 12 sample-level means. Results are reported separately for antigen
+presentation, inflammatory activation, and T-cell recruitment programs.
+
+## Setup
+
+```{r load-packages, message=FALSE, warning=FALSE}
+suppressPackageStartupMessages({
+  library(rprojroot)
+  library(dplyr)
+  library(tidyr)
+  library(tibble)
+  library(ggplot2)
+  library(SeuratObject)
+})
+
+root_dir <- find_root(has_dir(".git"))
+data_dir <- file.path(root_dir, "data", "v5")
+analysis_dir <- file.path(root_dir, "analyses", "downstream-analyses")
+results_dir <- file.path(analysis_dir, "results", "myeloid", "kdm6b")
+plot_dir <- file.path(analysis_dir, "plots", "myeloid", "kdm6b")
+
+dir.create(results_dir, recursive = TRUE, showWarnings = FALSE)
+dir.create(plot_dir, recursive = TRUE, showWarnings = FALSE)
+```
+
+## Genes of interest
+
+```{r analysis-parameters}
+input_file <- file.path(data_dir, params$input_rds)
+if (!file.exists(input_file)) {
+  stop("Missing input file: ", input_file)
+}
+
+condition_levels <- c(
+  "41BB-L", "B7H3", "CD28-41BB", "CD8-41BB", "STOP", "tumor"
+)
+program_levels <- c(
+  "Antigen presentation",
+  "Inflammatory activation",
+  "T-cell recruitment"
+)
+
+program_genes <- tibble::tribble(
+  ~program, ~gene,
+  "Antigen presentation", "H2-Ab1",
+  "Antigen presentation", "Cd74",
+  "Antigen presentation", "H2-Eb1",
+  "Antigen presentation", "B2m",
+  "Antigen presentation", "Psmb8",
+  "Antigen presentation", "Tap1",
+  "Antigen presentation", "Tapbp",
+  "Inflammatory activation", "Il12b",
+  "Inflammatory activation", "Ifngr1",
+  "Inflammatory activation", "Stat1",
+  "Inflammatory activation", "Irf1",
+  "Inflammatory activation", "Irf7",
+  "Inflammatory activation", "Cxcl9",
+  "Inflammatory activation", "Cxcl10",
+  "Inflammatory activation", "Tnf",
+  "T-cell recruitment", "Ccl5",
+  "T-cell recruitment", "Cxcl9",
+  "T-cell recruitment", "Cxcl10",
+  "T-cell recruitment", "Xcl1",
+  "T-cell recruitment", "Xcr1",
+  "T-cell recruitment", "Ccr7",
+  "T-cell recruitment", "Ccl19",
+  "T-cell recruitment", "Ccl21a"
+) %>%
+  dplyr::mutate(program = factor(program, levels = program_levels))
+```
+
+## Load all myeloid cells
+
+Correlations use sample-level mean log-normalized RNA expression.
+
+```{r load-expression-data, message=FALSE, warning=FALSE}
+myeloid_obj <- readRDS(input_file)
+required_metadata <- c("sample", "condition")
+stopifnot(all(required_metadata %in% colnames(myeloid_obj@meta.data)))
+
+log_expression <- SeuratObject::GetAssayData(
+  myeloid_obj,
+  assay = "RNA",
+  layer = "data"
+)
+if (!"Kdm6b" %in% rownames(log_expression)) {
+  stop("Kdm6b is absent from the RNA assay.")
+}
+
+missing_genes <- setdiff(unique(program_genes$gene), rownames(log_expression))
+if (length(missing_genes) > 0) {
+  message("Genes absent from the RNA assay: ", paste(missing_genes, collapse = ", "))
+}
+program_genes <- program_genes %>%
+  dplyr::filter(gene %in% rownames(log_expression))
+target_genes <- unique(program_genes$gene)
+
+cell_metadata <- myeloid_obj@meta.data[colnames(log_expression), , drop = FALSE] %>%
+  tibble::rownames_to_column("cell") %>%
+  dplyr::transmute(
+    cell,
+    sample = as.character(sample),
+    condition = factor(as.character(condition), levels = condition_levels)
+  )
+
+if (anyNA(cell_metadata$condition)) {
+  stop("At least one cell has a condition outside condition_levels.")
+}
+if (!identical(cell_metadata$cell, colnames(log_expression))) {
+  stop("Expression columns and metadata rows are not aligned.")
+}
+
+correlation_expression <- as.matrix(
+  log_expression[c("Kdm6b", target_genes), , drop = FALSE]
+)
+cat("Myeloid cells included:", nrow(cell_metadata), "\n")
+cat("Biological samples included:", dplyr::n_distinct(cell_metadata$sample), "\n")
+cat("Target genes detected:", length(target_genes), "\n")
+```
+
+## Calculate sample-level mean expression and correlations
+
+```{r correlation-functions}
+safe_sample_correlation <- function(x, y) {
+  if (length(x) < 3 || length(unique(x)) < 2 || length(unique(y)) < 2) {
+    return(NA_real_)
+  }
+  stats::cor(x, y, method = "spearman", use = "complete.obs")
+}
+
+sample_metadata <- cell_metadata %>%
+  dplyr::distinct(sample, condition) %>%
+  dplyr::arrange(condition, sample)
+
+calculate_sample_means <- function(sample_id) {
+  cell_index <- which(cell_metadata$sample == sample_id)
+  sample_condition <- as.character(cell_metadata$condition[cell_index][1])
+  sample_means <- rowMeans(correlation_expression[, cell_index, drop = FALSE])
+  tibble::tibble(
+    sample = sample_id,
+    condition = sample_condition,
+    n_cells = length(cell_index)
+  ) %>%
+    dplyr::bind_cols(tibble::as_tibble_row(as.list(sample_means)))
+}
+```
+
+```{r calculate-correlations, message=FALSE, warning=FALSE}
+sample_means_wide <- dplyr::bind_rows(
+  lapply(sample_metadata$sample, calculate_sample_means)
+) %>%
+  dplyr::mutate(condition = factor(condition, levels = condition_levels))
+
+sample_mean_output <- sample_means_wide %>%
+  dplyr::select(sample, condition, n_cells, Kdm6b, dplyr::all_of(target_genes)) %>%
+  tidyr::pivot_longer(
+    cols = dplyr::all_of(target_genes),
+    names_to = "gene",
+    values_to = "gene_mean_expression"
+  ) %>%
+  dplyr::rename(kdm6b_mean_expression = Kdm6b) %>%
+  dplyr::arrange(gene, condition, sample)
+
+correlation_summary <- sample_mean_output %>%
+  dplyr::group_by(gene) %>%
+  dplyr::summarise(
+    n_samples = sum(
+      is.finite(kdm6b_mean_expression) & is.finite(gene_mean_expression)
+    ),
+    spearman_rho = if (n_samples >= 3) {
+      safe_sample_correlation(kdm6b_mean_expression, gene_mean_expression)
+    } else {
+      NA_real_
+    },
+    p_value = if (n_samples >= 3) {
+      stats::cor.test(
+        kdm6b_mean_expression,
+        gene_mean_expression,
+        method = "spearman",
+        exact = FALSE
+      )$p.value
+    } else {
+      NA_real_
+    },
+    .groups = "drop"
+  ) %>%
+  dplyr::mutate(
+    adjusted_p_value = stats::p.adjust(
+      p_value,
+      method = "BH"
+    )
+  )
+
+correlation_summary <- correlation_summary %>%
+  dplyr::left_join(program_genes, by = "gene") %>%
+  dplyr::relocate(program, gene) %>%
+  dplyr::arrange(program, dplyr::desc(spearman_rho), gene)
+
+sample_correlation_output <- sample_mean_output %>%
+  dplyr::left_join(
+    program_genes,
+    by = "gene",
+    relationship = "many-to-many"
+  ) %>%
+  dplyr::relocate(program, gene, sample, condition) %>%
+  dplyr::arrange(program, gene, condition, sample)
+
+readr::write_tsv(
+  correlation_summary,
+  file.path(results_dir, "myeloid_kdm6b_gene_correlation_summary.tsv")
+)
+readr::write_tsv(
+  sample_correlation_output,
+  file.path(results_dir, "myeloid_kdm6b_gene_mean_expression_by_sample.tsv")
+)
+
+correlation_summary
+```
+
+## Program-specific sample-level scatter plots
+
+Each facet shows sample-level mean `Kdm6b` expression against sample-level mean
+expression of one target gene. Each point represents one biological sample. The
+line is a fitted linear trend, and each facet reports the Spearman correlation
+and BH-adjusted p-value. Genes present in more than one program are shown in each
+relevant plot.
+
+```{r program-correlation-scatterplots, fig.width=12, fig.height=8}
+for (program_name in program_levels) {
+  program_gene_levels <- program_genes %>%
+    dplyr::filter(program == program_name) %>%
+    dplyr::pull(gene)
+
+  plot_data <- sample_correlation_output %>%
+    dplyr::filter(program == program_name) %>%
+    dplyr::mutate(
+      gene = factor(gene, levels = program_gene_levels)
+    )
+
+  annotation_data <- correlation_summary %>%
+    dplyr::filter(program == program_name) %>%
+    dplyr::mutate(
+      gene = factor(gene, levels = program_gene_levels),
+      label = paste0(
+        "rho = ", sprintf("%.2f", spearman_rho),
+        "\nFDR = ", format.pval(adjusted_p_value, digits = 2, eps = 1e-3)
+      )
+    )
+
+  p <- ggplot(
+    plot_data,
+    aes(x = kdm6b_mean_expression, y = gene_mean_expression)
+  ) +
+    geom_smooth(
+      data = plot_data,
+      aes(x = kdm6b_mean_expression, y = gene_mean_expression),
+      method = "lm",
+      formula = y ~ x,
+      se = FALSE,
+      color = "#B2182B",
+      linewidth = 0.6,
+      inherit.aes = FALSE
+    ) +
+    geom_point(size = 2.2, color = "#2166AC", alpha = 0.85) +
+    geom_text(
+      data = annotation_data,
+      aes(x = -Inf, y = Inf, label = label),
+      inherit.aes = FALSE,
+      hjust = -0.05,
+      vjust = 1.15,
+      size = 3
+    ) +
+    facet_wrap(~gene, scales = "free_y", ncol = 3) +
+    theme_bw(base_size = 11) +
+    theme(
+      panel.background = element_rect(fill = "white", color = NA),
+      plot.background = element_rect(fill = "white", color = NA),
+      panel.grid = element_blank(),
+      strip.background = element_rect(fill = "grey95", color = "grey70")
+    ) +
+    labs(
+      title = paste("Kdm6b and immune-program genes:", program_name),
+      x = "Sample mean log-normalized Kdm6b expression",
+      y = "Sample mean log-normalized gene expression"
+    )
+
+  print(p)
+
+  output_label <- gsub("[^a-z0-9]+", "_", tolower(program_name))
+  ggsave(
+    file.path(
+      plot_dir,
+      paste0("myeloid_kdm6b_correlation_", output_label, "_scatterplots.pdf")
+    ),
+    plot = p,
+    width = 12,
+    height = 8,
+    device = grDevices::pdf,
+    bg = "white"
+  )
+}
+```
+
+## Program-specific correlation dot plots
+
+The dot plots provide compact summaries of the same sample-level correlations
+shown in the scatter plots.
+
+```{r program-correlation-dotplots, fig.width=6, fig.height=4}
+rho_limit <- max(abs(correlation_summary$spearman_rho), na.rm = TRUE)
+rho_limit <- max(rho_limit, 0.1)
+
+for (program_name in program_levels) {
+  output_label <- gsub("[^a-z0-9]+", "_", tolower(program_name))
+  program_gene_levels <- program_genes %>%
+    dplyr::filter(program == program_name) %>%
+    dplyr::pull(gene)
+
+  plot_data <- correlation_summary %>%
+    dplyr::filter(program == program_name) %>%
+    dplyr::mutate(
+      gene = factor(gene, levels = rev(program_gene_levels)),
+      minus_log10_fdr = -log10(
+        pmax(adjusted_p_value, .Machine$double.xmin)
+      )
+    )
+
+  p_dot <- ggplot(
+    plot_data,
+    aes(
+      x = spearman_rho,
+      y = gene,
+      color = spearman_rho,
+      size = minus_log10_fdr
+    )
+  ) +
+    geom_vline(xintercept = 0, color = "grey70", linewidth = 0.5) +
+    geom_point(alpha = 0.9) +
+    scale_color_gradient2(
+      low = "#2166AC",
+      mid = "white",
+      high = "#B2182B",
+      midpoint = 0,
+      limits = c(-rho_limit, rho_limit),
+      oob = scales::squish
+    ) +
+    theme_bw(base_size = 11) +
+    theme(
+      panel.grid = element_blank(),
+      plot.margin = ggplot2::margin(2, 2, 2, 2)
+    ) +
+    labs(
+      title = paste("Kdm6b correlation:", program_name),
+      x = "Spearman rho",
+      y = NULL,
+      color = "Spearman rho",
+      size = "-log10(FDR)"
+    )
+
+  ggsave(
+    file.path(
+      plot_dir,
+      paste0("myeloid_kdm6b_correlation_", output_label, "_dotplot.pdf")
+    ),
+    plot = p_dot,
+    width = 6,
+    height = 4,
+    device = grDevices::pdf,
+    bg = "white"
+  )
+
+}
+```
+
+## Session info
+
+```{r session-info}
+sessionInfo()
+```
