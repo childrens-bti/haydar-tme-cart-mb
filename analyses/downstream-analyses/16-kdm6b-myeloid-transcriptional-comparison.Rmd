@@ -1,0 +1,527 @@
+---
+title: "16-kdm6b-myeloid-transcriptional-comparison"
+author: "Bicna Song"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: TRUE
+    toc_float: TRUE
+params:
+  input_rds: "cart_myeloid_subtypes.rds"
+  ranking_tsv: "kdm6b_subcluster_ranking_and_groups.tsv"
+  min_total_count: 10
+  de_fdr: 0.05
+  heatmap_genes_per_direction: 25
+  gsea_min_size: 15
+  gsea_max_size: 500
+  gsea_pathways_per_direction: 10
+---
+
+This analysis compares the transcriptional profiles of Kdm6b-high and
+Kdm6b-low myeloid subclusters. Intermediate subclusters are excluded from the
+comparison.
+
+Raw RNA counts are aggregated into one Kdm6b-high and one Kdm6b-low pseudobulk
+profile per biological sample. The paired DESeq2 design, `~ sample +
+kdm6b_group`, estimates the high-versus-low difference within samples and then
+combines that evidence across all samples. Treatment is not included as a tested
+effect.
+
+## Setup
+
+```{r load-packages, message=FALSE, warning=FALSE}
+suppressPackageStartupMessages({
+  library(rprojroot)
+  library(dplyr)
+  library(tidyr)
+  library(tibble)
+  library(ggplot2)
+  library(SeuratObject)
+  library(Matrix)
+  library(DESeq2)
+  library(msigdbr)
+  library(fgsea)
+  library(ComplexHeatmap)
+})
+
+root_dir <- find_root(has_dir(".git"))
+data_dir <- file.path(root_dir, "data", "v5")
+analysis_dir <- file.path(root_dir, "analyses", "downstream-analyses")
+results_dir <- file.path(analysis_dir, "results", "myeloid", "kdm6b")
+plot_dir <- file.path(analysis_dir, "plots", "myeloid", "kdm6b")
+
+dir.create(results_dir, recursive = TRUE, showWarnings = FALSE)
+dir.create(plot_dir, recursive = TRUE, showWarnings = FALSE)
+
+source(file.path(root_dir, "figures", "theme.R"))
+set.seed(1234)
+```
+
+## Analysis parameters
+
+```{r parameters}
+input_file <- file.path(data_dir, params$input_rds)
+ranking_file <- file.path(results_dir, params$ranking_tsv)
+min_total_count <- params$min_total_count
+de_fdr <- params$de_fdr
+heatmap_genes_per_direction <- params$heatmap_genes_per_direction
+gsea_min_size <- params$gsea_min_size
+gsea_max_size <- params$gsea_max_size
+gsea_pathways_per_direction <- params$gsea_pathways_per_direction
+
+kdm6b_group_levels <- c("Kdm6b-low", "Kdm6b-high")
+condition_levels <- c(
+  "41BB-L", "B7H3", "CD28-41BB", "CD8-41BB", "STOP", "tumor"
+)
+kdm6b_group_colors <- c(
+  "Kdm6b-low" = "#2166AC",
+  "Kdm6b-high" = "#B2182B"
+)
+missing_input_files <- c(input_file, ranking_file)[
+  !file.exists(c(input_file, ranking_file))
+]
+if (length(missing_input_files) > 0) {
+  stop("Missing input file(s): ", paste(missing_input_files, collapse = ", "))
+}
+```
+
+## Load data and map Kdm6b groups
+
+The previously defined high and low assignments are imported from the
+subcluster-ranking table and are not recalculated here.
+
+```{r load-and-map-groups}
+myeloid_obj <- readRDS(input_file)
+kdm6b_ranking <- readr::read_tsv(ranking_file, show_col_types = FALSE) %>%
+  dplyr::mutate(subcluster = as.character(subcluster))
+
+required_metadata <- c("sample", "condition", "seurat_clusters")
+required_ranking_columns <- c("subcluster", "kdm6b_group")
+stopifnot(all(required_metadata %in% colnames(myeloid_obj@meta.data)))
+stopifnot(all(required_ranking_columns %in% colnames(kdm6b_ranking)))
+
+if (anyDuplicated(kdm6b_ranking$subcluster)) {
+  stop("Each numeric subcluster must have exactly one Kdm6b group assignment.")
+}
+
+observed_subclusters <- unique(as.character(myeloid_obj$seurat_clusters))
+if (!setequal(observed_subclusters, kdm6b_ranking$subcluster)) {
+  stop("The ranking table and myeloid object contain different subclusters.")
+}
+
+cell_metadata <- myeloid_obj@meta.data %>%
+  tibble::rownames_to_column("cell") %>%
+  dplyr::transmute(
+    cell,
+    sample = as.character(sample),
+    condition = as.character(condition),
+    subcluster = as.character(seurat_clusters)
+  ) %>%
+  dplyr::left_join(
+    kdm6b_ranking %>% dplyr::select(subcluster, kdm6b_group),
+    by = "subcluster"
+  )
+
+if (anyNA(cell_metadata$kdm6b_group)) {
+  stop("At least one myeloid cell could not be assigned to a Kdm6b group.")
+}
+
+analysis_metadata <- cell_metadata %>%
+  dplyr::filter(kdm6b_group %in% kdm6b_group_levels) %>%
+  dplyr::mutate(
+    condition = factor(condition, levels = condition_levels),
+    kdm6b_group = factor(kdm6b_group, levels = kdm6b_group_levels),
+    profile_id = paste(sample, kdm6b_group, sep = "__")
+  )
+
+if (anyNA(analysis_metadata$condition)) {
+  stop("At least one cell has a condition outside condition_levels.")
+}
+
+cat("Cells retained for the high-versus-low comparison:",
+    nrow(analysis_metadata), "\n")
+cat("Intermediate cells excluded:",
+    nrow(cell_metadata) - nrow(analysis_metadata), "\n")
+table(analysis_metadata$kdm6b_group, analysis_metadata$condition)
+```
+
+## Build paired sample-level pseudobulks
+
+Each sample must contribute both a Kdm6b-high and a Kdm6b-low profile. Raw RNA
+counts are summed across all cells belonging to each sample and group.
+
+```{r build-pseudobulk, message=FALSE, warning=FALSE}
+counts <- SeuratObject::GetAssayData(
+  myeloid_obj,
+  assay = "RNA",
+  layer = "counts"
+)
+
+if (!all(analysis_metadata$cell %in% colnames(counts))) {
+  stop("At least one retained cell is absent from the RNA count matrix.")
+}
+
+analysis_metadata <- analysis_metadata %>%
+  dplyr::arrange(match(cell, colnames(counts)))
+analysis_counts <- counts[, analysis_metadata$cell, drop = FALSE]
+stopifnot(identical(colnames(analysis_counts), analysis_metadata$cell))
+
+profile_metadata <- analysis_metadata %>%
+  dplyr::count(
+    profile_id,
+    sample,
+    condition,
+    kdm6b_group,
+    name = "n_cells"
+  ) %>%
+  dplyr::arrange(sample, kdm6b_group)
+
+pair_check <- profile_metadata %>%
+  dplyr::count(sample, name = "n_group_profiles")
+if (any(pair_check$n_group_profiles != 2)) {
+  stop("Every sample must contain one Kdm6b-high and one Kdm6b-low profile.")
+}
+
+profile_indicator <- Matrix::sparseMatrix(
+  i = seq_len(ncol(analysis_counts)),
+  j = match(analysis_metadata$profile_id, profile_metadata$profile_id),
+  x = 1,
+  dims = c(ncol(analysis_counts), nrow(profile_metadata)),
+  dimnames = list(colnames(analysis_counts), profile_metadata$profile_id)
+)
+pseudobulk_counts <- analysis_counts %*% profile_indicator
+
+profile_metadata <- profile_metadata %>%
+  dplyr::mutate(
+    raw_library_size = as.numeric(Matrix::colSums(pseudobulk_counts)),
+    sample_number = sub("^.*_(D[0-9]+)$", "\\1", sample)
+  )
+
+profile_metadata
+```
+
+## Paired differential-expression analysis
+
+The sample term blocks differences among biological samples. The model tests one
+common Kdm6b-high versus Kdm6b-low effect across the 12 paired samples. Treatment
+is retained only as provenance in the profile table and is not included in the
+design, contrast, or plots.
+
+Genes with fewer than `r min_total_count` total counts across the 24 profiles are
+excluded before model fitting. The output table contains every gene tested by
+DESeq2, rather than only statistically significant genes.
+
+```{r paired-deseq2, message=FALSE, warning=FALSE}
+coldata <- profile_metadata %>%
+  dplyr::mutate(
+    sample_block = factor(match(sample, unique(sample))),
+    kdm6b_group_model = factor(
+      ifelse(kdm6b_group == "Kdm6b-high", "high", "low"),
+      levels = c("low", "high")
+    )
+  ) %>%
+  as.data.frame()
+rownames(coldata) <- coldata$profile_id
+
+pseudobulk_counts <- pseudobulk_counts[, rownames(coldata), drop = FALSE]
+keep_genes <- Matrix::rowSums(pseudobulk_counts) >= min_total_count
+cat("Genes retained for DESeq2:", sum(keep_genes), "of",
+    length(keep_genes), "\n")
+
+design_matrix <- stats::model.matrix(
+  ~ sample_block + kdm6b_group_model,
+  data = coldata
+)
+if (qr(design_matrix)$rank != ncol(design_matrix)) {
+  stop("The paired DESeq2 design matrix is not full rank.")
+}
+
+dds <- DESeq2::DESeqDataSetFromMatrix(
+  countData = round(as.matrix(pseudobulk_counts[keep_genes, , drop = FALSE])),
+  colData = coldata,
+  design = ~ sample_block + kdm6b_group_model
+)
+dds <- DESeq2::DESeq(dds, quiet = TRUE)
+
+de_result <- DESeq2::results(
+  dds,
+  contrast = c("kdm6b_group_model", "high", "low"),
+  alpha = de_fdr
+)
+
+de_table <- as.data.frame(de_result) %>%
+  tibble::rownames_to_column("gene") %>%
+  dplyr::mutate(
+    comparison = "Kdm6b-high vs Kdm6b-low",
+    direction = dplyr::case_when(
+      is.na(log2FoldChange) ~ NA_character_,
+      log2FoldChange > 0 ~ "Higher in Kdm6b-high",
+      log2FoldChange < 0 ~ "Higher in Kdm6b-low",
+      TRUE ~ "No direction"
+    ),
+    significant_fdr = !is.na(padj) & padj < de_fdr
+  ) %>%
+  dplyr::arrange(is.na(padj), padj, pvalue)
+
+readr::write_tsv(
+  de_table,
+  file.path(results_dir, "myeloid_kdm6b_high_vs_low_paired_deseq2.tsv")
+)
+
+summary(de_result)
+table(de_table$direction, de_table$significant_fdr, useNA = "ifany")
+```
+
+## Hallmark gene-set enrichment analysis
+
+All genes with finite DESeq2 Wald statistics are ranked from higher in
+Kdm6b-high to higher in Kdm6b-low. Positive normalized enrichment scores indicate
+Hallmark pathways associated with the Kdm6b-high subclusters.
+
+```{r hallmark-gsea, message=FALSE, warning=FALSE}
+hallmark_pathways <- msigdbr::msigdbr(
+  species = "Mus musculus",
+  collection = "H"
+) %>%
+  dplyr::select(gs_name, gene_symbol) %>%
+  split(x = .$gene_symbol, f = .$gs_name)
+
+gene_ranks <- de_table %>%
+  dplyr::filter(!is.na(stat), is.finite(stat)) %>%
+  dplyr::select(gene, stat) %>%
+  tibble::deframe() %>%
+  sort(decreasing = TRUE)
+
+set.seed(1234)
+hallmark_gsea <- fgsea::fgsea(
+  pathways = hallmark_pathways,
+  stats = gene_ranks,
+  minSize = gsea_min_size,
+  maxSize = gsea_max_size
+) %>%
+  dplyr::arrange(padj, pval) %>%
+  dplyr::mutate(
+    direction = ifelse(
+      NES > 0,
+      "Enriched in Kdm6b-high",
+      "Enriched in Kdm6b-low"
+    )
+  )
+
+hallmark_gsea_output <- hallmark_gsea %>%
+  dplyr::mutate(
+    leadingEdge = vapply(
+      leadingEdge,
+      paste,
+      collapse = ";",
+      FUN.VALUE = character(1)
+    )
+  )
+
+readr::write_tsv(
+  hallmark_gsea_output,
+  file.path(results_dir, "myeloid_kdm6b_high_vs_low_hallmark_gsea.tsv")
+)
+
+hallmark_gsea_output
+```
+
+```{r plot-hallmark-gsea, fig.width=10, fig.height=7}
+gsea_plot_data <- hallmark_gsea %>%
+  dplyr::filter(!is.na(padj), is.finite(padj), is.finite(NES)) %>%
+  dplyr::group_by(direction) %>%
+  dplyr::slice_min(order_by = padj, n = gsea_pathways_per_direction) %>%
+  dplyr::ungroup() %>%
+  dplyr::mutate(
+    pathway_label = stringr::str_remove(pathway, "^HALLMARK_"),
+    pathway_label = stringr::str_replace_all(pathway_label, "_", " "),
+    pathway_label = factor(
+      pathway_label,
+      levels = rev(unique(pathway_label[order(NES)]))
+    ),
+    minus_log10_fdr = -log10(pmax(padj, .Machine$double.xmin))
+  )
+
+if (nrow(gsea_plot_data) == 0) {
+  stop("No finite Hallmark GSEA results are available for plotting.")
+}
+
+p_hallmark_gsea <- ggplot(
+  gsea_plot_data,
+  aes(
+    x = NES,
+    y = pathway_label,
+    color = NES,
+    size = minus_log10_fdr
+  )
+) +
+  geom_vline(xintercept = 0, color = "grey70", linewidth = 0.5) +
+  geom_point(alpha = 0.9) +
+  scale_color_gradient2(
+    low = "#2166AC",
+    mid = "white",
+    high = "#B2182B",
+    midpoint = 0
+  ) +
+  theme_Publication() +
+  theme(
+    panel.background = element_rect(fill = "white", color = NA),
+    plot.background = element_rect(fill = "white", color = NA),
+    legend.key = element_rect(fill = "white", color = NA)
+  ) +
+  labs(
+    title = "Hallmark GSEA: Kdm6b-high vs Kdm6b-low",
+    subtitle = "Positive NES indicates enrichment in Kdm6b-high subclusters",
+    x = "Normalized enrichment score",
+    y = NULL,
+    color = "NES",
+    size = "-log10(FDR)"
+  )
+
+p_hallmark_gsea
+
+ggsave(
+  file.path(plot_dir, "myeloid_kdm6b_high_vs_low_hallmark_gsea_dotplot.pdf"),
+  plot = p_hallmark_gsea,
+  width = 10,
+  height = 7,
+  device = cairo_pdf,
+  bg = "white"
+)
+```
+
+## Heatmap of top differential genes
+
+The heatmap displays variance-stabilized pseudobulk expression. Genes are ranked
+separately by direction, prioritizing FDR-significant genes. If fewer than the
+requested number pass the FDR threshold, the remaining positions are filled by
+the next best-ranked tested genes and identified in the accompanying table.
+Columns are ordered with all Kdm6b-high profiles first, followed by all
+Kdm6b-low profiles; individual sample labels are hidden.
+
+```{r select-heatmap-genes}
+heatmap_gene_table <- de_table %>%
+  dplyr::filter(
+    direction %in% c("Higher in Kdm6b-high", "Higher in Kdm6b-low"),
+    !is.na(pvalue),
+    is.finite(pvalue),
+    is.finite(log2FoldChange)
+  ) %>%
+  dplyr::group_by(direction) %>%
+  dplyr::arrange(
+    dplyr::desc(significant_fdr),
+    padj,
+    pvalue,
+    dplyr::desc(abs(log2FoldChange)),
+    .by_group = TRUE
+  ) %>%
+  dplyr::slice_head(n = heatmap_genes_per_direction) %>%
+  dplyr::ungroup() %>%
+  dplyr::mutate(
+    heatmap_direction = factor(
+      direction,
+      levels = c("Higher in Kdm6b-high", "Higher in Kdm6b-low")
+    )
+  ) %>%
+  dplyr::arrange(heatmap_direction, padj, pvalue)
+
+if (nrow(heatmap_gene_table) == 0) {
+  stop("No genes are available for the differential-expression heatmap.")
+}
+
+readr::write_tsv(
+  heatmap_gene_table,
+  file.path(results_dir, "myeloid_kdm6b_high_vs_low_heatmap_genes.tsv")
+)
+
+heatmap_gene_table %>%
+  dplyr::select(
+    gene,
+    log2FoldChange,
+    padj,
+    significant_fdr,
+    direction
+  )
+```
+
+```{r plot-differential-gene-heatmap, fig.width=13, fig.height=10}
+vsd <- DESeq2::varianceStabilizingTransformation(dds, blind = FALSE)
+column_order <- order(
+  match(
+    as.character(coldata$kdm6b_group),
+    c("Kdm6b-high", "Kdm6b-low")
+  ),
+  coldata$sample_block
+)
+coldata_plot <- coldata[column_order, , drop = FALSE]
+
+heatmap_matrix <- SummarizedExperiment::assay(vsd)[
+  heatmap_gene_table$gene,
+  rownames(coldata_plot),
+  drop = FALSE
+]
+
+heatmap_z <- t(scale(t(heatmap_matrix)))
+heatmap_z[!is.finite(heatmap_z)] <- 0
+heatmap_z <- pmax(pmin(heatmap_z, 2.5), -2.5)
+
+column_annotation <- ComplexHeatmap::HeatmapAnnotation(
+  Kdm6b_group = factor(
+    as.character(coldata_plot$kdm6b_group),
+    levels = c("Kdm6b-high", "Kdm6b-low")
+  ),
+  col = list(
+    Kdm6b_group = kdm6b_group_colors
+  ),
+  annotation_legend_param = list(
+    Kdm6b_group = list(direction = "vertical")
+  ),
+  annotation_name_side = "left"
+)
+
+heatmap_plot <- ComplexHeatmap::Heatmap(
+  heatmap_z,
+  name = "Row z-score",
+  col = circlize::colorRamp2(
+    c(-2.5, 0, 2.5),
+    c("#2166AC", "white", "#B2182B")
+  ),
+  top_annotation = column_annotation,
+  row_split = heatmap_gene_table$heatmap_direction,
+  cluster_columns = FALSE,
+  cluster_rows = TRUE,
+  cluster_row_slices = FALSE,
+  show_row_dend = FALSE,
+  show_column_names = FALSE,
+  column_title = NULL,
+  row_title = NULL,
+  border = TRUE,
+  heatmap_legend_param = list(
+    title = "Row z-score",
+    at = c(-2.5, 0, 2.5),
+    labels = c("-2.5", "0", "2.5"),
+    direction = "vertical"
+  )
+)
+
+grDevices::pdf(
+  file.path(plot_dir, "myeloid_kdm6b_high_vs_low_pseudobulk_gene_heatmap.pdf"),
+  width = 10,
+  height = 8
+)
+ComplexHeatmap::draw(
+  heatmap_plot,
+  heatmap_legend_side = "right",
+  annotation_legend_side = "right",
+  merge_legends = TRUE
+)
+grDevices::dev.off()
+
+heatmap_plot
+```
+
+## Session info
+
+```{r session-info}
+sessionInfo()
+```
