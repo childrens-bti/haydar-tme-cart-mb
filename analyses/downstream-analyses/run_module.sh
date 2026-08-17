@@ -56,3 +56,6 @@ Rscript -e "rmarkdown::render('16-kdm6b-myeloid-transcriptional-comparison.Rmd')
 
 # Correlate Kdm6b expression with immune-program genes across all myeloid cells
 Rscript -e "rmarkdown::render('17-kdm6b-myeloid-gene-correlations.Rmd')"
+
+# Summarize myeloid immune-program gene expression and UCell scores
+Rscript -e "rmarkdown::render('18-kdm6b-myeloid-immune-programs.Rmd')"

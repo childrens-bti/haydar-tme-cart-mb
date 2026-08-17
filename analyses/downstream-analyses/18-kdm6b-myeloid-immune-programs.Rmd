@@ -1,0 +1,667 @@
+---
+title: "18-kdm6b-myeloid-immune-programs"
+author: "Bicna Song"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: TRUE
+    toc_float: TRUE
+params:
+  input_rds: "cart_myeloid_subtypes.rds"
+  ranking_tsv: "kdm6b_subcluster_ranking_and_groups.tsv"
+---
+
+This analysis evaluates antigen-presentation, inflammatory-activation, and
+T-cell-recruitment programs across myeloid subclusters. Gene-level expression
+and detection are summarized by numeric subcluster, and UCell scores are
+calculated for each myeloid cell.
+
+Program scores are summarized across all subclusters, including intermediate
+subclusters. The Kdm6b-high versus Kdm6b-low comparison excludes intermediate
+subclusters and uses paired median scores from each biological sample. These
+program differences describe the predefined subcluster groups and should not be
+interpreted as effects caused by Kdm6b.
+
+## Setup
+
+```{r load-packages, message=FALSE, warning=FALSE}
+suppressPackageStartupMessages({
+  library(rprojroot)
+  library(dplyr)
+  library(tidyr)
+  library(tibble)
+  library(ggplot2)
+  library(Seurat)
+  library(SeuratObject)
+  library(UCell)
+})
+
+root_dir <- find_root(has_dir(".git"))
+data_dir <- file.path(root_dir, "data", "v5")
+analysis_dir <- file.path(root_dir, "analyses", "downstream-analyses")
+results_dir <- file.path(analysis_dir, "results", "myeloid", "kdm6b")
+plot_dir <- file.path(analysis_dir, "plots", "myeloid", "kdm6b")
+
+dir.create(results_dir, recursive = TRUE, showWarnings = FALSE)
+dir.create(plot_dir, recursive = TRUE, showWarnings = FALSE)
+
+source(file.path(root_dir, "figures", "theme.R"))
+```
+
+## Gene programs
+
+```{r analysis-parameters}
+input_file <- file.path(data_dir, params$input_rds)
+ranking_file <- file.path(results_dir, params$ranking_tsv)
+missing_input_files <- c(input_file, ranking_file)[
+  !file.exists(c(input_file, ranking_file))
+]
+if (length(missing_input_files) > 0) {
+  stop("Missing input file(s): ", paste(missing_input_files, collapse = ", "))
+}
+
+program_levels <- c(
+  "Antigen presentation",
+  "Inflammatory activation",
+  "T-cell recruitment"
+)
+program_signatures <- list(
+  Antigen_presentation = c(
+    "H2-Ab1", "Cd74", "H2-Eb1", "B2m", "Psmb8", "Tap1", "Tapbp"
+  ),
+  Inflammatory_activation = c(
+    "Il12b", "Ifngr1", "Stat1", "Irf1", "Irf7", "Cxcl9", "Cxcl10", "Tnf"
+  ),
+  T_cell_recruitment = c(
+    "Ccl5", "Cxcl9", "Cxcl10", "Xcl1", "Xcr1", "Ccr7", "Ccl19", "Ccl21a"
+  )
+)
+program_key <- tibble::tibble(
+  score_name = names(program_signatures),
+  program = factor(program_levels, levels = program_levels)
+)
+program_genes <- dplyr::bind_rows(lapply(names(program_signatures), function(x) {
+  tibble::tibble(score_name = x, gene = program_signatures[[x]])
+})) %>%
+  dplyr::left_join(program_key, by = "score_name")
+
+kdm6b_group_levels <- c("Kdm6b-high", "Intermediate", "Kdm6b-low")
+kdm6b_group_colors <- c(
+  "Kdm6b-high" = "#B2182B",
+  "Intermediate" = "#BDBDBD",
+  "Kdm6b-low" = "#2166AC"
+)
+```
+
+## Load data and map Kdm6b groups
+
+```{r load-data}
+myeloid_obj <- readRDS(input_file)
+kdm6b_ranking <- readr::read_tsv(ranking_file, show_col_types = FALSE) %>%
+  dplyr::mutate(
+    subcluster = as.character(subcluster),
+    kdm6b_group = factor(
+      kdm6b_group,
+      levels = kdm6b_group_levels
+    )
+  )
+
+required_metadata <- c("sample", "seurat_clusters")
+required_ranking_columns <- c("subcluster", "myeloid_subtype", "kdm6b_group")
+stopifnot(all(required_metadata %in% colnames(myeloid_obj@meta.data)))
+stopifnot(all(required_ranking_columns %in% colnames(kdm6b_ranking)))
+
+if (anyDuplicated(kdm6b_ranking$subcluster)) {
+  stop("Each subcluster must have one Kdm6b group assignment.")
+}
+
+observed_subclusters <- unique(as.character(myeloid_obj$seurat_clusters))
+if (!setequal(observed_subclusters, kdm6b_ranking$subcluster)) {
+  stop("The ranking table and myeloid object contain different subclusters.")
+}
+
+subcluster_levels <- as.character(sort(as.integer(observed_subclusters)))
+kdm6b_ranking <- kdm6b_ranking %>%
+  dplyr::arrange(kdm6b_group, as.integer(subcluster))
+# Keep violin plots in sequential Seurat cluster order.
+subcluster_plot_levels <- subcluster_levels
+subcluster_axis_labels <- setNames(
+  subcluster_plot_levels,
+  subcluster_plot_levels
+)
+cluster_colors <- setNames(
+  scales::hue_pal()(length(subcluster_levels)),
+  subcluster_levels
+)[subcluster_plot_levels]
+myeloid_obj$seurat_clusters <- factor(
+  as.character(myeloid_obj$seurat_clusters),
+  levels = subcluster_plot_levels
+)
+
+group_index <- match(
+  as.character(myeloid_obj$seurat_clusters),
+  kdm6b_ranking$subcluster
+)
+cell_kdm6b_group <- kdm6b_ranking$kdm6b_group[group_index]
+if (anyNA(cell_kdm6b_group)) {
+  stop("At least one cell could not be assigned to a Kdm6b group.")
+}
+myeloid_obj$kdm6b_group <- factor(
+  cell_kdm6b_group,
+  levels = kdm6b_group_levels
+)
+
+SeuratObject::DefaultAssay(myeloid_obj) <- "RNA"
+log_expression <- SeuratObject::GetAssayData(
+  myeloid_obj,
+  assay = "RNA",
+  layer = "data"
+)
+raw_counts <- SeuratObject::GetAssayData(
+  myeloid_obj,
+  assay = "RNA",
+  layer = "counts"
+)
+
+missing_genes <- setdiff(unique(program_genes$gene), rownames(log_expression))
+if (length(missing_genes) > 0) {
+  stop("Program genes absent from the RNA assay: ", paste(missing_genes, collapse = ", "))
+}
+```
+
+## Gene expression across myeloid subclusters
+
+The violin plots show the distribution of log-normalized expression for each
+gene across myeloid subclusters.
+
+```{r summarize-gene-expression}
+unique_program_genes <- unique(program_genes$gene)
+
+gene_expression_by_subcluster <- dplyr::bind_rows(lapply(
+  subcluster_levels,
+  function(subcluster) {
+    cell_index <- which(myeloid_obj$seurat_clusters == subcluster)
+    tibble::tibble(
+      subcluster = subcluster,
+      gene = unique_program_genes,
+      mean_log_expression = as.numeric(
+        Matrix::rowMeans(log_expression[unique_program_genes, cell_index, drop = FALSE])
+      ),
+      detection_fraction = as.numeric(
+        Matrix::rowMeans(raw_counts[unique_program_genes, cell_index, drop = FALSE] > 0)
+      )
+    )
+  }
+)) %>%
+  dplyr::left_join(program_genes, by = "gene", relationship = "many-to-many") %>%
+  dplyr::left_join(
+    kdm6b_ranking %>%
+      dplyr::select(subcluster, myeloid_subtype, kdm6b_group),
+    by = "subcluster"
+  ) %>%
+  dplyr::mutate(
+    subcluster = factor(subcluster, levels = subcluster_plot_levels),
+    program = factor(program, levels = program_levels)
+  ) %>%
+  dplyr::arrange(program, gene, subcluster)
+
+readr::write_tsv(
+  gene_expression_by_subcluster %>%
+    dplyr::select(-score_name),
+  file.path(results_dir, "myeloid_kdm6b_immune_program_genes_by_subcluster.tsv")
+)
+```
+
+```{r plot-gene-expression-violins, fig.width=12, fig.height=6}
+gene_expression_long <- tibble::as_tibble(
+  t(as.matrix(log_expression[unique_program_genes, , drop = FALSE])),
+  rownames = "cell"
+) %>%
+  dplyr::left_join(
+    myeloid_obj@meta.data %>%
+      tibble::rownames_to_column("cell") %>%
+      dplyr::transmute(
+        cell,
+        sample,
+        subcluster = factor(
+          as.character(seurat_clusters),
+          levels = subcluster_plot_levels
+        ),
+        kdm6b_group
+      ),
+    by = "cell"
+  ) %>%
+  tidyr::pivot_longer(
+    cols = dplyr::all_of(unique_program_genes),
+    names_to = "gene",
+    values_to = "log_normalized_expression"
+  ) %>%
+  dplyr::left_join(program_genes, by = "gene", relationship = "many-to-many") %>%
+  dplyr::mutate(
+    program = factor(program, levels = program_levels),
+    subcluster = factor(subcluster, levels = subcluster_plot_levels),
+    kdm6b_group = factor(kdm6b_group, levels = kdm6b_group_levels)
+  )
+
+gene_violin_file <- file.path(
+  plot_dir,
+  "myeloid_kdm6b_immune_program_gene_violin_by_subcluster.pdf"
+)
+grDevices::pdf(gene_violin_file, width = 12, height = 6, bg = "white")
+for (gene_name in unique_program_genes) {
+  p_gene_violin <- VlnPlot(
+    myeloid_obj,
+    features = gene_name,
+    group.by = "seurat_clusters",
+    assay = "RNA",
+    pt.size = 0,
+    cols = cluster_colors
+  ) &
+    scale_x_discrete(
+      limits = subcluster_plot_levels,
+      labels = subcluster_axis_labels,
+      drop = FALSE
+    ) &
+    theme_Publication() &
+    theme(
+      panel.background = element_rect(fill = "white", color = NA),
+      plot.background = element_rect(fill = "white", color = NA),
+      legend.background = element_rect(fill = "white", color = NA),
+      legend.key = element_rect(fill = "white", color = NA),
+      panel.grid.major = element_line(color = "grey90"),
+      panel.grid.minor = element_blank(),
+      axis.text.x = element_text(angle = 45, hjust = 1)
+    ) &
+    labs(
+      title = paste(gene_name, "expression by myeloid subcluster"),
+      x = "Seurat cluster",
+      y = "Log-normalized RNA expression"
+    )
+  print(p_gene_violin)
+}
+grDevices::dev.off()
+```
+
+## Kdm6b-high versus Kdm6b-low gene expression
+
+Intermediate subclusters are excluded from this comparison. Gene expression is
+first averaged within each sample and Kdm6b group, then compared with a paired
+Wilcoxon signed-rank test across samples. This avoids treating individual cells
+as independent biological replicates.
+
+```{r summarize-gene-high-low}
+gene_expression_by_sample_group <- gene_expression_long %>%
+  dplyr::select(
+    cell,
+    sample,
+    gene,
+    log_normalized_expression,
+    kdm6b_group
+  ) %>%
+  dplyr::distinct() %>%
+  dplyr::filter(kdm6b_group != "Intermediate") %>%
+  dplyr::group_by(gene, sample, kdm6b_group) %>%
+  dplyr::summarise(
+    mean_log_expression = mean(log_normalized_expression),
+    n_cells = dplyr::n(),
+    .groups = "drop"
+  )
+
+gene_high_low_tests <- gene_expression_by_sample_group %>%
+  dplyr::select(gene, sample, kdm6b_group, mean_log_expression) %>%
+  tidyr::pivot_wider(
+    names_from = kdm6b_group,
+    values_from = mean_log_expression
+  ) %>%
+  dplyr::filter(!is.na(`Kdm6b-high`), !is.na(`Kdm6b-low`)) %>%
+  dplyr::group_by(gene) %>%
+  dplyr::summarise(
+    n_samples = dplyr::n(),
+    median_high_expression = median(`Kdm6b-high`),
+    median_low_expression = median(`Kdm6b-low`),
+    median_paired_difference = median(`Kdm6b-high` - `Kdm6b-low`),
+    p_value = stats::wilcox.test(
+      `Kdm6b-high`,
+      `Kdm6b-low`,
+      paired = TRUE,
+      exact = FALSE
+    )$p.value,
+    .groups = "drop"
+  ) %>%
+  dplyr::mutate(adjusted_p_value = stats::p.adjust(p_value, method = "BH"))
+
+readr::write_tsv(
+  gene_high_low_tests,
+  file.path(results_dir, "myeloid_kdm6b_immune_program_gene_high_vs_low.tsv")
+)
+```
+
+```{r plot-gene-high-low-boxplots, fig.width=8, fig.height=6}
+gene_boxplot_data <- gene_expression_by_sample_group %>%
+  dplyr::mutate(
+    kdm6b_group = factor(
+      kdm6b_group,
+      levels = c("Kdm6b-high", "Kdm6b-low")
+    )
+  )
+
+gene_boxplot_file <- file.path(
+  plot_dir,
+  "myeloid_kdm6b_immune_program_gene_high_vs_low_boxplots.pdf"
+)
+grDevices::pdf(gene_boxplot_file, width = 8, height = 6, bg = "white")
+gene_boxplot_labels <- gene_high_low_tests %>%
+  dplyr::left_join(
+    program_genes %>% dplyr::select(program, gene) %>% dplyr::distinct(),
+    by = "gene"
+  ) %>%
+  dplyr::mutate(
+    p_label = paste0(
+      "p = ",
+      format.pval(p_value, digits = 3, eps = 0.001)
+    )
+  )
+gene_boxplot_y_positions <- gene_boxplot_data %>%
+  dplyr::group_by(gene) %>%
+  dplyr::summarise(
+    y_position = max(mean_log_expression, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  dplyr::mutate(y_position = ifelse(y_position > 0, y_position * 1.08, 0.1))
+
+for (program_name in program_levels) {
+  program_genes_to_plot <- program_genes %>%
+    dplyr::filter(program == program_name) %>%
+    dplyr::pull(gene) %>%
+    unique()
+  program_boxplot_data <- gene_boxplot_data %>%
+    dplyr::filter(gene %in% program_genes_to_plot)
+  program_boxplot_labels <- gene_boxplot_labels %>%
+    dplyr::filter(program == program_name) %>%
+    dplyr::left_join(gene_boxplot_y_positions, by = "gene")
+  p_gene_boxplot <- ggplot(
+    program_boxplot_data,
+    aes(x = kdm6b_group, y = mean_log_expression, fill = kdm6b_group)
+  ) +
+    geom_line(
+      aes(group = sample),
+      color = "grey70",
+      linewidth = 0.5
+    ) +
+    geom_boxplot(
+      width = 0.55,
+      outlier.shape = NA,
+      color = "grey20"
+    ) +
+    geom_point(
+      aes(color = kdm6b_group),
+      position = position_jitter(width = 0.05, height = 0),
+      size = 2
+    ) +
+    scale_fill_manual(values = kdm6b_group_colors, drop = FALSE) +
+    scale_color_manual(values = kdm6b_group_colors, drop = FALSE) +
+    scale_x_discrete(
+      labels = c(
+        "Kdm6b-high" = "Kdm6b-high",
+        "Kdm6b-low" = "Kdm6b-low"
+      ),
+      drop = FALSE
+    ) +
+    theme_Publication() +
+    theme(
+      panel.background = element_rect(fill = "white", color = NA),
+      plot.background = element_rect(fill = "white", color = NA),
+      panel.grid.major = element_line(color = "grey90"),
+      panel.grid.minor = element_blank(),
+      axis.text.x = element_text(size = 8),
+      legend.position = "none"
+    ) +
+    facet_wrap(~ gene, scales = "free_y", ncol = 4) +
+    geom_text(
+      data = program_boxplot_labels,
+      aes(x = "Kdm6b-low", y = y_position, label = p_label),
+      inherit.aes = FALSE,
+      size = 3
+    ) +
+    labs(
+      title = paste(program_name, "gene expression"),
+      x = NULL,
+      y = "Sample-level mean log-normalized expression"
+    )
+  print(p_gene_boxplot)
+}
+grDevices::dev.off()
+```
+
+## UCell program scores
+
+UCell scores are calculated for every myeloid cell. The object is not saved;
+only sample- and subcluster-level summaries are written.
+
+```{r calculate-ucell-scores, message=FALSE, warning=FALSE}
+myeloid_obj <- UCell::AddModuleScore_UCell(
+  myeloid_obj,
+  features = program_signatures,
+  name = ""
+)
+
+score_columns <- names(program_signatures)
+if (!all(score_columns %in% colnames(myeloid_obj@meta.data))) {
+  stop("UCell did not create the expected score columns.")
+}
+
+cell_scores <- myeloid_obj@meta.data %>%
+  tibble::rownames_to_column("cell") %>%
+  dplyr::select(
+    cell,
+    sample,
+    subcluster = seurat_clusters,
+    kdm6b_group,
+    dplyr::all_of(score_columns)
+  ) %>%
+  tidyr::pivot_longer(
+    cols = dplyr::all_of(score_columns),
+    names_to = "score_name",
+    values_to = "ucell_score"
+  ) %>%
+  dplyr::left_join(program_key, by = "score_name") %>%
+  dplyr::mutate(
+    subcluster = as.character(subcluster),
+    kdm6b_group = factor(kdm6b_group, levels = kdm6b_group_levels)
+  )
+```
+
+```{r summarize-ucell-scores}
+ucell_by_subcluster <- cell_scores %>%
+  dplyr::group_by(program, subcluster, kdm6b_group) %>%
+  dplyr::summarise(
+    n_cells = dplyr::n(),
+    median_ucell_score = median(ucell_score),
+    q25_ucell_score = stats::quantile(ucell_score, 0.25, names = FALSE),
+    q75_ucell_score = stats::quantile(ucell_score, 0.75, names = FALSE),
+    .groups = "drop"
+  ) %>%
+  dplyr::left_join(
+    kdm6b_ranking %>% dplyr::select(subcluster, myeloid_subtype),
+    by = "subcluster"
+  ) %>%
+  dplyr::arrange(program, as.integer(subcluster))
+
+ucell_by_sample_group <- cell_scores %>%
+  dplyr::filter(kdm6b_group != "Intermediate") %>%
+  dplyr::group_by(program, sample, kdm6b_group) %>%
+  dplyr::summarise(
+    n_cells = dplyr::n(),
+    median_ucell_score = median(ucell_score),
+    .groups = "drop"
+  )
+
+pair_check <- ucell_by_sample_group %>%
+  dplyr::count(program, sample, name = "n_groups")
+if (any(pair_check$n_groups != 2)) {
+  stop("Every sample must contribute both Kdm6b-high and Kdm6b-low scores.")
+}
+
+ucell_high_low_tests <- ucell_by_sample_group %>%
+  dplyr::select(program, sample, kdm6b_group, median_ucell_score) %>%
+  tidyr::pivot_wider(
+    names_from = kdm6b_group,
+    values_from = median_ucell_score
+  ) %>%
+  dplyr::group_by(program) %>%
+  dplyr::summarise(
+    n_samples = dplyr::n(),
+    median_high_score = median(`Kdm6b-high`),
+    median_low_score = median(`Kdm6b-low`),
+    median_paired_difference = median(`Kdm6b-high` - `Kdm6b-low`),
+    p_value = stats::wilcox.test(
+      `Kdm6b-high`,
+      `Kdm6b-low`,
+      paired = TRUE,
+      exact = FALSE
+    )$p.value,
+    .groups = "drop"
+  ) %>%
+  dplyr::mutate(adjusted_p_value = stats::p.adjust(p_value, method = "BH"))
+
+readr::write_tsv(
+  ucell_by_subcluster,
+  file.path(results_dir, "myeloid_kdm6b_immune_program_ucell_by_subcluster.tsv")
+)
+readr::write_tsv(
+  ucell_by_sample_group,
+  file.path(results_dir, "myeloid_kdm6b_immune_program_ucell_by_sample_group.tsv")
+)
+readr::write_tsv(
+  ucell_high_low_tests,
+  file.path(results_dir, "myeloid_kdm6b_immune_program_ucell_high_vs_low.tsv")
+)
+
+ucell_high_low_tests
+```
+
+```{r plot-ucell-violins-by-subcluster, fig.width=12, fig.height=6}
+ucell_violin_data <- cell_scores %>%
+  dplyr::mutate(
+    subcluster = factor(subcluster, levels = subcluster_plot_levels),
+    program = factor(program, levels = program_levels)
+  )
+
+ucell_violin_file <- file.path(
+  plot_dir,
+  "myeloid_kdm6b_immune_program_ucell_violin_by_subcluster.pdf"
+)
+grDevices::pdf(ucell_violin_file, width = 12, height = 6, bg = "white")
+for (program_name in program_levels) {
+  p_ucell_violin <- ggplot(
+    dplyr::filter(ucell_violin_data, program == program_name),
+    aes(x = subcluster, y = ucell_score, fill = subcluster)
+  ) +
+    geom_violin(
+      scale = "width",
+      trim = TRUE,
+      linewidth = 0.2,
+      color = "grey20"
+    ) +
+    scale_x_discrete(
+      limits = subcluster_plot_levels,
+      labels = subcluster_axis_labels,
+      drop = FALSE
+    ) +
+    scale_fill_manual(values = cluster_colors, drop = FALSE) +
+    theme_Publication() +
+    theme(
+      panel.background = element_rect(fill = "white", color = NA),
+      plot.background = element_rect(fill = "white", color = NA),
+      panel.grid.major = element_line(color = "grey90"),
+      panel.grid.minor = element_blank(),
+      axis.text.x = element_text(angle = 45, hjust = 1),
+      legend.position = "right"
+    ) +
+    labs(
+      title = paste(program_name, "UCell score by myeloid subcluster"),
+      x = "Seurat cluster",
+      y = "UCell score"
+    )
+  print(p_ucell_violin)
+}
+grDevices::dev.off()
+```
+
+## Kdm6b-high versus Kdm6b-low UCell scores
+
+Intermediate subclusters are excluded. UCell scores are summarized within
+each sample and group, then compared with the paired Wilcoxon signed-rank test.
+
+```{r plot-ucell-high-low-boxplots, fig.width=6, fig.height=5}
+ucell_boxplot_data <- ucell_by_sample_group %>%
+  dplyr::mutate(
+    kdm6b_group = factor(
+      kdm6b_group,
+      levels = c("Kdm6b-high", "Kdm6b-low")
+    )
+  )
+
+ucell_boxplot_file <- file.path(
+  plot_dir,
+  "myeloid_kdm6b_immune_program_ucell_high_vs_low_boxplots.pdf"
+)
+grDevices::pdf(ucell_boxplot_file, width = 6, height = 5, bg = "white")
+for (program_name in program_levels) {
+  test_row <- ucell_high_low_tests %>% dplyr::filter(program == program_name)
+  p_ucell_boxplot <- ggplot(
+    dplyr::filter(ucell_boxplot_data, program == program_name),
+    aes(x = kdm6b_group, y = median_ucell_score, fill = kdm6b_group)
+  ) +
+    geom_line(
+      aes(group = sample),
+      color = "grey70",
+      linewidth = 0.5
+    ) +
+    geom_boxplot(
+      width = 0.55,
+      outlier.shape = NA,
+      color = "grey20"
+    ) +
+    geom_point(
+      aes(color = kdm6b_group),
+      position = position_jitter(width = 0.05, height = 0),
+      size = 2
+    ) +
+    scale_fill_manual(values = kdm6b_group_colors, drop = FALSE) +
+    scale_color_manual(values = kdm6b_group_colors, drop = FALSE) +
+    scale_x_discrete(
+      labels = c(
+        "Kdm6b-high" = "Kdm6b-high",
+        "Kdm6b-low" = "Kdm6b-low"
+      ),
+      drop = FALSE
+    ) +
+    theme_Publication() +
+    theme(
+      panel.background = element_rect(fill = "white", color = NA),
+      plot.background = element_rect(fill = "white", color = NA),
+      panel.grid.major = element_line(color = "grey90"),
+      panel.grid.minor = element_blank(),
+      #axis.text.x = element_text(size = 8),
+      legend.position = "none"
+    ) +
+    labs(
+      title = paste(program_name, "UCell score"),
+      subtitle = paste(
+        "Paired Wilcoxon p =",
+        format.pval(test_row$p_value, digits = 3, eps = 0.001)
+      ),
+      x = NULL,
+      y = "Sample-level median UCell score"
+    )
+  print(p_ucell_boxplot)
+}
+grDevices::dev.off()
+```
+
+## Session info
+
+```{r session-info}
+sessionInfo()
+```

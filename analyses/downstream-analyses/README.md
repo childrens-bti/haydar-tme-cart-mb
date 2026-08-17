@@ -23,6 +23,7 @@
 15. `15-kdm6b-myeloid-subcluster-abundance.Rmd`: quantifies myeloid subcluster proportions, tests all 16 numeric subclusters with sccomp using 41BB-L as the reference, and summarizes differential abundance for Kdm6b-high and Kdm6b-low subclusters.
 16. `16-kdm6b-myeloid-transcriptional-comparison.Rmd`: compares Kdm6b-high and Kdm6b-low myeloid subclusters using paired sample-level pseudobulk profiles, DESeq2 differential expression, Hallmark GSEA, and a heatmap of the top genes in each direction.
 17. `17-kdm6b-myeloid-gene-correlations.Rmd`: calculates mean log-normalized expression per sample across all myeloid cells, correlates sample-level Kdm6b and immune-program expression using Spearman correlation, and generates program-specific correlation dot plots and faceted sample-level scatter plots for antigen presentation, inflammatory activation, and T-cell recruitment.
+18. `18-kdm6b-myeloid-immune-programs.Rmd`: summarizes antigen-presentation, inflammatory-activation, and T-cell-recruitment gene expression and UCell program scores across myeloid subclusters, with violin plots ordered by sequential Seurat cluster; compares Kdm6b-high versus Kdm6b-low groups, excluding intermediate subclusters, using sample-level paired Wilcoxon tests.
 
 ## Analysis module directory structure
 ```
@@ -61,6 +62,8 @@ downstream-analyses/
 ├── 16-kdm6b-myeloid-transcriptional-comparison.html
 ├── 17-kdm6b-myeloid-gene-correlations.Rmd
 ├── 17-kdm6b-myeloid-gene-correlations.html
+├── 18-kdm6b-myeloid-immune-programs.Rmd
+├── 18-kdm6b-myeloid-immune-programs.html
 ├── README.md
 ├── input
 │   ├── cart_lineage_markers.csv
@@ -147,6 +150,10 @@ downstream-analyses/
 │   │   │   ├── myeloid_kdm6b_correlation_antigen_presentation_dotplot.pdf
 │   │   │   ├── myeloid_kdm6b_correlation_inflammatory_activation_dotplot.pdf
 │   │   │   ├── myeloid_kdm6b_correlation_t_cell_recruitment_dotplot.pdf
+│   │   │   ├── myeloid_kdm6b_immune_program_gene_violin_by_subcluster.pdf
+│   │   │   ├── myeloid_kdm6b_immune_program_ucell_violin_by_subcluster.pdf
+│   │   │   ├── myeloid_kdm6b_immune_program_gene_high_vs_low_boxplots.pdf
+│   │   │   ├── myeloid_kdm6b_immune_program_ucell_high_vs_low_boxplots.pdf
 │   │   │   └── myeloid_subcluster_proportions_stacked_barplot.png
 │   │   ├── myeloid_dotplot_subcluster_markers.pdf
 │   │   ├── myeloid_dotplot_subcluster_markers_panelE.pdf
@@ -316,6 +323,11 @@ downstream-analyses/
 │   │   │   ├── myeloid_kdm6b_high_vs_low_paired_deseq2.tsv
 │   │   │   ├── myeloid_kdm6b_gene_correlation_summary.tsv
 │   │   │   ├── myeloid_kdm6b_gene_mean_expression_by_sample.tsv
+│   │   │   ├── myeloid_kdm6b_immune_program_genes_by_subcluster.tsv
+│   │   │   ├── myeloid_kdm6b_immune_program_gene_high_vs_low.tsv
+│   │   │   ├── myeloid_kdm6b_immune_program_ucell_by_subcluster.tsv
+│   │   │   ├── myeloid_kdm6b_immune_program_ucell_by_sample_group.tsv
+│   │   │   ├── myeloid_kdm6b_immune_program_ucell_high_vs_low.tsv
 │   │   │   └── myeloid_subcluster_composition_sccomp_41BBL_baseline_results.tsv
 │   │   ├── myeloid_subtype_composition_sccomp_41BBL_baseline_results.tsv
 │   │   ├── myeloid_subtype_composition_sccomp_STOP_baseline_results.tsv
