@@ -1,369 +1,369 @@
 subcluster	gene	mean_log_expression	detection_fraction	program	myeloid_subtype	kdm6b_group
-0	B2m	1.2708486243356834	0.5240941352259992	Antigen presentation	Early activated microglia	Kdm6b-high
-1	B2m	2.67591403257571	0.875893437296946	Antigen presentation	TAM-like phagocytic microglia	Intermediate
-2	B2m	1.0341745524840156	0.4242867593269934	Antigen presentation	Stress-response microglia	Kdm6b-low
-3	B2m	1.1107345109488138	0.45034519383961763	Antigen presentation	Stress-response microglia	Intermediate
 4	B2m	1.2019498271784343	0.4794682422451994	Antigen presentation	Inflammatory activated microglia	Kdm6b-high
-5	B2m	2.1292170315586167	0.772821270310192	Antigen presentation	Angiogenic TAMs	Intermediate
-6	B2m	2.1148754425907135	0.7567342073897497	Antigen presentation	Antigen-presenting TAMs	Intermediate
-7	B2m	0.9674886478761379	0.38786952089704385	Antigen presentation	Homeostatic microglia	Intermediate
-8	B2m	1.5850576769099514	0.60520031838684	Antigen presentation	Perivascular macrophages	Kdm6b-low
-9	B2m	2.485960569023553	0.8933333333333333	Antigen presentation	Lipid-associated TAMs	Kdm6b-low
 10	B2m	1.2532320027015484	0.5181945416375088	Antigen presentation	Perivascular macrophages (chemokine-producing)	Kdm6b-high
+0	B2m	1.2708486243356834	0.5240941352259992	Antigen presentation	Early activated microglia	Kdm6b-high
 11	B2m	1.7661780139038559	0.6812121212121212	Antigen presentation	Antigen-presenting monocytes	Kdm6b-high
-12	B2m	3.0027385867557066	0.9221400608960417	Antigen presentation	Inflammatory TAMs	Intermediate
-13	B2m	2.271514554511998	0.75	Antigen presentation	Homeostatic microglia	Kdm6b-low
-14	B2m	1.6484590113472786	0.6749226006191951	Antigen presentation	cDC1	Intermediate
 15	B2m	2.021567996923466	0.7618270799347472	Antigen presentation	Inflammatory monocytes	Intermediate
-0	Cd74	0.20531631126215238	0.05409039970115801	Antigen presentation	Early activated microglia	Kdm6b-high
-1	Cd74	2.1060827352278384	0.47035412605588045	Antigen presentation	TAM-like phagocytic microglia	Intermediate
-2	Cd74	0.013270396876556343	0.0036576444769568397	Antigen presentation	Stress-response microglia	Kdm6b-low
-3	Cd74	0.09128234336941357	0.02372101256859621	Antigen presentation	Stress-response microglia	Intermediate
+5	B2m	2.1292170315586167	0.772821270310192	Antigen presentation	Angiogenic TAMs	Intermediate
+7	B2m	0.9674886478761379	0.38786952089704385	Antigen presentation	Homeostatic microglia	Intermediate
+12	B2m	3.0027385867557066	0.9221400608960417	Antigen presentation	Inflammatory TAMs	Intermediate
+3	B2m	1.1107345109488138	0.45034519383961763	Antigen presentation	Stress-response microglia	Intermediate
+1	B2m	2.67591403257571	0.875893437296946	Antigen presentation	TAM-like phagocytic microglia	Intermediate
+14	B2m	1.6484590113472786	0.6749226006191951	Antigen presentation	cDC1	Intermediate
+6	B2m	2.1148754425907135	0.7567342073897497	Antigen presentation	Antigen-presenting TAMs	Intermediate
+8	B2m	1.5850576769099514	0.60520031838684	Antigen presentation	Perivascular macrophages	Kdm6b-low
+13	B2m	2.271514554511998	0.75	Antigen presentation	Homeostatic microglia	Kdm6b-low
+2	B2m	1.0341745524840156	0.4242867593269934	Antigen presentation	Stress-response microglia	Kdm6b-low
+9	B2m	2.485960569023553	0.8933333333333333	Antigen presentation	Lipid-associated TAMs	Kdm6b-low
 4	Cd74	0.30677415986412326	0.08340718857705563	Antigen presentation	Inflammatory activated microglia	Kdm6b-high
-5	Cd74	3.6908160197725977	0.7332348596750369	Antigen presentation	Angiogenic TAMs	Intermediate
-6	Cd74	3.668825154127006	0.7284862932061978	Antigen presentation	Antigen-presenting TAMs	Intermediate
-7	Cd74	0.3240347530276974	0.08222901800883452	Antigen presentation	Homeostatic microglia	Intermediate
-8	Cd74	1.4033295829215426	0.30750862297691695	Antigen presentation	Perivascular macrophages	Kdm6b-low
-9	Cd74	1.8800876626106746	0.4533333333333333	Antigen presentation	Lipid-associated TAMs	Kdm6b-low
 10	Cd74	1.4751215279890075	0.31630510846745974	Antigen presentation	Perivascular macrophages (chemokine-producing)	Kdm6b-high
+0	Cd74	0.20531631126215238	0.05409039970115801	Antigen presentation	Early activated microglia	Kdm6b-high
 11	Cd74	5.502348728507048	0.9733333333333334	Antigen presentation	Antigen-presenting monocytes	Kdm6b-high
-12	Cd74	5.109833548488212	0.9295345802522836	Antigen presentation	Inflammatory TAMs	Intermediate
-13	Cd74	0.6655395788035288	0.16238532110091744	Antigen presentation	Homeostatic microglia	Kdm6b-low
-14	Cd74	5.701264135122958	0.9919504643962849	Antigen presentation	cDC1	Intermediate
 15	Cd74	1.3289540430949072	0.3197389885807504	Antigen presentation	Inflammatory monocytes	Intermediate
-0	H2-Ab1	0.03820132334220236	0.012626073963391857	Antigen presentation	Early activated microglia	Kdm6b-high
-1	H2-Ab1	1.1192979070633933	0.3190383365821962	Antigen presentation	TAM-like phagocytic microglia	Intermediate
-2	H2-Ab1	0.0029852706840956325	8.940908721450052e-4	Antigen presentation	Stress-response microglia	Kdm6b-low
-3	H2-Ab1	0.014628648486878811	0.004602584528235086	Antigen presentation	Stress-response microglia	Intermediate
+5	Cd74	3.6908160197725977	0.7332348596750369	Antigen presentation	Angiogenic TAMs	Intermediate
+7	Cd74	0.3240347530276974	0.08222901800883452	Antigen presentation	Homeostatic microglia	Intermediate
+12	Cd74	5.109833548488212	0.9295345802522836	Antigen presentation	Inflammatory TAMs	Intermediate
+3	Cd74	0.09128234336941357	0.02372101256859621	Antigen presentation	Stress-response microglia	Intermediate
+1	Cd74	2.1060827352278384	0.47035412605588045	Antigen presentation	TAM-like phagocytic microglia	Intermediate
+14	Cd74	5.701264135122958	0.9919504643962849	Antigen presentation	cDC1	Intermediate
+6	Cd74	3.668825154127006	0.7284862932061978	Antigen presentation	Antigen-presenting TAMs	Intermediate
+8	Cd74	1.4033295829215426	0.30750862297691695	Antigen presentation	Perivascular macrophages	Kdm6b-low
+13	Cd74	0.6655395788035288	0.16238532110091744	Antigen presentation	Homeostatic microglia	Kdm6b-low
+2	Cd74	0.013270396876556343	0.0036576444769568397	Antigen presentation	Stress-response microglia	Kdm6b-low
+9	Cd74	1.8800876626106746	0.4533333333333333	Antigen presentation	Lipid-associated TAMs	Kdm6b-low
 4	H2-Ab1	0.0779671679477526	0.025406203840472673	Antigen presentation	Inflammatory activated microglia	Kdm6b-high
-5	H2-Ab1	2.755124348939889	0.6707040866568194	Antigen presentation	Angiogenic TAMs	Intermediate
-6	H2-Ab1	2.638211579760765	0.6475566150178784	Antigen presentation	Antigen-presenting TAMs	Intermediate
-7	H2-Ab1	0.13911100918773106	0.04128440366972477	Antigen presentation	Homeostatic microglia	Intermediate
-8	H2-Ab1	0.7576761634733258	0.20084903157336165	Antigen presentation	Perivascular macrophages	Kdm6b-low
-9	H2-Ab1	1.1284363469156813	0.3617021276595745	Antigen presentation	Lipid-associated TAMs	Kdm6b-low
 10	H2-Ab1	0.8374945486828066	0.21693491952414276	Antigen presentation	Perivascular macrophages (chemokine-producing)	Kdm6b-high
+0	H2-Ab1	0.03820132334220236	0.012626073963391857	Antigen presentation	Early activated microglia	Kdm6b-high
 11	H2-Ab1	4.719338349659936	0.9595959595959596	Antigen presentation	Antigen-presenting monocytes	Kdm6b-high
-12	H2-Ab1	3.9600272486434833	0.9016963897346673	Antigen presentation	Inflammatory TAMs	Intermediate
-13	H2-Ab1	0.28066912689587337	0.08623853211009175	Antigen presentation	Homeostatic microglia	Kdm6b-low
-14	H2-Ab1	4.968748938896921	0.9925696594427245	Antigen presentation	cDC1	Intermediate
 15	H2-Ab1	0.7430882098432959	0.21207177814029363	Antigen presentation	Inflammatory monocytes	Intermediate
-0	H2-Eb1	0.031197291552559663	0.011505416511019799	Antigen presentation	Early activated microglia	Kdm6b-high
-1	H2-Eb1	0.8123753404009071	0.2688434048083171	Antigen presentation	TAM-like phagocytic microglia	Intermediate
-2	H2-Eb1	0.001534225500244851	4.87685930260912e-4	Antigen presentation	Stress-response microglia	Kdm6b-low
-3	H2-Eb1	0.013167501218856053	0.004602584528235086	Antigen presentation	Stress-response microglia	Intermediate
+5	H2-Ab1	2.755124348939889	0.6707040866568194	Antigen presentation	Angiogenic TAMs	Intermediate
+7	H2-Ab1	0.13911100918773106	0.04128440366972477	Antigen presentation	Homeostatic microglia	Intermediate
+12	H2-Ab1	3.9600272486434833	0.9016963897346673	Antigen presentation	Inflammatory TAMs	Intermediate
+3	H2-Ab1	0.014628648486878811	0.004602584528235086	Antigen presentation	Stress-response microglia	Intermediate
+1	H2-Ab1	1.1192979070633933	0.3190383365821962	Antigen presentation	TAM-like phagocytic microglia	Intermediate
+14	H2-Ab1	4.968748938896921	0.9925696594427245	Antigen presentation	cDC1	Intermediate
+6	H2-Ab1	2.638211579760765	0.6475566150178784	Antigen presentation	Antigen-presenting TAMs	Intermediate
+8	H2-Ab1	0.7576761634733258	0.20084903157336165	Antigen presentation	Perivascular macrophages	Kdm6b-low
+13	H2-Ab1	0.28066912689587337	0.08623853211009175	Antigen presentation	Homeostatic microglia	Kdm6b-low
+2	H2-Ab1	0.0029852706840956325	8.940908721450052e-4	Antigen presentation	Stress-response microglia	Kdm6b-low
+9	H2-Ab1	1.1284363469156813	0.3617021276595745	Antigen presentation	Lipid-associated TAMs	Kdm6b-low
 4	H2-Eb1	0.07472853542347473	0.026193993106843918	Antigen presentation	Inflammatory activated microglia	Kdm6b-high
-5	H2-Eb1	2.08018282009429	0.5802067946824224	Antigen presentation	Angiogenic TAMs	Intermediate
-6	H2-Eb1	1.9708480297003914	0.5584028605482717	Antigen presentation	Antigen-presenting TAMs	Intermediate
-7	H2-Eb1	0.10203235840357866	0.03244988107373428	Antigen presentation	Homeostatic microglia	Intermediate
-8	H2-Eb1	0.5800705911697326	0.1756434067391881	Antigen presentation	Perivascular macrophages	Kdm6b-low
-9	H2-Eb1	0.5833418244740365	0.2300709219858156	Antigen presentation	Lipid-associated TAMs	Kdm6b-low
 10	H2-Eb1	0.644584405930326	0.1906927921623513	Antigen presentation	Perivascular macrophages (chemokine-producing)	Kdm6b-high
+0	H2-Eb1	0.031197291552559663	0.011505416511019799	Antigen presentation	Early activated microglia	Kdm6b-high
 11	H2-Eb1	4.036173166805889	0.9418181818181818	Antigen presentation	Antigen-presenting monocytes	Kdm6b-high
-12	H2-Eb1	3.015791317762287	0.8394954327968682	Antigen presentation	Inflammatory TAMs	Intermediate
-13	H2-Eb1	0.19535617298774846	0.06743119266055046	Antigen presentation	Homeostatic microglia	Kdm6b-low
-14	H2-Eb1	4.261087527877982	0.978328173374613	Antigen presentation	cDC1	Intermediate
 15	H2-Eb1	0.45782094509624754	0.15415986949429036	Antigen presentation	Inflammatory monocytes	Intermediate
-0	Psmb8	0.27596029489875423	0.15353007097497198	Antigen presentation	Early activated microglia	Kdm6b-high
-1	Psmb8	1.1432323126432045	0.5944606887589343	Antigen presentation	TAM-like phagocytic microglia	Intermediate
-2	Psmb8	0.23752967532286454	0.1167194993091116	Antigen presentation	Stress-response microglia	Kdm6b-low
-3	Psmb8	0.242786731768483	0.11957868649318464	Antigen presentation	Stress-response microglia	Intermediate
+5	H2-Eb1	2.08018282009429	0.5802067946824224	Antigen presentation	Angiogenic TAMs	Intermediate
+7	H2-Eb1	0.10203235840357866	0.03244988107373428	Antigen presentation	Homeostatic microglia	Intermediate
+12	H2-Eb1	3.015791317762287	0.8394954327968682	Antigen presentation	Inflammatory TAMs	Intermediate
+3	H2-Eb1	0.013167501218856053	0.004602584528235086	Antigen presentation	Stress-response microglia	Intermediate
+1	H2-Eb1	0.8123753404009071	0.2688434048083171	Antigen presentation	TAM-like phagocytic microglia	Intermediate
+14	H2-Eb1	4.261087527877982	0.978328173374613	Antigen presentation	cDC1	Intermediate
+6	H2-Eb1	1.9708480297003914	0.5584028605482717	Antigen presentation	Antigen-presenting TAMs	Intermediate
+8	H2-Eb1	0.5800705911697326	0.1756434067391881	Antigen presentation	Perivascular macrophages	Kdm6b-low
+13	H2-Eb1	0.19535617298774846	0.06743119266055046	Antigen presentation	Homeostatic microglia	Kdm6b-low
+2	H2-Eb1	0.001534225500244851	4.87685930260912e-4	Antigen presentation	Stress-response microglia	Kdm6b-low
+9	H2-Eb1	0.5833418244740365	0.2300709219858156	Antigen presentation	Lipid-associated TAMs	Kdm6b-low
 4	Psmb8	0.31649162973506456	0.16838995568685378	Antigen presentation	Inflammatory activated microglia	Kdm6b-high
-5	Psmb8	1.1776605812739138	0.6001969473165928	Antigen presentation	Angiogenic TAMs	Intermediate
-6	Psmb8	1.177359726165399	0.5712753277711561	Antigen presentation	Antigen-presenting TAMs	Intermediate
-7	Psmb8	0.34749445398836487	0.15392456676860347	Antigen presentation	Homeostatic microglia	Intermediate
-8	Psmb8	0.7290394517511204	0.34200053064473335	Antigen presentation	Perivascular macrophages	Kdm6b-low
-9	Psmb8	1.2951616264887638	0.7117730496453901	Antigen presentation	Lipid-associated TAMs	Kdm6b-low
 10	Psmb8	0.4718121831333615	0.2575227431770469	Antigen presentation	Perivascular macrophages (chemokine-producing)	Kdm6b-high
+0	Psmb8	0.27596029489875423	0.15353007097497198	Antigen presentation	Early activated microglia	Kdm6b-high
 11	Psmb8	1.7410776037577627	0.7345454545454545	Antigen presentation	Antigen-presenting monocytes	Kdm6b-high
-12	Psmb8	1.749922334566398	0.8142670726402784	Antigen presentation	Inflammatory TAMs	Intermediate
-13	Psmb8	0.6214142053125561	0.2665137614678899	Antigen presentation	Homeostatic microglia	Kdm6b-low
-14	Psmb8	2.310917457277313	0.8637770897832817	Antigen presentation	cDC1	Intermediate
 15	Psmb8	1.112789951984313	0.5391517128874388	Antigen presentation	Inflammatory monocytes	Intermediate
-0	Tap1	0.27172050422529664	0.14008218154650728	Antigen presentation	Early activated microglia	Kdm6b-high
-1	Tap1	0.8529839152162889	0.44631254061078623	Antigen presentation	TAM-like phagocytic microglia	Intermediate
-2	Tap1	0.18931057658273745	0.08688937657481915	Antigen presentation	Stress-response microglia	Kdm6b-low
-3	Tap1	0.28350991274480186	0.1295804567180032	Antigen presentation	Stress-response microglia	Intermediate
+5	Psmb8	1.1776605812739138	0.6001969473165928	Antigen presentation	Angiogenic TAMs	Intermediate
+7	Psmb8	0.34749445398836487	0.15392456676860347	Antigen presentation	Homeostatic microglia	Intermediate
+12	Psmb8	1.749922334566398	0.8142670726402784	Antigen presentation	Inflammatory TAMs	Intermediate
+3	Psmb8	0.242786731768483	0.11957868649318464	Antigen presentation	Stress-response microglia	Intermediate
+1	Psmb8	1.1432323126432045	0.5944606887589343	Antigen presentation	TAM-like phagocytic microglia	Intermediate
+14	Psmb8	2.310917457277313	0.8637770897832817	Antigen presentation	cDC1	Intermediate
+6	Psmb8	1.177359726165399	0.5712753277711561	Antigen presentation	Antigen-presenting TAMs	Intermediate
+8	Psmb8	0.7290394517511204	0.34200053064473335	Antigen presentation	Perivascular macrophages	Kdm6b-low
+13	Psmb8	0.6214142053125561	0.2665137614678899	Antigen presentation	Homeostatic microglia	Kdm6b-low
+2	Psmb8	0.23752967532286454	0.1167194993091116	Antigen presentation	Stress-response microglia	Kdm6b-low
+9	Psmb8	1.2951616264887638	0.7117730496453901	Antigen presentation	Lipid-associated TAMs	Kdm6b-low
 4	Tap1	0.3310985857942661	0.16484490398818316	Antigen presentation	Inflammatory activated microglia	Kdm6b-high
-5	Tap1	0.8144554235913993	0.44401772525849337	Antigen presentation	Angiogenic TAMs	Intermediate
-6	Tap1	0.8648444291803417	0.4444576877234803	Antigen presentation	Antigen-presenting TAMs	Intermediate
-7	Tap1	0.2838764130394861	0.12215426435609922	Antigen presentation	Homeostatic microglia	Intermediate
-8	Tap1	0.42339754472867897	0.2122578933404086	Antigen presentation	Perivascular macrophages	Kdm6b-low
-9	Tap1	0.7344503672322982	0.47801418439716314	Antigen presentation	Lipid-associated TAMs	Kdm6b-low
 10	Tap1	0.3625286615912103	0.19839048285514346	Antigen presentation	Perivascular macrophages (chemokine-producing)	Kdm6b-high
+0	Tap1	0.27172050422529664	0.14008218154650728	Antigen presentation	Early activated microglia	Kdm6b-high
 11	Tap1	1.4077276953272921	0.6383838383838384	Antigen presentation	Antigen-presenting monocytes	Kdm6b-high
-12	Tap1	1.0435942473687325	0.5593736407133536	Antigen presentation	Inflammatory TAMs	Intermediate
-13	Tap1	0.5666608117519948	0.23486238532110093	Antigen presentation	Homeostatic microglia	Kdm6b-low
-14	Tap1	2.1254773721603297	0.8414860681114551	Antigen presentation	cDC1	Intermediate
 15	Tap1	0.6428192088257115	0.34257748776508973	Antigen presentation	Inflammatory monocytes	Intermediate
-0	Tapbp	0.7939413415110984	0.3781098244303325	Antigen presentation	Early activated microglia	Kdm6b-high
-1	Tapbp	1.460248004425239	0.6522092267706303	Antigen presentation	TAM-like phagocytic microglia	Intermediate
-2	Tapbp	0.588041084827723	0.2679834186783711	Antigen presentation	Stress-response microglia	Kdm6b-low
-3	Tapbp	0.6370045294792983	0.29120198265179675	Antigen presentation	Stress-response microglia	Intermediate
+5	Tap1	0.8144554235913993	0.44401772525849337	Antigen presentation	Angiogenic TAMs	Intermediate
+7	Tap1	0.2838764130394861	0.12215426435609922	Antigen presentation	Homeostatic microglia	Intermediate
+12	Tap1	1.0435942473687325	0.5593736407133536	Antigen presentation	Inflammatory TAMs	Intermediate
+3	Tap1	0.28350991274480186	0.1295804567180032	Antigen presentation	Stress-response microglia	Intermediate
+1	Tap1	0.8529839152162889	0.44631254061078623	Antigen presentation	TAM-like phagocytic microglia	Intermediate
+14	Tap1	2.1254773721603297	0.8414860681114551	Antigen presentation	cDC1	Intermediate
+6	Tap1	0.8648444291803417	0.4444576877234803	Antigen presentation	Antigen-presenting TAMs	Intermediate
+8	Tap1	0.42339754472867897	0.2122578933404086	Antigen presentation	Perivascular macrophages	Kdm6b-low
+13	Tap1	0.5666608117519948	0.23486238532110093	Antigen presentation	Homeostatic microglia	Kdm6b-low
+2	Tap1	0.18931057658273745	0.08688937657481915	Antigen presentation	Stress-response microglia	Kdm6b-low
+9	Tap1	0.7344503672322982	0.47801418439716314	Antigen presentation	Lipid-associated TAMs	Kdm6b-low
 4	Tapbp	0.8416511797442202	0.3880846873461349	Antigen presentation	Inflammatory activated microglia	Kdm6b-high
-5	Tapbp	1.4624454539220642	0.6665681930083702	Antigen presentation	Angiogenic TAMs	Intermediate
-6	Tapbp	1.4345212581940234	0.6262216924910607	Antigen presentation	Antigen-presenting TAMs	Intermediate
-7	Tapbp	0.6251928658379763	0.2743798844716276	Antigen presentation	Homeostatic microglia	Intermediate
-8	Tapbp	1.0574757596556557	0.457681082515256	Antigen presentation	Perivascular macrophages	Kdm6b-low
-9	Tapbp	1.9171268743539767	0.8266666666666667	Antigen presentation	Lipid-associated TAMs	Kdm6b-low
 10	Tapbp	1.0773565557753284	0.4895031490552834	Antigen presentation	Perivascular macrophages (chemokine-producing)	Kdm6b-high
+0	Tapbp	0.7939413415110984	0.3781098244303325	Antigen presentation	Early activated microglia	Kdm6b-high
 11	Tapbp	1.6006076743374331	0.6719191919191919	Antigen presentation	Antigen-presenting monocytes	Kdm6b-high
-12	Tapbp	1.9356678345638019	0.8099173553719008	Antigen presentation	Inflammatory TAMs	Intermediate
-13	Tapbp	1.0271811638889299	0.41376146788990825	Antigen presentation	Homeostatic microglia	Kdm6b-low
-14	Tapbp	1.7992606581966184	0.7535603715170278	Antigen presentation	cDC1	Intermediate
 15	Tapbp	1.1893916502188169	0.5619902120717781	Antigen presentation	Inflammatory monocytes	Intermediate
-0	Cxcl10	0.37293214491876914	0.14082928651475532	Inflammatory activation	Early activated microglia	Kdm6b-high
-1	Cxcl10	0.7523036091241698	0.28492527615334634	Inflammatory activation	TAM-like phagocytic microglia	Intermediate
-2	Cxcl10	0.01721443418313667	0.006258636105015037	Inflammatory activation	Stress-response microglia	Kdm6b-low
-3	Cxcl10	0.11046909067861373	0.041334749513188176	Inflammatory activation	Stress-response microglia	Intermediate
+5	Tapbp	1.4624454539220642	0.6665681930083702	Antigen presentation	Angiogenic TAMs	Intermediate
+7	Tapbp	0.6251928658379763	0.2743798844716276	Antigen presentation	Homeostatic microglia	Intermediate
+12	Tapbp	1.9356678345638019	0.8099173553719008	Antigen presentation	Inflammatory TAMs	Intermediate
+3	Tapbp	0.6370045294792983	0.29120198265179675	Antigen presentation	Stress-response microglia	Intermediate
+1	Tapbp	1.460248004425239	0.6522092267706303	Antigen presentation	TAM-like phagocytic microglia	Intermediate
+14	Tapbp	1.7992606581966184	0.7535603715170278	Antigen presentation	cDC1	Intermediate
+6	Tapbp	1.4345212581940234	0.6262216924910607	Antigen presentation	Antigen-presenting TAMs	Intermediate
+8	Tapbp	1.0574757596556557	0.457681082515256	Antigen presentation	Perivascular macrophages	Kdm6b-low
+13	Tapbp	1.0271811638889299	0.41376146788990825	Antigen presentation	Homeostatic microglia	Kdm6b-low
+2	Tapbp	0.588041084827723	0.2679834186783711	Antigen presentation	Stress-response microglia	Kdm6b-low
+9	Tapbp	1.9171268743539767	0.8266666666666667	Antigen presentation	Lipid-associated TAMs	Kdm6b-low
 4	Cxcl10	0.2257849176966831	0.09522402757262433	Inflammatory activation	Inflammatory activated microglia	Kdm6b-high
-5	Cxcl10	0.1303884160406506	0.05603151157065485	Inflammatory activation	Angiogenic TAMs	Intermediate
-6	Cxcl10	0.2683670451024508	0.09547079856972586	Inflammatory activation	Antigen-presenting TAMs	Intermediate
-7	Cxcl10	0.15383373191311314	0.0581039755351682	Inflammatory activation	Homeostatic microglia	Intermediate
-8	Cxcl10	0.16483719095353666	0.061820111435394	Inflammatory activation	Perivascular macrophages	Kdm6b-low
-9	Cxcl10	0.0063254279554911	0.00425531914893617	Inflammatory activation	Lipid-associated TAMs	Kdm6b-low
 10	Cxcl10	0.20030368828361508	0.08537438768369489	Inflammatory activation	Perivascular macrophages (chemokine-producing)	Kdm6b-high
+0	Cxcl10	0.37293214491876914	0.14082928651475532	Inflammatory activation	Early activated microglia	Kdm6b-high
 11	Cxcl10	0.27796024072091974	0.10909090909090909	Inflammatory activation	Antigen-presenting monocytes	Kdm6b-high
-12	Cxcl10	0.43222211986007225	0.176163549369291	Inflammatory activation	Inflammatory TAMs	Intermediate
-13	Cxcl10	0.291794537058674	0.09954128440366973	Inflammatory activation	Homeostatic microglia	Kdm6b-low
-14	Cxcl10	0.11646767007074983	0.05201238390092879	Inflammatory activation	cDC1	Intermediate
 15	Cxcl10	0.16983424124092725	0.05791190864600326	Inflammatory activation	Inflammatory monocytes	Intermediate
-0	Cxcl9	0.02253106798038865	0.008143444153903624	Inflammatory activation	Early activated microglia	Kdm6b-high
-1	Cxcl9	0.49729900207827	0.1652046783625731	Inflammatory activation	TAM-like phagocytic microglia	Intermediate
-2	Cxcl9	0.0025168024225321367	8.940908721450052e-4	Inflammatory activation	Stress-response microglia	Kdm6b-low
-3	Cxcl9	0.011473069866908726	0.003983005841741901	Inflammatory activation	Stress-response microglia	Intermediate
+5	Cxcl10	0.1303884160406506	0.05603151157065485	Inflammatory activation	Angiogenic TAMs	Intermediate
+7	Cxcl10	0.15383373191311314	0.0581039755351682	Inflammatory activation	Homeostatic microglia	Intermediate
+12	Cxcl10	0.43222211986007225	0.176163549369291	Inflammatory activation	Inflammatory TAMs	Intermediate
+3	Cxcl10	0.11046909067861373	0.041334749513188176	Inflammatory activation	Stress-response microglia	Intermediate
+1	Cxcl10	0.7523036091241698	0.28492527615334634	Inflammatory activation	TAM-like phagocytic microglia	Intermediate
+14	Cxcl10	0.11646767007074983	0.05201238390092879	Inflammatory activation	cDC1	Intermediate
+6	Cxcl10	0.2683670451024508	0.09547079856972586	Inflammatory activation	Antigen-presenting TAMs	Intermediate
+8	Cxcl10	0.16483719095353666	0.061820111435394	Inflammatory activation	Perivascular macrophages	Kdm6b-low
+13	Cxcl10	0.291794537058674	0.09954128440366973	Inflammatory activation	Homeostatic microglia	Kdm6b-low
+2	Cxcl10	0.01721443418313667	0.006258636105015037	Inflammatory activation	Stress-response microglia	Kdm6b-low
+9	Cxcl10	0.0063254279554911	0.00425531914893617	Inflammatory activation	Lipid-associated TAMs	Kdm6b-low
 4	Cxcl9	0.03447624686564435	0.012210733628754309	Inflammatory activation	Inflammatory activated microglia	Kdm6b-high
-5	Cxcl9	0.1722069499251501	0.06115214180206795	Inflammatory activation	Angiogenic TAMs	Intermediate
-6	Cxcl9	0.2819779648236256	0.09129916567342074	Inflammatory activation	Antigen-presenting TAMs	Intermediate
-7	Cxcl9	0.062499553033307786	0.019028202514441046	Inflammatory activation	Homeostatic microglia	Intermediate
-8	Cxcl9	0.015933502795778633	0.005306447333510215	Inflammatory activation	Perivascular macrophages	Kdm6b-low
-9	Cxcl9	0.011531265203662846	0.0045390070921985815	Inflammatory activation	Lipid-associated TAMs	Kdm6b-low
 10	Cxcl9	0.010096566461927971	0.0034989503149055285	Inflammatory activation	Perivascular macrophages (chemokine-producing)	Kdm6b-high
+0	Cxcl9	0.02253106798038865	0.008143444153903624	Inflammatory activation	Early activated microglia	Kdm6b-high
 11	Cxcl9	0.5401287396332882	0.17898989898989898	Inflammatory activation	Antigen-presenting monocytes	Kdm6b-high
-12	Cxcl9	1.154865924638489	0.3784254023488473	Inflammatory activation	Inflammatory TAMs	Intermediate
-13	Cxcl9	0.13199212970050647	0.0426605504587156	Inflammatory activation	Homeostatic microglia	Kdm6b-low
-14	Cxcl9	0.7039902187119464	0.2476780185758514	Inflammatory activation	cDC1	Intermediate
 15	Cxcl9	0.02795894766122916	0.012234910277324634	Inflammatory activation	Inflammatory monocytes	Intermediate
-0	Ifngr1	1.074468452588245	0.5136346656705267	Inflammatory activation	Early activated microglia	Kdm6b-high
-1	Ifngr1	0.6617789280512798	0.4018843404808317	Inflammatory activation	TAM-like phagocytic microglia	Intermediate
-2	Ifngr1	1.5505003676893196	0.6309030317808665	Inflammatory activation	Stress-response microglia	Kdm6b-low
-3	Ifngr1	1.298585815385387	0.5489467162329615	Inflammatory activation	Stress-response microglia	Intermediate
+5	Cxcl9	0.1722069499251501	0.06115214180206795	Inflammatory activation	Angiogenic TAMs	Intermediate
+7	Cxcl9	0.062499553033307786	0.019028202514441046	Inflammatory activation	Homeostatic microglia	Intermediate
+12	Cxcl9	1.154865924638489	0.3784254023488473	Inflammatory activation	Inflammatory TAMs	Intermediate
+3	Cxcl9	0.011473069866908726	0.003983005841741901	Inflammatory activation	Stress-response microglia	Intermediate
+1	Cxcl9	0.49729900207827	0.1652046783625731	Inflammatory activation	TAM-like phagocytic microglia	Intermediate
+14	Cxcl9	0.7039902187119464	0.2476780185758514	Inflammatory activation	cDC1	Intermediate
+6	Cxcl9	0.2819779648236256	0.09129916567342074	Inflammatory activation	Antigen-presenting TAMs	Intermediate
+8	Cxcl9	0.015933502795778633	0.005306447333510215	Inflammatory activation	Perivascular macrophages	Kdm6b-low
+13	Cxcl9	0.13199212970050647	0.0426605504587156	Inflammatory activation	Homeostatic microglia	Kdm6b-low
+2	Cxcl9	0.0025168024225321367	8.940908721450052e-4	Inflammatory activation	Stress-response microglia	Kdm6b-low
+9	Cxcl9	0.011531265203662846	0.0045390070921985815	Inflammatory activation	Lipid-associated TAMs	Kdm6b-low
 4	Ifngr1	0.4407486864079474	0.23298867552929592	Inflammatory activation	Inflammatory activated microglia	Kdm6b-high
-5	Ifngr1	0.9511698800839149	0.5183653372722796	Inflammatory activation	Angiogenic TAMs	Intermediate
-6	Ifngr1	0.7369260306507696	0.4069129916567342	Inflammatory activation	Antigen-presenting TAMs	Intermediate
-7	Ifngr1	0.9336260562832107	0.40519877675840976	Inflammatory activation	Homeostatic microglia	Intermediate
-8	Ifngr1	0.9077214697323568	0.42584239851419475	Inflammatory activation	Perivascular macrophages	Kdm6b-low
-9	Ifngr1	0.8478970574511688	0.534468085106383	Inflammatory activation	Lipid-associated TAMs	Kdm6b-low
 10	Ifngr1	0.46277302690431277	0.25787263820853745	Inflammatory activation	Perivascular macrophages (chemokine-producing)	Kdm6b-high
+0	Ifngr1	1.074468452588245	0.5136346656705267	Inflammatory activation	Early activated microglia	Kdm6b-high
 11	Ifngr1	0.9517942563027978	0.4901010101010101	Inflammatory activation	Antigen-presenting monocytes	Kdm6b-high
-12	Ifngr1	0.7230789384182817	0.44280121792083516	Inflammatory activation	Inflammatory TAMs	Intermediate
-13	Ifngr1	1.0552545554307313	0.45137614678899085	Inflammatory activation	Homeostatic microglia	Kdm6b-low
-14	Ifngr1	1.2681969255388739	0.6123839009287926	Inflammatory activation	cDC1	Intermediate
 15	Ifngr1	1.532033860606236	0.6876019575856444	Inflammatory activation	Inflammatory monocytes	Intermediate
-0	Il12b	0.013038532561718417	0.005229734777736272	Inflammatory activation	Early activated microglia	Kdm6b-high
-1	Il12b	0.07689360064776576	0.032407407407407406	Inflammatory activation	TAM-like phagocytic microglia	Intermediate
-2	Il12b	5.045863014681803e-4	2.43842965130456e-4	Inflammatory activation	Stress-response microglia	Kdm6b-low
-3	Il12b	0.002905144002093728	0.0011506461320587714	Inflammatory activation	Stress-response microglia	Intermediate
+5	Ifngr1	0.9511698800839149	0.5183653372722796	Inflammatory activation	Angiogenic TAMs	Intermediate
+7	Ifngr1	0.9336260562832107	0.40519877675840976	Inflammatory activation	Homeostatic microglia	Intermediate
+12	Ifngr1	0.7230789384182817	0.44280121792083516	Inflammatory activation	Inflammatory TAMs	Intermediate
+3	Ifngr1	1.298585815385387	0.5489467162329615	Inflammatory activation	Stress-response microglia	Intermediate
+1	Ifngr1	0.6617789280512798	0.4018843404808317	Inflammatory activation	TAM-like phagocytic microglia	Intermediate
+14	Ifngr1	1.2681969255388739	0.6123839009287926	Inflammatory activation	cDC1	Intermediate
+6	Ifngr1	0.7369260306507696	0.4069129916567342	Inflammatory activation	Antigen-presenting TAMs	Intermediate
+8	Ifngr1	0.9077214697323568	0.42584239851419475	Inflammatory activation	Perivascular macrophages	Kdm6b-low
+13	Ifngr1	1.0552545554307313	0.45137614678899085	Inflammatory activation	Homeostatic microglia	Kdm6b-low
+2	Ifngr1	1.5505003676893196	0.6309030317808665	Inflammatory activation	Stress-response microglia	Kdm6b-low
+9	Ifngr1	0.8478970574511688	0.534468085106383	Inflammatory activation	Lipid-associated TAMs	Kdm6b-low
 4	Il12b	0.023270005743066525	0.008173313638601675	Inflammatory activation	Inflammatory activated microglia	Kdm6b-high
-5	Il12b	0.004551188019953777	0.0018709995076317085	Inflammatory activation	Angiogenic TAMs	Intermediate
-6	Il12b	0.008135519197635001	0.0033373063170441	Inflammatory activation	Antigen-presenting TAMs	Intermediate
-7	Il12b	0.007627704339566896	0.0027183146449201497	Inflammatory activation	Homeostatic microglia	Intermediate
-8	Il12b	4.2761519843679256e-4	2.653223666755107e-4	Inflammatory activation	Perivascular macrophages	Kdm6b-low
-9	Il12b	4.120259885184492e-4	0.00028368794326241134	Inflammatory activation	Lipid-associated TAMs	Kdm6b-low
 10	Il12b	2.877352391415591e-4	3.498950314905528e-4	Inflammatory activation	Perivascular macrophages (chemokine-producing)	Kdm6b-high
+0	Il12b	0.013038532561718417	0.005229734777736272	Inflammatory activation	Early activated microglia	Kdm6b-high
 11	Il12b	0.17982859069173696	0.08282828282828283	Inflammatory activation	Antigen-presenting monocytes	Kdm6b-high
-12	Il12b	0.014417761904500543	0.007394519356241845	Inflammatory activation	Inflammatory TAMs	Intermediate
-13	Il12b	0.0039090211377161965	0.0013761467889908258	Inflammatory activation	Homeostatic microglia	Kdm6b-low
-14	Il12b	0.10130280695829441	0.051393188854489166	Inflammatory activation	cDC1	Intermediate
 15	Il12b	0	0	Inflammatory activation	Inflammatory monocytes	Intermediate
-0	Irf1	0.26744546804709873	0.14374299589092268	Inflammatory activation	Early activated microglia	Kdm6b-high
-1	Irf1	0.20623533267249985	0.1316601689408707	Inflammatory activation	TAM-like phagocytic microglia	Intermediate
-2	Irf1	0.09576878767584983	0.04795578314232301	Inflammatory activation	Stress-response microglia	Kdm6b-low
-3	Irf1	0.17619647055490542	0.08656399362719065	Inflammatory activation	Stress-response microglia	Intermediate
+5	Il12b	0.004551188019953777	0.0018709995076317085	Inflammatory activation	Angiogenic TAMs	Intermediate
+7	Il12b	0.007627704339566896	0.0027183146449201497	Inflammatory activation	Homeostatic microglia	Intermediate
+12	Il12b	0.014417761904500543	0.007394519356241845	Inflammatory activation	Inflammatory TAMs	Intermediate
+3	Il12b	0.002905144002093728	0.0011506461320587714	Inflammatory activation	Stress-response microglia	Intermediate
+1	Il12b	0.07689360064776576	0.032407407407407406	Inflammatory activation	TAM-like phagocytic microglia	Intermediate
+14	Il12b	0.10130280695829441	0.051393188854489166	Inflammatory activation	cDC1	Intermediate
+6	Il12b	0.008135519197635001	0.0033373063170441	Inflammatory activation	Antigen-presenting TAMs	Intermediate
+8	Il12b	4.2761519843679256e-4	2.653223666755107e-4	Inflammatory activation	Perivascular macrophages	Kdm6b-low
+13	Il12b	0.0039090211377161965	0.0013761467889908258	Inflammatory activation	Homeostatic microglia	Kdm6b-low
+2	Il12b	5.045863014681803e-4	2.43842965130456e-4	Inflammatory activation	Stress-response microglia	Kdm6b-low
+9	Il12b	4.120259885184492e-4	0.00028368794326241134	Inflammatory activation	Lipid-associated TAMs	Kdm6b-low
 4	Irf1	0.08063871012509426	0.046282619399310686	Inflammatory activation	Inflammatory activated microglia	Kdm6b-high
-5	Irf1	0.1268335340727835	0.08724766125061546	Inflammatory activation	Angiogenic TAMs	Intermediate
-6	Irf1	0.172735663307496	0.10536352800953516	Inflammatory activation	Antigen-presenting TAMs	Intermediate
-7	Irf1	0.11782018233554192	0.05742439687393816	Inflammatory activation	Homeostatic microglia	Intermediate
-8	Irf1	0.11484595716746648	0.06288140090209604	Inflammatory activation	Perivascular macrophages	Kdm6b-low
-9	Irf1	0.07695576953422305	0.06808510638297872	Inflammatory activation	Lipid-associated TAMs	Kdm6b-low
 10	Irf1	0.057426767931695474	0.03498950314905528	Inflammatory activation	Perivascular macrophages (chemokine-producing)	Kdm6b-high
+0	Irf1	0.26744546804709873	0.14374299589092268	Inflammatory activation	Early activated microglia	Kdm6b-high
 11	Irf1	0.2484978413611251	0.16404040404040404	Inflammatory activation	Antigen-presenting monocytes	Kdm6b-high
-12	Irf1	0.30573595697252687	0.21270117442366246	Inflammatory activation	Inflammatory TAMs	Intermediate
-13	Irf1	0.12635693217221786	0.06100917431192661	Inflammatory activation	Homeostatic microglia	Kdm6b-low
-14	Irf1	0.20706252848436407	0.1436532507739938	Inflammatory activation	cDC1	Intermediate
 15	Irf1	0.2550815523250225	0.14926590538336051	Inflammatory activation	Inflammatory monocytes	Intermediate
-0	Irf7	0.04750500163940578	0.02211430706014195	Inflammatory activation	Early activated microglia	Kdm6b-high
-1	Irf7	0.6557701645282278	0.2965399610136452	Inflammatory activation	TAM-like phagocytic microglia	Intermediate
-2	Irf7	0.012574418662283487	0.004633016337478664	Inflammatory activation	Stress-response microglia	Kdm6b-low
-3	Irf7	0.03380466684396833	0.013630731102850062	Inflammatory activation	Stress-response microglia	Intermediate
+5	Irf1	0.1268335340727835	0.08724766125061546	Inflammatory activation	Angiogenic TAMs	Intermediate
+7	Irf1	0.11782018233554192	0.05742439687393816	Inflammatory activation	Homeostatic microglia	Intermediate
+12	Irf1	0.30573595697252687	0.21270117442366246	Inflammatory activation	Inflammatory TAMs	Intermediate
+3	Irf1	0.17619647055490542	0.08656399362719065	Inflammatory activation	Stress-response microglia	Intermediate
+1	Irf1	0.20623533267249985	0.1316601689408707	Inflammatory activation	TAM-like phagocytic microglia	Intermediate
+14	Irf1	0.20706252848436407	0.1436532507739938	Inflammatory activation	cDC1	Intermediate
+6	Irf1	0.172735663307496	0.10536352800953516	Inflammatory activation	Antigen-presenting TAMs	Intermediate
+8	Irf1	0.11484595716746648	0.06288140090209604	Inflammatory activation	Perivascular macrophages	Kdm6b-low
+13	Irf1	0.12635693217221786	0.06100917431192661	Inflammatory activation	Homeostatic microglia	Kdm6b-low
+2	Irf1	0.09576878767584983	0.04795578314232301	Inflammatory activation	Stress-response microglia	Kdm6b-low
+9	Irf1	0.07695576953422305	0.06808510638297872	Inflammatory activation	Lipid-associated TAMs	Kdm6b-low
 4	Irf7	0.07620384739321788	0.03692762186115214	Inflammatory activation	Inflammatory activated microglia	Kdm6b-high
-5	Irf7	0.8485427984627445	0.40423436730674545	Inflammatory activation	Angiogenic TAMs	Intermediate
-6	Irf7	0.9597342454202266	0.41513706793802146	Inflammatory activation	Antigen-presenting TAMs	Intermediate
-7	Irf7	0.10312339884398099	0.03924566768603466	Inflammatory activation	Homeostatic microglia	Intermediate
-8	Irf7	0.4005648691176358	0.1806845317060228	Inflammatory activation	Perivascular macrophages	Kdm6b-low
-9	Irf7	0.5570510074187436	0.3364539007092199	Inflammatory activation	Lipid-associated TAMs	Kdm6b-low
 10	Irf7	0.3240052895336111	0.16060181945416374	Inflammatory activation	Perivascular macrophages (chemokine-producing)	Kdm6b-high
+0	Irf7	0.04750500163940578	0.02211430706014195	Inflammatory activation	Early activated microglia	Kdm6b-high
 11	Irf7	0.9792409178471624	0.4109090909090909	Inflammatory activation	Antigen-presenting monocytes	Kdm6b-high
-12	Irf7	1.0467263716862674	0.5110917790343628	Inflammatory activation	Inflammatory TAMs	Intermediate
-13	Irf7	0.2736452535073228	0.10504587155963303	Inflammatory activation	Homeostatic microglia	Kdm6b-low
-14	Irf7	1.6542539440860715	0.6452012383900929	Inflammatory activation	cDC1	Intermediate
 15	Irf7	1.1693294354814698	0.5138662316476346	Inflammatory activation	Inflammatory monocytes	Intermediate
-0	Stat1	0.06710667655948335	0.04004482629809488	Inflammatory activation	Early activated microglia	Kdm6b-high
-1	Stat1	0.4027589760334195	0.25747238466536715	Inflammatory activation	TAM-like phagocytic microglia	Intermediate
-2	Stat1	0.036924831674432154	0.018613346338291474	Inflammatory activation	Stress-response microglia	Kdm6b-low
-3	Stat1	0.05788490405977403	0.02947424322889007	Inflammatory activation	Stress-response microglia	Intermediate
+5	Irf7	0.8485427984627445	0.40423436730674545	Inflammatory activation	Angiogenic TAMs	Intermediate
+7	Irf7	0.10312339884398099	0.03924566768603466	Inflammatory activation	Homeostatic microglia	Intermediate
+12	Irf7	1.0467263716862674	0.5110917790343628	Inflammatory activation	Inflammatory TAMs	Intermediate
+3	Irf7	0.03380466684396833	0.013630731102850062	Inflammatory activation	Stress-response microglia	Intermediate
+1	Irf7	0.6557701645282278	0.2965399610136452	Inflammatory activation	TAM-like phagocytic microglia	Intermediate
+14	Irf7	1.6542539440860715	0.6452012383900929	Inflammatory activation	cDC1	Intermediate
+6	Irf7	0.9597342454202266	0.41513706793802146	Inflammatory activation	Antigen-presenting TAMs	Intermediate
+8	Irf7	0.4005648691176358	0.1806845317060228	Inflammatory activation	Perivascular macrophages	Kdm6b-low
+13	Irf7	0.2736452535073228	0.10504587155963303	Inflammatory activation	Homeostatic microglia	Kdm6b-low
+2	Irf7	0.012574418662283487	0.004633016337478664	Inflammatory activation	Stress-response microglia	Kdm6b-low
+9	Irf7	0.5570510074187436	0.3364539007092199	Inflammatory activation	Lipid-associated TAMs	Kdm6b-low
 4	Stat1	0.04164251626108215	0.027277203348104382	Inflammatory activation	Inflammatory activated microglia	Kdm6b-high
-5	Stat1	0.30412589531986367	0.21083210241260464	Inflammatory activation	Angiogenic TAMs	Intermediate
-6	Stat1	0.39292490537514885	0.23766388557806914	Inflammatory activation	Antigen-presenting TAMs	Intermediate
-7	Stat1	0.07050495006984138	0.0309208290859667	Inflammatory activation	Homeostatic microglia	Intermediate
-8	Stat1	0.19397277804367452	0.10427169010347573	Inflammatory activation	Perivascular macrophages	Kdm6b-low
-9	Stat1	0.2681698642563147	0.23290780141843972	Inflammatory activation	Lipid-associated TAMs	Kdm6b-low
 10	Stat1	0.10704673649876156	0.06787963610916725	Inflammatory activation	Perivascular macrophages (chemokine-producing)	Kdm6b-high
+0	Stat1	0.06710667655948335	0.04004482629809488	Inflammatory activation	Early activated microglia	Kdm6b-high
 11	Stat1	0.48913630921125195	0.29414141414141415	Inflammatory activation	Antigen-presenting monocytes	Kdm6b-high
-12	Stat1	0.8086047148084885	0.49760765550239233	Inflammatory activation	Inflammatory TAMs	Intermediate
-13	Stat1	0.23571774170767845	0.10779816513761468	Inflammatory activation	Homeostatic microglia	Kdm6b-low
-14	Stat1	0.7876583052752748	0.45263157894736844	Inflammatory activation	cDC1	Intermediate
 15	Stat1	0.3189473582067205	0.1933115823817292	Inflammatory activation	Inflammatory monocytes	Intermediate
-0	Tnf	1.917473557628054	0.6618602913709376	Inflammatory activation	Early activated microglia	Kdm6b-high
-1	Tnf	1.0505201806525546	0.4392462638076673	Inflammatory activation	TAM-like phagocytic microglia	Intermediate
-2	Tnf	0.15692994738655114	0.06770706331788995	Inflammatory activation	Stress-response microglia	Kdm6b-low
-3	Tnf	0.5303328764122592	0.21410869180385908	Inflammatory activation	Stress-response microglia	Intermediate
+5	Stat1	0.30412589531986367	0.21083210241260464	Inflammatory activation	Angiogenic TAMs	Intermediate
+7	Stat1	0.07050495006984138	0.0309208290859667	Inflammatory activation	Homeostatic microglia	Intermediate
+12	Stat1	0.8086047148084885	0.49760765550239233	Inflammatory activation	Inflammatory TAMs	Intermediate
+3	Stat1	0.05788490405977403	0.02947424322889007	Inflammatory activation	Stress-response microglia	Intermediate
+1	Stat1	0.4027589760334195	0.25747238466536715	Inflammatory activation	TAM-like phagocytic microglia	Intermediate
+14	Stat1	0.7876583052752748	0.45263157894736844	Inflammatory activation	cDC1	Intermediate
+6	Stat1	0.39292490537514885	0.23766388557806914	Inflammatory activation	Antigen-presenting TAMs	Intermediate
+8	Stat1	0.19397277804367452	0.10427169010347573	Inflammatory activation	Perivascular macrophages	Kdm6b-low
+13	Stat1	0.23571774170767845	0.10779816513761468	Inflammatory activation	Homeostatic microglia	Kdm6b-low
+2	Stat1	0.036924831674432154	0.018613346338291474	Inflammatory activation	Stress-response microglia	Kdm6b-low
+9	Stat1	0.2681698642563147	0.23290780141843972	Inflammatory activation	Lipid-associated TAMs	Kdm6b-low
 4	Tnf	1.8450377933267894	0.6873461349089118	Inflammatory activation	Inflammatory activated microglia	Kdm6b-high
-5	Tnf	0.40390354977756804	0.20994583948793696	Inflammatory activation	Angiogenic TAMs	Intermediate
-6	Tnf	0.5702752944362889	0.2564958283671037	Inflammatory activation	Antigen-presenting TAMs	Intermediate
-7	Tnf	0.6079361957738774	0.2342847434590554	Inflammatory activation	Homeostatic microglia	Intermediate
-8	Tnf	0.39900810607132103	0.17458211727248607	Inflammatory activation	Perivascular macrophages	Kdm6b-low
-9	Tnf	0.21355019951968962	0.1452482269503546	Inflammatory activation	Lipid-associated TAMs	Kdm6b-low
 10	Tnf	0.8611624710828376	0.3803358992302309	Inflammatory activation	Perivascular macrophages (chemokine-producing)	Kdm6b-high
+0	Tnf	1.917473557628054	0.6618602913709376	Inflammatory activation	Early activated microglia	Kdm6b-high
 11	Tnf	0.45942122420703424	0.22343434343434343	Inflammatory activation	Antigen-presenting monocytes	Kdm6b-high
-12	Tnf	0.44783590043510485	0.23053501522401043	Inflammatory activation	Inflammatory TAMs	Intermediate
-13	Tnf	0.42688326976858254	0.16376146788990825	Inflammatory activation	Homeostatic microglia	Kdm6b-low
-14	Tnf	0.20334622391696563	0.1065015479876161	Inflammatory activation	cDC1	Intermediate
 15	Tnf	0.43217407697687427	0.21533442088091354	Inflammatory activation	Inflammatory monocytes	Intermediate
-0	Ccl19	0	0	T-cell recruitment	Early activated microglia	Kdm6b-high
-1	Ccl19	0	0	T-cell recruitment	TAM-like phagocytic microglia	Intermediate
-2	Ccl19	4.7587463281929056e-4	1.625619767536373e-4	T-cell recruitment	Stress-response microglia	Kdm6b-low
-3	Ccl19	0	0	T-cell recruitment	Stress-response microglia	Intermediate
+5	Tnf	0.40390354977756804	0.20994583948793696	Inflammatory activation	Angiogenic TAMs	Intermediate
+7	Tnf	0.6079361957738774	0.2342847434590554	Inflammatory activation	Homeostatic microglia	Intermediate
+12	Tnf	0.44783590043510485	0.23053501522401043	Inflammatory activation	Inflammatory TAMs	Intermediate
+3	Tnf	0.5303328764122592	0.21410869180385908	Inflammatory activation	Stress-response microglia	Intermediate
+1	Tnf	1.0505201806525546	0.4392462638076673	Inflammatory activation	TAM-like phagocytic microglia	Intermediate
+14	Tnf	0.20334622391696563	0.1065015479876161	Inflammatory activation	cDC1	Intermediate
+6	Tnf	0.5702752944362889	0.2564958283671037	Inflammatory activation	Antigen-presenting TAMs	Intermediate
+8	Tnf	0.39900810607132103	0.17458211727248607	Inflammatory activation	Perivascular macrophages	Kdm6b-low
+13	Tnf	0.42688326976858254	0.16376146788990825	Inflammatory activation	Homeostatic microglia	Kdm6b-low
+2	Tnf	0.15692994738655114	0.06770706331788995	Inflammatory activation	Stress-response microglia	Kdm6b-low
+9	Tnf	0.21355019951968962	0.1452482269503546	Inflammatory activation	Lipid-associated TAMs	Kdm6b-low
 4	Ccl19	2.3211176817688475e-4	9.847365829640571e-5	T-cell recruitment	Inflammatory activated microglia	Kdm6b-high
-5	Ccl19	1.2473515329391758e-4	9.847365829640571e-5	T-cell recruitment	Angiogenic TAMs	Intermediate
-6	Ccl19	0	0	T-cell recruitment	Antigen-presenting TAMs	Intermediate
-7	Ccl19	0.005151384125507018	0.0020387359836901123	T-cell recruitment	Homeostatic microglia	Intermediate
-8	Ccl19	0	0	T-cell recruitment	Perivascular macrophages	Kdm6b-low
-9	Ccl19	2.53664113548932e-4	0.00028368794326241134	T-cell recruitment	Lipid-associated TAMs	Kdm6b-low
 10	Ccl19	0	0	T-cell recruitment	Perivascular macrophages (chemokine-producing)	Kdm6b-high
+0	Ccl19	0	0	T-cell recruitment	Early activated microglia	Kdm6b-high
 11	Ccl19	0	0	T-cell recruitment	Antigen-presenting monocytes	Kdm6b-high
-12	Ccl19	0.013518936706788711	0.010004349717268378	T-cell recruitment	Inflammatory TAMs	Intermediate
-13	Ccl19	0	0	T-cell recruitment	Homeostatic microglia	Kdm6b-low
-14	Ccl19	0	0	T-cell recruitment	cDC1	Intermediate
 15	Ccl19	0	0	T-cell recruitment	Inflammatory monocytes	Intermediate
-0	Ccl21a	0	0	T-cell recruitment	Early activated microglia	Kdm6b-high
-1	Ccl21a	1.4627886619897256e-4	8.122157244964262e-5	T-cell recruitment	TAM-like phagocytic microglia	Intermediate
-2	Ccl21a	5.15549354480018e-4	2.43842965130456e-4	T-cell recruitment	Stress-response microglia	Kdm6b-low
-3	Ccl21a	0	0	T-cell recruitment	Stress-response microglia	Intermediate
+5	Ccl19	1.2473515329391758e-4	9.847365829640571e-5	T-cell recruitment	Angiogenic TAMs	Intermediate
+7	Ccl19	0.005151384125507018	0.0020387359836901123	T-cell recruitment	Homeostatic microglia	Intermediate
+12	Ccl19	0.013518936706788711	0.010004349717268378	T-cell recruitment	Inflammatory TAMs	Intermediate
+3	Ccl19	0	0	T-cell recruitment	Stress-response microglia	Intermediate
+1	Ccl19	0	0	T-cell recruitment	TAM-like phagocytic microglia	Intermediate
+14	Ccl19	0	0	T-cell recruitment	cDC1	Intermediate
+6	Ccl19	0	0	T-cell recruitment	Antigen-presenting TAMs	Intermediate
+8	Ccl19	0	0	T-cell recruitment	Perivascular macrophages	Kdm6b-low
+13	Ccl19	0	0	T-cell recruitment	Homeostatic microglia	Kdm6b-low
+2	Ccl19	4.7587463281929056e-4	1.625619767536373e-4	T-cell recruitment	Stress-response microglia	Kdm6b-low
+9	Ccl19	2.53664113548932e-4	0.00028368794326241134	T-cell recruitment	Lipid-associated TAMs	Kdm6b-low
 4	Ccl21a	1.9507646172984574e-4	9.847365829640571e-5	T-cell recruitment	Inflammatory activated microglia	Kdm6b-high
-5	Ccl21a	0	0	T-cell recruitment	Angiogenic TAMs	Intermediate
-6	Ccl21a	2.4723433929704314e-4	1.1918951132300358e-4	T-cell recruitment	Antigen-presenting TAMs	Intermediate
-7	Ccl21a	0.0016055659683888684	8.494733265375467e-4	T-cell recruitment	Homeostatic microglia	Intermediate
-8	Ccl21a	7.262988046306994e-4	5.306447333510214e-4	T-cell recruitment	Perivascular macrophages	Kdm6b-low
-9	Ccl21a	0	0	T-cell recruitment	Lipid-associated TAMs	Kdm6b-low
 10	Ccl21a	0.0012983732686334298	6.997900629811056e-4	T-cell recruitment	Perivascular macrophages (chemokine-producing)	Kdm6b-high
+0	Ccl21a	0	0	T-cell recruitment	Early activated microglia	Kdm6b-high
 11	Ccl21a	0	0	T-cell recruitment	Antigen-presenting monocytes	Kdm6b-high
-12	Ccl21a	0	0	T-cell recruitment	Inflammatory TAMs	Intermediate
-13	Ccl21a	0	0	T-cell recruitment	Homeostatic microglia	Kdm6b-low
-14	Ccl21a	0	0	T-cell recruitment	cDC1	Intermediate
 15	Ccl21a	0	0	T-cell recruitment	Inflammatory monocytes	Intermediate
-0	Ccl5	0.031211571891995617	0.011580127007844603	T-cell recruitment	Early activated microglia	Kdm6b-high
-1	Ccl5	0.718775754693171	0.22335932423651722	T-cell recruitment	TAM-like phagocytic microglia	Intermediate
-2	Ccl5	0.0018311205488976427	5.689669186377306e-4	T-cell recruitment	Stress-response microglia	Kdm6b-low
-3	Ccl5	0.00929016260124995	0.0032749159143211186	T-cell recruitment	Stress-response microglia	Intermediate
+5	Ccl21a	0	0	T-cell recruitment	Angiogenic TAMs	Intermediate
+7	Ccl21a	0.0016055659683888684	8.494733265375467e-4	T-cell recruitment	Homeostatic microglia	Intermediate
+12	Ccl21a	0	0	T-cell recruitment	Inflammatory TAMs	Intermediate
+3	Ccl21a	0	0	T-cell recruitment	Stress-response microglia	Intermediate
+1	Ccl21a	1.4627886619897256e-4	8.122157244964262e-5	T-cell recruitment	TAM-like phagocytic microglia	Intermediate
+14	Ccl21a	0	0	T-cell recruitment	cDC1	Intermediate
+6	Ccl21a	2.4723433929704314e-4	1.1918951132300358e-4	T-cell recruitment	Antigen-presenting TAMs	Intermediate
+8	Ccl21a	7.262988046306994e-4	5.306447333510214e-4	T-cell recruitment	Perivascular macrophages	Kdm6b-low
+13	Ccl21a	0	0	T-cell recruitment	Homeostatic microglia	Kdm6b-low
+2	Ccl21a	5.15549354480018e-4	2.43842965130456e-4	T-cell recruitment	Stress-response microglia	Kdm6b-low
+9	Ccl21a	0	0	T-cell recruitment	Lipid-associated TAMs	Kdm6b-low
 4	Ccl5	0.08197106913327554	0.030822255046774986	T-cell recruitment	Inflammatory activated microglia	Kdm6b-high
-5	Ccl5	0.35724323193906515	0.11826686361398325	T-cell recruitment	Angiogenic TAMs	Intermediate
-6	Ccl5	0.4236189558879243	0.13361144219308702	T-cell recruitment	Antigen-presenting TAMs	Intermediate
-7	Ccl5	0.060856681761227334	0.018858307849133536	T-cell recruitment	Homeostatic microglia	Intermediate
-8	Ccl5	0.010337154850589041	0.003183868400106129	T-cell recruitment	Perivascular macrophages	Kdm6b-low
-9	Ccl5	0.0299060053901282	0.010212765957446808	T-cell recruitment	Lipid-associated TAMs	Kdm6b-low
 10	Ccl5	0.017673773281675034	0.005598320503848845	T-cell recruitment	Perivascular macrophages (chemokine-producing)	Kdm6b-high
+0	Ccl5	0.031211571891995617	0.011580127007844603	T-cell recruitment	Early activated microglia	Kdm6b-high
 11	Ccl5	0.7274825118017361	0.21737373737373739	T-cell recruitment	Antigen-presenting monocytes	Kdm6b-high
-12	Ccl5	3.1090573856870685	0.7007394519356241	T-cell recruitment	Inflammatory TAMs	Intermediate
-13	Ccl5	0.1278261861835794	0.04128440366972477	T-cell recruitment	Homeostatic microglia	Kdm6b-low
-14	Ccl5	0.1556874292744868	0.056346749226006194	T-cell recruitment	cDC1	Intermediate
 15	Ccl5	0.05785895926818115	0.024469820554649267	T-cell recruitment	Inflammatory monocytes	Intermediate
-0	Ccr7	0.0011108832155116307	5.97683974598431e-4	T-cell recruitment	Early activated microglia	Kdm6b-high
-1	Ccr7	0.0010205366740139595	7.309941520467836e-4	T-cell recruitment	TAM-like phagocytic microglia	Intermediate
-2	Ccr7	0	0	T-cell recruitment	Stress-response microglia	Kdm6b-low
-3	Ccr7	0	0	T-cell recruitment	Stress-response microglia	Intermediate
+5	Ccl5	0.35724323193906515	0.11826686361398325	T-cell recruitment	Angiogenic TAMs	Intermediate
+7	Ccl5	0.060856681761227334	0.018858307849133536	T-cell recruitment	Homeostatic microglia	Intermediate
+12	Ccl5	3.1090573856870685	0.7007394519356241	T-cell recruitment	Inflammatory TAMs	Intermediate
+3	Ccl5	0.00929016260124995	0.0032749159143211186	T-cell recruitment	Stress-response microglia	Intermediate
+1	Ccl5	0.718775754693171	0.22335932423651722	T-cell recruitment	TAM-like phagocytic microglia	Intermediate
+14	Ccl5	0.1556874292744868	0.056346749226006194	T-cell recruitment	cDC1	Intermediate
+6	Ccl5	0.4236189558879243	0.13361144219308702	T-cell recruitment	Antigen-presenting TAMs	Intermediate
+8	Ccl5	0.010337154850589041	0.003183868400106129	T-cell recruitment	Perivascular macrophages	Kdm6b-low
+13	Ccl5	0.1278261861835794	0.04128440366972477	T-cell recruitment	Homeostatic microglia	Kdm6b-low
+2	Ccl5	0.0018311205488976427	5.689669186377306e-4	T-cell recruitment	Stress-response microglia	Kdm6b-low
+9	Ccl5	0.0299060053901282	0.010212765957446808	T-cell recruitment	Lipid-associated TAMs	Kdm6b-low
 4	Ccr7	0.0054178431546373345	0.002363367799113737	T-cell recruitment	Inflammatory activated microglia	Kdm6b-high
-5	Ccr7	8.954518364530199e-4	6.8931560807484e-4	T-cell recruitment	Angiogenic TAMs	Intermediate
-6	Ccr7	1.8480824049952392e-4	1.1918951132300358e-4	T-cell recruitment	Antigen-presenting TAMs	Intermediate
-7	Ccr7	0	0	T-cell recruitment	Homeostatic microglia	Intermediate
-8	Ccr7	2.901839118537197e-4	2.653223666755107e-4	T-cell recruitment	Perivascular macrophages	Kdm6b-low
-9	Ccr7	4.415236078194742e-4	0.00028368794326241134	T-cell recruitment	Lipid-associated TAMs	Kdm6b-low
 10	Ccr7	0	0	T-cell recruitment	Perivascular macrophages (chemokine-producing)	Kdm6b-high
+0	Ccr7	0.0011108832155116307	5.97683974598431e-4	T-cell recruitment	Early activated microglia	Kdm6b-high
 11	Ccr7	0.5448989730583889	0.25575757575757574	T-cell recruitment	Antigen-presenting monocytes	Kdm6b-high
-12	Ccr7	0.0031530957600776396	0.002174858634188778	T-cell recruitment	Inflammatory TAMs	Intermediate
-13	Ccr7	0	0	T-cell recruitment	Homeostatic microglia	Kdm6b-low
-14	Ccr7	0.08466534556502163	0.05077399380804953	T-cell recruitment	cDC1	Intermediate
 15	Ccr7	0.008149750049497225	0.005709624796084829	T-cell recruitment	Inflammatory monocytes	Intermediate
-0	Cxcl10	0.37293214491876914	0.14082928651475532	T-cell recruitment	Early activated microglia	Kdm6b-high
-1	Cxcl10	0.7523036091241698	0.28492527615334634	T-cell recruitment	TAM-like phagocytic microglia	Intermediate
-2	Cxcl10	0.01721443418313667	0.006258636105015037	T-cell recruitment	Stress-response microglia	Kdm6b-low
-3	Cxcl10	0.11046909067861373	0.041334749513188176	T-cell recruitment	Stress-response microglia	Intermediate
+5	Ccr7	8.954518364530199e-4	6.8931560807484e-4	T-cell recruitment	Angiogenic TAMs	Intermediate
+7	Ccr7	0	0	T-cell recruitment	Homeostatic microglia	Intermediate
+12	Ccr7	0.0031530957600776396	0.002174858634188778	T-cell recruitment	Inflammatory TAMs	Intermediate
+3	Ccr7	0	0	T-cell recruitment	Stress-response microglia	Intermediate
+1	Ccr7	0.0010205366740139595	7.309941520467836e-4	T-cell recruitment	TAM-like phagocytic microglia	Intermediate
+14	Ccr7	0.08466534556502163	0.05077399380804953	T-cell recruitment	cDC1	Intermediate
+6	Ccr7	1.8480824049952392e-4	1.1918951132300358e-4	T-cell recruitment	Antigen-presenting TAMs	Intermediate
+8	Ccr7	2.901839118537197e-4	2.653223666755107e-4	T-cell recruitment	Perivascular macrophages	Kdm6b-low
+13	Ccr7	0	0	T-cell recruitment	Homeostatic microglia	Kdm6b-low
+2	Ccr7	0	0	T-cell recruitment	Stress-response microglia	Kdm6b-low
+9	Ccr7	4.415236078194742e-4	0.00028368794326241134	T-cell recruitment	Lipid-associated TAMs	Kdm6b-low
 4	Cxcl10	0.2257849176966831	0.09522402757262433	T-cell recruitment	Inflammatory activated microglia	Kdm6b-high
-5	Cxcl10	0.1303884160406506	0.05603151157065485	T-cell recruitment	Angiogenic TAMs	Intermediate
-6	Cxcl10	0.2683670451024508	0.09547079856972586	T-cell recruitment	Antigen-presenting TAMs	Intermediate
-7	Cxcl10	0.15383373191311314	0.0581039755351682	T-cell recruitment	Homeostatic microglia	Intermediate
-8	Cxcl10	0.16483719095353666	0.061820111435394	T-cell recruitment	Perivascular macrophages	Kdm6b-low
-9	Cxcl10	0.0063254279554911	0.00425531914893617	T-cell recruitment	Lipid-associated TAMs	Kdm6b-low
 10	Cxcl10	0.20030368828361508	0.08537438768369489	T-cell recruitment	Perivascular macrophages (chemokine-producing)	Kdm6b-high
+0	Cxcl10	0.37293214491876914	0.14082928651475532	T-cell recruitment	Early activated microglia	Kdm6b-high
 11	Cxcl10	0.27796024072091974	0.10909090909090909	T-cell recruitment	Antigen-presenting monocytes	Kdm6b-high
-12	Cxcl10	0.43222211986007225	0.176163549369291	T-cell recruitment	Inflammatory TAMs	Intermediate
-13	Cxcl10	0.291794537058674	0.09954128440366973	T-cell recruitment	Homeostatic microglia	Kdm6b-low
-14	Cxcl10	0.11646767007074983	0.05201238390092879	T-cell recruitment	cDC1	Intermediate
 15	Cxcl10	0.16983424124092725	0.05791190864600326	T-cell recruitment	Inflammatory monocytes	Intermediate
-0	Cxcl9	0.02253106798038865	0.008143444153903624	T-cell recruitment	Early activated microglia	Kdm6b-high
-1	Cxcl9	0.49729900207827	0.1652046783625731	T-cell recruitment	TAM-like phagocytic microglia	Intermediate
-2	Cxcl9	0.0025168024225321367	8.940908721450052e-4	T-cell recruitment	Stress-response microglia	Kdm6b-low
-3	Cxcl9	0.011473069866908726	0.003983005841741901	T-cell recruitment	Stress-response microglia	Intermediate
+5	Cxcl10	0.1303884160406506	0.05603151157065485	T-cell recruitment	Angiogenic TAMs	Intermediate
+7	Cxcl10	0.15383373191311314	0.0581039755351682	T-cell recruitment	Homeostatic microglia	Intermediate
+12	Cxcl10	0.43222211986007225	0.176163549369291	T-cell recruitment	Inflammatory TAMs	Intermediate
+3	Cxcl10	0.11046909067861373	0.041334749513188176	T-cell recruitment	Stress-response microglia	Intermediate
+1	Cxcl10	0.7523036091241698	0.28492527615334634	T-cell recruitment	TAM-like phagocytic microglia	Intermediate
+14	Cxcl10	0.11646767007074983	0.05201238390092879	T-cell recruitment	cDC1	Intermediate
+6	Cxcl10	0.2683670451024508	0.09547079856972586	T-cell recruitment	Antigen-presenting TAMs	Intermediate
+8	Cxcl10	0.16483719095353666	0.061820111435394	T-cell recruitment	Perivascular macrophages	Kdm6b-low
+13	Cxcl10	0.291794537058674	0.09954128440366973	T-cell recruitment	Homeostatic microglia	Kdm6b-low
+2	Cxcl10	0.01721443418313667	0.006258636105015037	T-cell recruitment	Stress-response microglia	Kdm6b-low
+9	Cxcl10	0.0063254279554911	0.00425531914893617	T-cell recruitment	Lipid-associated TAMs	Kdm6b-low
 4	Cxcl9	0.03447624686564435	0.012210733628754309	T-cell recruitment	Inflammatory activated microglia	Kdm6b-high
-5	Cxcl9	0.1722069499251501	0.06115214180206795	T-cell recruitment	Angiogenic TAMs	Intermediate
-6	Cxcl9	0.2819779648236256	0.09129916567342074	T-cell recruitment	Antigen-presenting TAMs	Intermediate
-7	Cxcl9	0.062499553033307786	0.019028202514441046	T-cell recruitment	Homeostatic microglia	Intermediate
-8	Cxcl9	0.015933502795778633	0.005306447333510215	T-cell recruitment	Perivascular macrophages	Kdm6b-low
-9	Cxcl9	0.011531265203662846	0.0045390070921985815	T-cell recruitment	Lipid-associated TAMs	Kdm6b-low
 10	Cxcl9	0.010096566461927971	0.0034989503149055285	T-cell recruitment	Perivascular macrophages (chemokine-producing)	Kdm6b-high
+0	Cxcl9	0.02253106798038865	0.008143444153903624	T-cell recruitment	Early activated microglia	Kdm6b-high
 11	Cxcl9	0.5401287396332882	0.17898989898989898	T-cell recruitment	Antigen-presenting monocytes	Kdm6b-high
-12	Cxcl9	1.154865924638489	0.3784254023488473	T-cell recruitment	Inflammatory TAMs	Intermediate
-13	Cxcl9	0.13199212970050647	0.0426605504587156	T-cell recruitment	Homeostatic microglia	Kdm6b-low
-14	Cxcl9	0.7039902187119464	0.2476780185758514	T-cell recruitment	cDC1	Intermediate
 15	Cxcl9	0.02795894766122916	0.012234910277324634	T-cell recruitment	Inflammatory monocytes	Intermediate
-0	Xcl1	0	0	T-cell recruitment	Early activated microglia	Kdm6b-high
-1	Xcl1	1.926737176536293e-4	1.6244314489928524e-4	T-cell recruitment	TAM-like phagocytic microglia	Intermediate
-2	Xcl1	0	0	T-cell recruitment	Stress-response microglia	Kdm6b-low
-3	Xcl1	0	0	T-cell recruitment	Stress-response microglia	Intermediate
+5	Cxcl9	0.1722069499251501	0.06115214180206795	T-cell recruitment	Angiogenic TAMs	Intermediate
+7	Cxcl9	0.062499553033307786	0.019028202514441046	T-cell recruitment	Homeostatic microglia	Intermediate
+12	Cxcl9	1.154865924638489	0.3784254023488473	T-cell recruitment	Inflammatory TAMs	Intermediate
+3	Cxcl9	0.011473069866908726	0.003983005841741901	T-cell recruitment	Stress-response microglia	Intermediate
+1	Cxcl9	0.49729900207827	0.1652046783625731	T-cell recruitment	TAM-like phagocytic microglia	Intermediate
+14	Cxcl9	0.7039902187119464	0.2476780185758514	T-cell recruitment	cDC1	Intermediate
+6	Cxcl9	0.2819779648236256	0.09129916567342074	T-cell recruitment	Antigen-presenting TAMs	Intermediate
+8	Cxcl9	0.015933502795778633	0.005306447333510215	T-cell recruitment	Perivascular macrophages	Kdm6b-low
+13	Cxcl9	0.13199212970050647	0.0426605504587156	T-cell recruitment	Homeostatic microglia	Kdm6b-low
+2	Cxcl9	0.0025168024225321367	8.940908721450052e-4	T-cell recruitment	Stress-response microglia	Kdm6b-low
+9	Cxcl9	0.011531265203662846	0.0045390070921985815	T-cell recruitment	Lipid-associated TAMs	Kdm6b-low
 4	Xcl1	0	0	T-cell recruitment	Inflammatory activated microglia	Kdm6b-high
-5	Xcl1	6.392289756492834e-4	4.923682914820286e-4	T-cell recruitment	Angiogenic TAMs	Intermediate
-6	Xcl1	2.6150547817013303e-4	1.1918951132300358e-4	T-cell recruitment	Antigen-presenting TAMs	Intermediate
-7	Xcl1	0	0	T-cell recruitment	Homeostatic microglia	Intermediate
-8	Xcl1	3.4879635793447753e-4	2.653223666755107e-4	T-cell recruitment	Perivascular macrophages	Kdm6b-low
-9	Xcl1	0	0	T-cell recruitment	Lipid-associated TAMs	Kdm6b-low
 10	Xcl1	0	0	T-cell recruitment	Perivascular macrophages (chemokine-producing)	Kdm6b-high
+0	Xcl1	0	0	T-cell recruitment	Early activated microglia	Kdm6b-high
 11	Xcl1	0.004820567394760886	0.0028282828282828283	T-cell recruitment	Antigen-presenting monocytes	Kdm6b-high
-12	Xcl1	2.2882877864828635e-4	4.3497172683775554e-4	T-cell recruitment	Inflammatory TAMs	Intermediate
-13	Xcl1	0	0	T-cell recruitment	Homeostatic microglia	Kdm6b-low
-14	Xcl1	0.002380073149111224	0.0018575851393188853	T-cell recruitment	cDC1	Intermediate
 15	Xcl1	0.00421314195454058	0.0032626427406199023	T-cell recruitment	Inflammatory monocytes	Intermediate
-0	Xcr1	0	0	T-cell recruitment	Early activated microglia	Kdm6b-high
-1	Xcr1	0	0	T-cell recruitment	TAM-like phagocytic microglia	Intermediate
-2	Xcr1	0	0	T-cell recruitment	Stress-response microglia	Kdm6b-low
-3	Xcr1	0	0	T-cell recruitment	Stress-response microglia	Intermediate
+5	Xcl1	6.392289756492834e-4	4.923682914820286e-4	T-cell recruitment	Angiogenic TAMs	Intermediate
+7	Xcl1	0	0	T-cell recruitment	Homeostatic microglia	Intermediate
+12	Xcl1	2.2882877864828635e-4	4.3497172683775554e-4	T-cell recruitment	Inflammatory TAMs	Intermediate
+3	Xcl1	0	0	T-cell recruitment	Stress-response microglia	Intermediate
+1	Xcl1	1.926737176536293e-4	1.6244314489928524e-4	T-cell recruitment	TAM-like phagocytic microglia	Intermediate
+14	Xcl1	0.002380073149111224	0.0018575851393188853	T-cell recruitment	cDC1	Intermediate
+6	Xcl1	2.6150547817013303e-4	1.1918951132300358e-4	T-cell recruitment	Antigen-presenting TAMs	Intermediate
+8	Xcl1	3.4879635793447753e-4	2.653223666755107e-4	T-cell recruitment	Perivascular macrophages	Kdm6b-low
+13	Xcl1	0	0	T-cell recruitment	Homeostatic microglia	Kdm6b-low
+2	Xcl1	0	0	T-cell recruitment	Stress-response microglia	Kdm6b-low
+9	Xcl1	0	0	T-cell recruitment	Lipid-associated TAMs	Kdm6b-low
 4	Xcr1	3.1225892287808097e-4	9.847365829640571e-5	T-cell recruitment	Inflammatory activated microglia	Kdm6b-high
-5	Xcr1	0.0023856815904496776	0.00137863121614968	T-cell recruitment	Angiogenic TAMs	Intermediate
-6	Xcr1	0.0021292966850022595	0.0015494636471990466	T-cell recruitment	Antigen-presenting TAMs	Intermediate
-7	Xcr1	0.0011714149952662843	5.096839959225281e-4	T-cell recruitment	Homeostatic microglia	Intermediate
-8	Xcr1	0.002039365181461831	0.0010612894667020429	T-cell recruitment	Perivascular macrophages	Kdm6b-low
-9	Xcr1	0.0027313349488323467	0.0014184397163120568	T-cell recruitment	Lipid-associated TAMs	Kdm6b-low
 10	Xcr1	0.01870181283356331	0.010146955913226032	T-cell recruitment	Perivascular macrophages (chemokine-producing)	Kdm6b-high
+0	Xcr1	0	0	T-cell recruitment	Early activated microglia	Kdm6b-high
 11	Xcr1	0.071487165028157107	0.039191919191919194	T-cell recruitment	Antigen-presenting monocytes	Kdm6b-high
-12	Xcr1	0.0018205042348073343	0.0013049151805132667	T-cell recruitment	Inflammatory TAMs	Intermediate
-13	Xcr1	0	0	T-cell recruitment	Homeostatic microglia	Kdm6b-low
-14	Xcr1	2.1003312072182627	0.8055727554179567	T-cell recruitment	cDC1	Intermediate
 15	Xcr1	0.004967547979862887	0.0032626427406199023	T-cell recruitment	Inflammatory monocytes	Intermediate
+5	Xcr1	0.0023856815904496776	0.00137863121614968	T-cell recruitment	Angiogenic TAMs	Intermediate
+7	Xcr1	0.0011714149952662843	5.096839959225281e-4	T-cell recruitment	Homeostatic microglia	Intermediate
+12	Xcr1	0.0018205042348073343	0.0013049151805132667	T-cell recruitment	Inflammatory TAMs	Intermediate
+3	Xcr1	0	0	T-cell recruitment	Stress-response microglia	Intermediate
+1	Xcr1	0	0	T-cell recruitment	TAM-like phagocytic microglia	Intermediate
+14	Xcr1	2.1003312072182627	0.8055727554179567	T-cell recruitment	cDC1	Intermediate
+6	Xcr1	0.0021292966850022595	0.0015494636471990466	T-cell recruitment	Antigen-presenting TAMs	Intermediate
+8	Xcr1	0.002039365181461831	0.0010612894667020429	T-cell recruitment	Perivascular macrophages	Kdm6b-low
+13	Xcr1	0	0	T-cell recruitment	Homeostatic microglia	Kdm6b-low
+2	Xcr1	0	0	T-cell recruitment	Stress-response microglia	Kdm6b-low
+9	Xcr1	0.0027313349488323467	0.0014184397163120568	T-cell recruitment	Lipid-associated TAMs	Kdm6b-low

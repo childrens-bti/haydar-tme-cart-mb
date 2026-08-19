@@ -11,7 +11,7 @@
 
 <meta name="author" content="Bicna Song" />
 
-<meta name="date" content="2026-08-17" />
+<meta name="date" content="2026-08-19" />
 
 <title>18-kdm6b-myeloid-immune-programs</title>
 
@@ -1481,7 +1481,7 @@ border-radius: 0px;
 
 <h1 class="title toc-ignore">18-kdm6b-myeloid-immune-programs</h1>
 <h4 class="author">Bicna Song</h4>
-<h4 class="date">2026-08-17</h4>
+<h4 class="date">2026-08-19</h4>
 
 </div>
 
@@ -1593,10 +1593,27 @@ if (!setequal(observed_subclusters, kdm6b_ranking$subcluster)) {
 subcluster_levels &lt;- as.character(sort(as.integer(observed_subclusters)))
 kdm6b_ranking &lt;- kdm6b_ranking %&gt;%
   dplyr::arrange(kdm6b_group, as.integer(subcluster))
-# Keep violin plots in sequential Seurat cluster order.
-subcluster_plot_levels &lt;- subcluster_levels
+# Keep violin plots ordered by Kdm6b group, then ranking within group.
+subcluster_plot_levels &lt;- kdm6b_ranking %&gt;%
+  dplyr::mutate(
+    kdm6b_group = factor(
+      kdm6b_group,
+      levels = c(&quot;Kdm6b-high&quot;, &quot;Intermediate&quot;, &quot;Kdm6b-low&quot;)
+    )
+  ) %&gt;%
+  dplyr::arrange(kdm6b_group, kdm6b_rank) %&gt;%
+  dplyr::pull(subcluster)
+kdm6b_group_by_subcluster &lt;- setNames(
+  as.character(kdm6b_ranking$kdm6b_group),
+  kdm6b_ranking$subcluster
+)
 subcluster_axis_labels &lt;- setNames(
-  subcluster_plot_levels,
+  paste0(
+    &quot;C&quot;,
+    subcluster_plot_levels,
+    &quot;:&quot;,
+    kdm6b_group_by_subcluster[subcluster_plot_levels]
+  ),
   subcluster_plot_levels
 )
 cluster_colors &lt;- setNames(
@@ -1734,7 +1751,8 @@ for (gene_name in unique_program_genes) {
       legend.key = element_rect(fill = &quot;white&quot;, color = NA),
       panel.grid.major = element_line(color = &quot;grey90&quot;),
       panel.grid.minor = element_blank(),
-      axis.text.x = element_text(angle = 45, hjust = 1)
+      axis.text.x = element_text(angle = 45, hjust = 1),
+      legend.position = &quot;none&quot;
     ) &amp;
     labs(
       title = paste(gene_name, &quot;expression by myeloid subcluster&quot;),
@@ -1897,12 +1915,14 @@ for (program_name in program_levels) {
       color = &quot;grey20&quot;
     ) +
     geom_point(
-      aes(color = kdm6b_group),
+      aes(fill = kdm6b_group),
+      color = &quot;black&quot;,
+      shape = 21,
+      alpha = 0.85,
       position = position_jitter(width = 0.05, height = 0),
-      size = 2
+      size = 1.2
     ) +
     scale_fill_manual(values = kdm6b_group_colors, drop = FALSE) +
-    scale_color_manual(values = kdm6b_group_colors, drop = FALSE) +
     scale_x_discrete(
       labels = c(
         &quot;Kdm6b-high&quot; = &quot;Kdm6b-high&quot;,
@@ -2064,8 +2084,8 @@ for (program_name in program_levels) {
     geom_violin(
       scale = &quot;width&quot;,
       trim = TRUE,
-      linewidth = 0.2,
-      color = &quot;grey20&quot;
+      linewidth = 0.5,
+      color = &quot;black&quot;
     ) +
     scale_x_discrete(
       limits = subcluster_plot_levels,
@@ -2080,7 +2100,7 @@ for (program_name in program_levels) {
       panel.grid.major = element_line(color = &quot;grey90&quot;),
       panel.grid.minor = element_blank(),
       axis.text.x = element_text(angle = 45, hjust = 1),
-      legend.position = &quot;right&quot;
+      legend.position = &quot;none&quot;
     ) +
     labs(
       title = paste(program_name, &quot;UCell score by myeloid subcluster&quot;),
@@ -2128,12 +2148,14 @@ for (program_name in program_levels) {
       color = &quot;grey20&quot;
     ) +
     geom_point(
-      aes(color = kdm6b_group),
+      aes(fill = kdm6b_group),
+      color = &quot;black&quot;,
+      shape = 21,
+      alpha = 0.85,
       position = position_jitter(width = 0.05, height = 0),
-      size = 2
+      size = 1.8
     ) +
     scale_fill_manual(values = kdm6b_group_colors, drop = FALSE) +
-    scale_color_manual(values = kdm6b_group_colors, drop = FALSE) +
     scale_x_discrete(
       labels = c(
         &quot;Kdm6b-high&quot; = &quot;Kdm6b-high&quot;,
