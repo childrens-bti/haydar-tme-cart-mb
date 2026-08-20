@@ -11,9 +11,9 @@
 
 <meta name="author" content="Bicna Song" />
 
-<meta name="date" content="2026-08-17" />
+<meta name="date" content="2026-08-20" />
 
-<title>Kdm6b-associated Myeloid Remodeling: Integrated Summary</title>
+<title>Kdm6b-associated T-cell Remodeling: Integrated Summary</title>
 
 <script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
 // be compatible with the behavior of Pandoc < 2.8).
@@ -350,232 +350,132 @@ display: none;
 
 
 
-<h1 class="title toc-ignore">Kdm6b-associated Myeloid Remodeling:
+<h1 class="title toc-ignore">Kdm6b-associated T-cell Remodeling:
 Integrated Summary</h1>
 <h4 class="author">Bicna Song</h4>
-<h4 class="date">2026-08-17</h4>
+<h4 class="date">2026-08-20</h4>
 
 </div>
 
 
 <div id="scope" class="section level2">
 <h2>Scope</h2>
-<p>This report provides an integrated summary of the Kdm6b-associated
-myeloid remodeling analysis. The analysis evaluates whether
-Kdm6b-associated myeloid subclusters differ across treatment conditions
-and whether the Kdm6b-high state is associated with immune-supportive
-programs.</p>
+<p>This report summarizes the Kdm6b-associated T-cell analysis. The
+analysis asks whether T-cell subclusters differ across treatment
+conditions and whether the predefined Kdm6b-high state is associated
+with distinct transcriptional and immune-program profiles.</p>
 </div>
 <div id="integrated-findings" class="section level2">
 <h2>Integrated findings</h2>
-<div id="is-kdm6b-expression-highest-in-the-effective-car-condition" class="section level3">
-<h3>1. Is Kdm6b expression highest in the effective CAR condition?</h3>
-<p>Yes, descriptively. 41BB-L has the highest median sample-level
-pseudobulk Kdm6b expression in all three compartments:</p>
+<div id="which-t-cell-subclusters-are-kdm6b-high-and-kdm6b-low" class="section level3">
+<h3>1. Which T-cell subclusters are Kdm6b-high and Kdm6b-low?</h3>
+<p>The Kdm6b-high group contains:</p>
 <ul>
-<li>All cells: 15.81</li>
-<li>Myeloid cells: 15.13</li>
-<li>T cells: 10.63</li>
+<li>C3: NK-like cytotoxic lymphocytes</li>
+<li>C9: γδ T cells</li>
+<li>C12: Th2-like inflammatory T cells</li>
 </ul>
-<p>Output:</p>
+<p>The Kdm6b-low group contains:</p>
 <ul>
-<li><code>plots/myeloid/kdm6b_pseudobulk_expression_by_compartment.pdf</code></li>
+<li>C10: IFN-responsive T cells</li>
+<li>C4: Cycling / proliferating T cells</li>
+<li>C2: Activated effector CD8 T cells (stress)</li>
 </ul>
-</div>
-<div id="is-the-kdm6b-signal-primarily-associated-with-myeloid-cells" class="section level3">
-<h3>2. Is the Kdm6b signal primarily associated with myeloid cells?</h3>
-<p>The data support focusing downstream analyses on the myeloid
-compartment, but they do not establish a quantitatively stronger myeloid
-signal by directly comparing y-axis values between compartments. Each
-compartment was normalized independently, so absolute values across all
-cells, T cells, and myeloid cells are not directly comparable.</p>
-<p>Within the myeloid compartment, Kdm6b expression is heterogeneous
-across the UMAP and subclusters, and the myeloid-specific ranking
-provides the basis for the downstream state analysis. Kdm6b is also
-detectable in T cells, so the results do not support describing it as
-myeloid-exclusive.</p>
+<p>The remaining seven subclusters are intermediate. These are
+subcluster-level definitions based on sample-level Kdm6b expression and
+are not individual-cell Kdm6b classifications.</p>
 <p>Outputs:</p>
 <ul>
-<li><code>plots/myeloid/myeloid_kdm6b_featureplot.pdf</code></li>
-<li><code>plots/myeloid/myeloid_kdm6b_violin_by_subcluster.pdf</code></li>
-<li><code>results/myeloid/kdm6b_pseudobulk_by_sample.tsv</code></li>
+<li><code>results/tcell/tcell_kdm6b_subcluster_ranking_and_groups.tsv</code></li>
+<li><code>plots/tcell/tcell_kdm6b_subcluster_ranking.pdf</code></li>
+<li><code>plots/tcell/tcell_kdm6b_violin_by_subcluster.pdf</code></li>
 </ul>
 </div>
-<div id="which-myeloid-subclusters-are-kdm6b-high" class="section level3">
-<h3>3. Which myeloid subclusters are Kdm6b-high?</h3>
-<p>The four Kdm6b-high subclusters are:</p>
-<ul>
-<li>C4: Inflammatory activated microglia</li>
-<li>C10: Perivascular macrophages (chemokine-producing)</li>
-<li>C0: Early activated microglia</li>
-<li>C11: Antigen-presenting monocytes</li>
-</ul>
-<p>The four Kdm6b-low subclusters are C8, C13, C2, and C9. The remaining
-eight subclusters are intermediate. These are subcluster-level
-definitions based on median sample-level mean log-normalized Kdm6b
-expression; they are not individual-cell Kdm6b classifications.</p>
-<p>Output:</p>
-<ul>
-<li><code>results/myeloid/myeloid_kdm6b_subcluster_ranking_and_groups.tsv</code></li>
-<li><code>plots/myeloid/myeloid_kdm6b_subcluster_ranking.pdf</code></li>
-</ul>
-</div>
-<div id="are-kdm6b-high-subclusters-enriched-in-effective-car-conditions" class="section level3">
-<h3>4. Are Kdm6b-high subclusters enriched in effective CAR
-conditions?</h3>
-<p>Some are, but the pattern is subcluster- and treatment-specific
-rather than a uniform expansion of the Kdm6b-high group.</p>
-<p>Using the all-16-subcluster sccomp model with 41BB-L as the
-reference:</p>
-<ul>
-<li>Relative to B7H3, three Kdm6b-high subclusters are enriched in
-41BB-L and one is enriched in B7H3.</li>
-<li>Relative to CD28-41BB, no Kdm6b-high subcluster is significantly
-different.</li>
-<li>Relative to CD8-41BB, one Kdm6b-high subcluster is enriched in
-CD8-41BB.</li>
-<li>Relative to STOP, one Kdm6b-high subcluster is enriched in
-STOP.</li>
-<li>Relative to tumor, one Kdm6b-high subcluster is enriched in 41BB-L
-and two are enriched in tumor.</li>
-</ul>
-<p>The corresponding Kdm6b-low results are also mixed. For example, C13
-is depleted in 41BB-L across comparisons, while C9 is enriched in 41BB-L
-in several comparisons. Therefore, the abundance results support
-subcluster-specific compositional remodeling rather than a single
-group-level Kdm6b-high enrichment effect.</p>
+<div id="are-kdm6b-high-or-kdm6b-low-t-cell-subclusters-preferentially-abundant-across-conditions" class="section level3">
+<h3>2. Are Kdm6b-high or Kdm6b-low T-cell subclusters preferentially
+abundant across conditions?</h3>
+<p>The abundance pattern is subcluster- and treatment-specific rather
+than a uniform enrichment of either Kdm6b group. Kdm6b-high subclusters
+show selected enrichment in 41BB-L, including C3 relative to STOP and
+C12 relative to B7H3 and CD8-41BB. C9 is depleted in 41BB-L relative to
+CD8-41BB. Kdm6b-low subclusters also show mixed behavior: C10 and C4 are
+depleted in 41BB-L in some comparisons, while C10 is enriched relative
+to CD8-41BB and C4 is enriched relative to tumor.</p>
+<p>These results support subcluster-specific compositional remodeling
+rather than a single group-level Kdm6b abundance effect.</p>
 <p>Outputs:</p>
 <ul>
-<li><code>\plots/myeloid/myeloid_kdm6b_high_low_subcluster_enrichment_across_conditions.pdf</code></li>
-<li><code>results/myeloid/myeloid_kdm6b_high_low_subcluster_differential_abundance.tsv</code></li>
+<li><code>plots/tcell/tcell_kdm6b_high_low_subcluster_enrichment_across_conditions.pdf</code></li>
+<li><code>results/tcell/tcell_kdm6b_high_low_subcluster_differential_abundance.tsv</code></li>
 </ul>
 </div>
-<div id="are-kdm6b-low-subclusters-depleted-or-unchanged-in-41bb-l" class="section level3">
-<h3>5. Are Kdm6b-low subclusters depleted or unchanged in 41BB-L?</h3>
-<p>Neither conclusion applies uniformly. Kdm6b-low subclusters show both
-enrichment and depletion depending on the subcluster and comparison. The
-results should therefore be interpreted at the individual-subcluster
-level, not as evidence that the entire Kdm6b-low compartment is depleted
-or unchanged in 41BB-L.</p>
-</div>
-<div id="do-kdm6b-high-subclusters-show-immune-supportive-programs" class="section level3">
-<h3>6. Do Kdm6b-high subclusters show immune-supportive programs?</h3>
-<p>The evidence is strongest for inflammatory and interferon-related
-activity, with additional evidence for antigen-presentation and selected
-chemokine genes. It is not uniform across every gene or scoring
-method.</p>
-<div id="transcriptional-comparison" class="section level4">
-<h4>Transcriptional comparison</h4>
-<p>The paired sample-level pseudobulk DESeq2 comparison identifies
-strong differences between the predefined Kdm6b-high and Kdm6b-low
-compartments. Genes higher in Kdm6b-high include inflammatory and
-activation-associated genes such as <code>Csf1</code>,
-<code>Rela</code>, <code>Cd83</code>, and <code>Icam1</code>. Hallmark
-GSEA shows Kdm6b-high enrichment for:</p>
-<ul>
-<li>TNFA signaling via NF-kB</li>
-<li>Inflammatory response</li>
-<li>Interferon-gamma response</li>
-<li>IL2-STAT5 signaling</li>
-<li>IL6-JAK-STAT3 signaling</li>
-</ul>
-<p>Kdm6b-low is enriched for oxidative phosphorylation, fatty-acid
-metabolism, and related metabolic programs. These comparisons
-distinguish the selected subcluster groups; they do not establish that
-Kdm6b causes the observed transcriptional programs.</p>
+<div id="do-kdm6b-high-and-kdm6b-low-t-cells-have-different-transcriptional-profiles" class="section level3">
+<h3>3. Do Kdm6b-high and Kdm6b-low T cells have different
+transcriptional profiles?</h3>
+<p>Yes. The paired sample-level pseudobulk DESeq2 comparison identifies
+strong transcriptional differences between the predefined groups.
+Kdm6b-high cells show higher expression of genes including
+<code>Ifngr1</code>, <code>Fosl2</code>, <code>Klrb1b</code>, and
+<code>Vps37b</code>, while Kdm6b-low cells show higher expression of
+genes including <code>Ly6a</code>, <code>Coro1a</code>, and
+proliferation-associated genes.</p>
+<p>Hallmark GSEA shows Kdm6b-high enrichment for TNFA signaling via
+NF-kB, inflammatory response, TGF-beta signaling, IL6-JAK-STAT3
+signaling, and related activation programs. Kdm6b-low is strongly
+enriched for E2F targets, G2M checkpoint, MYC targets, oxidative
+phosphorylation, interferon-alpha and interferon-gamma response, and
+other cell-cycle or metabolic programs.</p>
 <p>Outputs:</p>
 <ul>
-<li><code>plots/myeloid/myeloid_kdm6b_high_vs_low_pseudobulk_gene_heatmap.pdf</code></li>
-<li><code>plots/myeloid/myeloid_kdm6b_high_vs_low_hallmark_gsea_dotplot.pdf</code></li>
-<li><code>results/myeloid/myeloid_kdm6b_high_vs_low_paired_deseq2.tsv</code></li>
-<li><code>results/myeloid/myeloid_kdm6b_high_vs_low_hallmark_gsea.tsv</code></li>
-<li><code>results/myeloid/myeloid_kdm6b_high_vs_low_heatmap_genes.tsv</code></li>
+<li><code>plots/tcell/tcell_kdm6b_high_vs_low_pseudobulk_gene_heatmap.pdf</code></li>
+<li><code>plots/tcell/tcell_kdm6b_high_vs_low_hallmark_gsea_dotplot.pdf</code></li>
+<li><code>results/tcell/tcell_kdm6b_high_vs_low_paired_deseq2.tsv</code></li>
+<li><code>results/tcell/tcell_kdm6b_high_vs_low_hallmark_gsea.tsv</code></li>
+<li><code>results/tcell/tcell_kdm6b_high_vs_low_heatmap_genes.tsv</code></li>
 </ul>
 </div>
-<div id="immune-program-genes-and-ucell-scores" class="section level4">
-<h4>Immune-program genes and UCell scores</h4>
-<p>At the sample level, several individual genes have higher nominal
-paired values in Kdm6b-high, including <code>Ccl5</code>,
-<code>Ccr7</code>, <code>Cxcl9</code>, <code>Cxcl10</code>,
-<code>Cd74</code>, <code>H2-Ab1</code>, <code>H2-Eb1</code>,
-<code>Il12b</code>, <code>Irf1</code>, <code>Tnf</code>, and
-<code>Xcr1</code> after paired testing. <code>B2m</code>,
-<code>Ifngr1</code>, <code>Psmb8</code>, and <code>Stat1</code> show the
-opposite direction in this comparison.</p>
-<p>The UCell comparison shows a significant increase for the
-inflammatory activation module in Kdm6b-high. The antigen-presentation
-module is not significantly different, and the T-cell-recruitment module
-has zero median scores in both groups in the sample-level comparison.
-The gene-level and UCell-level results therefore support inflammatory
-activation more clearly than a broad increase across all immune
-programs.</p>
+<div id="which-t-cell-immune-programs-differ-between-the-kdm6b-groups" class="section level3">
+<h3>4. Which T-cell immune programs differ between the Kdm6b
+groups?</h3>
+<p>The T-cell UCell analysis uses six predefined programs: cytotoxicity,
+expansion/proliferation, memory/stem-like, exhaustion/dysfunction, IFN
+response, and chemokine responsiveness.</p>
+<p>At the sample level, the cytotoxicity score is higher in Kdm6b-high
+and remains significant after adjustment. The IFN-response score is
+higher in Kdm6b-low and also remains significant after adjustment.
+Expansion/proliferation has zero scores in both groups, while
+memory/stem-like, exhaustion/dysfunction, and chemokine responsiveness
+do not show significant adjusted differences.</p>
+<p>Individual gene comparisons are consistent with this mixed pattern.
+<code>Gzmb</code> and <code>Ccl3</code> are higher in Kdm6b-high,
+whereas <code>Cxcr3</code>, <code>Ifit3</code>, <code>Ifng</code>,
+<code>Isg15</code>, <code>Lag3</code>, <code>Mki67</code>, and
+<code>Havcr2</code> are higher in Kdm6b-low after adjustment.</p>
+<p>The results support selective cytotoxic and interferon differences
+rather than a uniform increase across all T-cell immune programs.</p>
 <p>Outputs:</p>
 <ul>
-<li><code>plots/myeloid/myeloid_kdm6b_immune_program_gene_high_vs_low_boxplots.pdf</code></li>
-<li><code>plots/myeloid/myeloid_kdm6b_immune_program_gene_violin_by_subcluster.pdf</code></li>
-<li><code>plots/myeloid/myeloid_kdm6b_immune_program_ucell_high_vs_low_boxplots.pdf</code></li>
-<li><code>plots/myeloid/myeloid_kdm6b_immune_program_ucell_violin_by_subcluster.pdf</code></li>
-<li><code>results/myeloid/myeloid_kdm6b_immune_program_gene_high_vs_low.tsv</code></li>
-<li><code>results/myeloid/myeloid_kdm6b_immune_program_genes_by_subcluster.tsv</code></li>
-<li><code>results/myeloid/myeloid_kdm6b_immune_program_ucell_by_sample_group.tsv</code></li>
-<li><code>results/myeloid/myeloid_kdm6b_immune_program_ucell_by_subcluster.tsv</code></li>
-<li><code>results/myeloid/myeloid_kdm6b_immune_program_ucell_high_vs_low.tsv</code></li>
+<li><code>plots/tcell/tcell_kdm6b_immune_program_gene_high_vs_low_boxplots.pdf</code></li>
+<li><code>plots/tcell/tcell_kdm6b_immune_program_gene_violin_by_subcluster.pdf</code></li>
+<li><code>plots/tcell/tcell_kdm6b_immune_program_ucell_high_vs_low_boxplots.pdf</code></li>
+<li><code>plots/tcell/tcell_kdm6b_immune_program_ucell_violin_by_subcluster.pdf</code></li>
+<li><code>results/tcell/tcell_kdm6b_immune_program_gene_high_vs_low.tsv</code></li>
+<li><code>results/tcell/tcell_kdm6b_immune_program_genes_by_subcluster.tsv</code></li>
+<li><code>results/tcell/tcell_kdm6b_immune_program_ucell_by_sample_group.tsv</code></li>
+<li><code>results/tcell/tcell_kdm6b_immune_program_ucell_by_subcluster.tsv</code></li>
+<li><code>results/tcell/tcell_kdm6b_immune_program_ucell_high_vs_low.tsv</code></li>
 </ul>
 </div>
-<div id="sample-level-kdm6b-correlations" class="section level4">
-<h4>Sample-level Kdm6b correlations</h4>
-<p>Across all myeloid cells, Kdm6b expression is positively correlated
-with genes from all three program categories. The strongest association
-is with <code>Xcl1</code> in the T-cell-recruitment program. Several
-antigen-presentation genes, including <code>Tap1</code>,
-<code>Tapbp</code>, <code>H2-Eb1</code>, <code>H2-Ab1</code>, and
-<code>Cd74</code>, show positive correlations, as do inflammatory genes
-such as <code>Irf7</code>, <code>Stat1</code>, <code>Cxcl10</code>, and
-<code>Tnf</code>.</p>
-<p>After multiple-testing adjustment, <code>Xcl1</code> is the clearest
-statistically supported correlation. Most other genes have positive
-nominal associations but adjusted p-values above 0.05. With only 12
-samples, these correlations should be treated as supportive trends
-rather than definitive evidence.</p>
-<p>Outputs:</p>
-<ul>
-<li><code>plots/myeloid/myeloid_kdm6b_correlation_antigen_presentation_scatterplots.pdf</code></li>
-<li><code>plots/myeloid/myeloid_kdm6b_correlation_antigen_presentation_dotplot.pdf</code></li>
-<li><code>plots/myeloid/myeloid_kdm6b_correlation_inflammatory_activation_scatterplots.pdf</code></li>
-<li><code>plots/myeloid/myeloid_kdm6b_correlation_inflammatory_activation_dotplot.pdf</code></li>
-<li><code>plots/myeloid/myeloid_kdm6b_correlation_t_cell_recruitment_scatterplots.pdf</code></li>
-<li><code>plots/myeloid/myeloid_kdm6b_correlation_t_cell_recruitment_dotplot.pdf</code></li>
-<li><code>results/myeloid/myeloid_kdm6b_gene_correlation_summary.tsv</code></li>
-<li><code>results/myeloid/myeloid_kdm6b_gene_mean_expression_by_sample.tsv</code></li>
-</ul>
-</div>
-</div>
-<div id="does-the-kdm6b-high-state-appear-consistent-with-immune-supportive-remodeling" class="section level3">
-<h3>7. Does the Kdm6b-high state appear consistent with
-immune-supportive remodeling?</h3>
-<p>The combined results are consistent with a Kdm6b-high myeloid state
-associated with inflammatory remodeling that could support CAR T-cell
-activity. This interpretation is supported by:</p>
-<ul>
-<li>Highest descriptive Kdm6b expression in 41BB-L within each
-compartment.</li>
-<li>Kdm6b-high subclusters that include inflammatory activated
-microglia, chemokine-producing perivascular macrophages, and
-antigen-presenting monocytes.</li>
-<li>High-versus-low enrichment for TNFA/NF-kB, inflammatory,
-interferon-gamma, IL2-STAT5, and IL6-JAK-STAT3 pathways.</li>
-<li>Positive sample-level correlations with antigen-presentation,
-inflammatory, and selected recruitment genes.</li>
-<li>Higher Kdm6b-high inflammatory UCell scores.</li>
-</ul>
-<p>The conclusion is associative and qualified. Differential abundance
-is mixed across individual subclusters, the antigen-presentation UCell
-score is not significantly different, the T-cell-recruitment UCell score
-is uninformative at the sample-group level, and most correlations do not
-remain significant after multiple-testing adjustment. The results
-support a remodeling hypothesis, not a claim that Kdm6b directly causes
-an immune-supportive state or that the state is uniformly enriched in
-41BB-L.</p>
+<div id="overall-interpretation" class="section level3">
+<h3>5. Overall interpretation</h3>
+<p>The T-cell results support an associative Kdm6b-linked remodeling
+pattern. The Kdm6b-high group is defined by cytotoxic and inflammatory
+T-cell states and shows stronger cytotoxicity, whereas the Kdm6b-low
+group includes IFN-responsive and cycling T-cell states and shows
+stronger interferon and cell-cycle programs. Differential abundance is
+mixed across individual subclusters, so the results do not support a
+uniform treatment-associated expansion of the Kdm6b-high or Kdm6b-low
+group.</p>
 </div>
 </div>
 
