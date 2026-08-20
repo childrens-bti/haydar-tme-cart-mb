@@ -1,5 +1,5 @@
 ---
-title: "16-kdm6b-myeloid-transcriptional-comparison"
+title: "16-kdm6b-transcriptional-comparison"
 author: "Bicna Song"
 date: "`r Sys.Date()`"
 output:
@@ -9,6 +9,7 @@ output:
 params:
   input_rds: "cart_myeloid_subtypes.rds"
   ranking_tsv: "kdm6b_subcluster_ranking_and_groups.tsv"
+  subtype_label: "myeloid"
   min_total_count: 10
   de_fdr: 0.05
   heatmap_genes_per_direction: 25
@@ -18,7 +19,7 @@ params:
 ---
 
 This analysis compares the transcriptional profiles of Kdm6b-high and
-Kdm6b-low myeloid subclusters. Intermediate subclusters are excluded from the
+Kdm6b-low subclusters within the selected compartment. Intermediate subclusters are excluded from the
 comparison.
 
 Raw RNA counts are aggregated into one Kdm6b-high and one Kdm6b-low pseudobulk
@@ -47,8 +48,14 @@ suppressPackageStartupMessages({
 root_dir <- find_root(has_dir(".git"))
 data_dir <- file.path(root_dir, "data", "v5")
 analysis_dir <- file.path(root_dir, "analyses", "downstream-analyses")
-results_dir <- file.path(analysis_dir, "results", "myeloid", "kdm6b")
-plot_dir <- file.path(analysis_dir, "plots", "myeloid", "kdm6b")
+analysis_label <- params$subtype_label
+compartment_label <- dplyr::case_when(
+  analysis_label == "tcell" ~ "T-cell",
+  analysis_label == "myeloid" ~ "Myeloid",
+  TRUE ~ analysis_label
+)
+results_dir <- file.path(analysis_dir, "results", analysis_label, "kdm6b")
+plot_dir <- file.path(analysis_dir, "plots", analysis_label, "kdm6b")
 
 dir.create(results_dir, recursive = TRUE, showWarnings = FALSE)
 dir.create(plot_dir, recursive = TRUE, showWarnings = FALSE)
@@ -123,7 +130,7 @@ cell_metadata <- myeloid_obj@meta.data %>%
   )
 
 if (anyNA(cell_metadata$kdm6b_group)) {
-  stop("At least one myeloid cell could not be assigned to a Kdm6b group.")
+  stop("At least one cell could not be assigned to a Kdm6b group.")
 }
 
 analysis_metadata <- cell_metadata %>%
@@ -265,7 +272,7 @@ de_table <- as.data.frame(de_result) %>%
 
 readr::write_tsv(
   de_table,
-  file.path(results_dir, "myeloid_kdm6b_high_vs_low_paired_deseq2.tsv")
+  file.path(results_dir, paste0(analysis_label, "_kdm6b_high_vs_low_paired_deseq2.tsv"))
 )
 
 summary(de_result)
@@ -320,7 +327,7 @@ hallmark_gsea_output <- hallmark_gsea %>%
 
 readr::write_tsv(
   hallmark_gsea_output,
-  file.path(results_dir, "myeloid_kdm6b_high_vs_low_hallmark_gsea.tsv")
+  file.path(results_dir, paste0(analysis_label, "_kdm6b_high_vs_low_hallmark_gsea.tsv"))
 )
 
 hallmark_gsea_output
@@ -370,7 +377,11 @@ p_hallmark_gsea <- ggplot(
     legend.key = element_rect(fill = "white", color = NA)
   ) +
   labs(
-    title = "Hallmark GSEA: Kdm6b-high vs Kdm6b-low",
+    title = paste(
+      "Hallmark GSEA:",
+      compartment_label,
+      "Kdm6b-high vs Kdm6b-low"
+    ),
     subtitle = "Positive NES indicates enrichment in Kdm6b-high subclusters",
     x = "Normalized enrichment score",
     y = NULL,
@@ -381,7 +392,7 @@ p_hallmark_gsea <- ggplot(
 p_hallmark_gsea
 
 ggsave(
-  file.path(plot_dir, "myeloid_kdm6b_high_vs_low_hallmark_gsea_dotplot.pdf"),
+  file.path(plot_dir, paste0(analysis_label, "_kdm6b_high_vs_low_hallmark_gsea_dotplot.pdf")),
   plot = p_hallmark_gsea,
   width = 10,
   height = 7,
@@ -431,7 +442,7 @@ if (nrow(heatmap_gene_table) == 0) {
 
 readr::write_tsv(
   heatmap_gene_table,
-  file.path(results_dir, "myeloid_kdm6b_high_vs_low_heatmap_genes.tsv")
+  file.path(results_dir, paste0(analysis_label, "_kdm6b_high_vs_low_heatmap_genes.tsv"))
 )
 
 heatmap_gene_table %>%
@@ -476,7 +487,7 @@ column_annotation <- ComplexHeatmap::HeatmapAnnotation(
   annotation_legend_param = list(
     Kdm6b_group = list(direction = "vertical")
   ),
-  annotation_name_side = "left"
+  show_annotation_name = FALSE
 )
 
 heatmap_plot <- ComplexHeatmap::Heatmap(
@@ -493,7 +504,11 @@ heatmap_plot <- ComplexHeatmap::Heatmap(
   cluster_row_slices = FALSE,
   show_row_dend = FALSE,
   show_column_names = FALSE,
-  column_title = NULL,
+  column_title = paste(
+    compartment_label,
+    "Kdm6b-high vs Kdm6b-low"
+  ),
+  column_title_gp = grid::gpar(fontsize = 14, fontface = "bold"),
   row_title = NULL,
   border = TRUE,
   heatmap_legend_param = list(
@@ -505,7 +520,7 @@ heatmap_plot <- ComplexHeatmap::Heatmap(
 )
 
 grDevices::pdf(
-  file.path(plot_dir, "myeloid_kdm6b_high_vs_low_pseudobulk_gene_heatmap.pdf"),
+  file.path(plot_dir, paste0(analysis_label, "_kdm6b_high_vs_low_pseudobulk_gene_heatmap.pdf")),
   width = 10,
   height = 8
 )
