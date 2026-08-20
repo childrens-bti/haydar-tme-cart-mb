@@ -222,7 +222,7 @@ p_kdm6b_feature <- FeaturePlot(
 p_kdm6b_feature
 
 ggsave(
-  filename = file.path(plot_dir, "kdm6b_myeloid_featureplot.pdf"),
+  filename = file.path(plot_dir, "myeloid_kdm6b_featureplot.pdf"),
   plot = p_kdm6b_feature,
   width = 6,
   height = 5,
@@ -256,7 +256,7 @@ p_kdm6b_violin <- VlnPlot(
 p_kdm6b_violin
 
 ggsave(
-  filename = file.path(plot_dir, "kdm6b_myeloid_violin_by_subcluster.pdf"),
+  filename = file.path(plot_dir, "myeloid_kdm6b_violin_by_subcluster.pdf"),
   plot = p_kdm6b_violin,
   width = 12,
   height = 6,
@@ -287,7 +287,7 @@ kdm6b_subcluster_ranking <- rank_kdm6b_subclusters(
 
 readr::write_tsv(
   kdm6b_subcluster_ranking,
-  file.path(results_dir, "kdm6b_subcluster_ranking_and_groups.tsv")
+  file.path(results_dir, "myeloid_kdm6b_subcluster_ranking_and_groups.tsv")
 )
 ```
 
@@ -359,7 +359,7 @@ p_ranking <- ggplot(
 p_ranking
 
 ggsave(
-  filename = file.path(plot_dir, "kdm6b_myeloid_subcluster_ranking.pdf"),
+  filename = file.path(plot_dir, "myeloid_kdm6b_subcluster_ranking.pdf"),
   plot = p_ranking,
   width = 11,
   height = 8,
@@ -390,7 +390,7 @@ p_tcell_kdm6b_feature <- FeaturePlot(
 p_tcell_kdm6b_feature
 
 ggsave(
-  filename = file.path(tcell_plot_dir, "kdm6b_tcell_featureplot.pdf"),
+  filename = file.path(tcell_plot_dir, "tcell_kdm6b_featureplot.pdf"),
   plot = p_tcell_kdm6b_feature,
   width = 6,
   height = 5,
@@ -423,7 +423,7 @@ p_tcell_kdm6b_violin <- VlnPlot(
 p_tcell_kdm6b_violin
 
 ggsave(
-  filename = file.path(tcell_plot_dir, "kdm6b_tcell_violin_by_subcluster.pdf"),
+  filename = file.path(tcell_plot_dir, "tcell_kdm6b_violin_by_subcluster.pdf"),
   plot = p_tcell_kdm6b_violin,
   width = 12,
   height = 6,
@@ -449,7 +449,7 @@ tcell_subcluster_ranking <- rank_kdm6b_subclusters(
 
 readr::write_tsv(
   tcell_subcluster_ranking,
-  file.path(tcell_results_dir, "kdm6b_tcell_subcluster_ranking_and_groups.tsv")
+  file.path(tcell_results_dir, "tcell_kdm6b_subcluster_ranking_and_groups.tsv")
 )
 ```
 
@@ -515,7 +515,7 @@ p_tcell_ranking <- ggplot(
 p_tcell_ranking
 
 ggsave(
-  filename = file.path(tcell_plot_dir, "kdm6b_tcell_subcluster_ranking.pdf"),
+  filename = file.path(tcell_plot_dir, "tcell_kdm6b_subcluster_ranking.pdf"),
   plot = p_tcell_ranking,
   width = 11,
   height = 8,
