@@ -45,11 +45,14 @@ Rscript -e "rmarkdown::render('12-tcell-cd4-cd8-annotation.Rmd')"
 # Perform CD4-like and CD8-like T cell trajectory analysis using Slingshot
 Rscript -e "rmarkdown::render('13-tcell-cd4-cd8-slingshot.Rmd')"
 
-# Compare Kdm6b expression and define Kdm6b-high and Kdm6b-low myeloid subclusters
+# Compare Kdm6b expression and define Kdm6b-high and Kdm6b-low subclusters
 Rscript -e "rmarkdown::render('14-kdm6b-expression-subcluster-definition.Rmd')"
 
 # Test differential abundance of myeloid subclusters using sccomp
-Rscript -e "rmarkdown::render('15-kdm6b-myeloid-subcluster-abundance.Rmd')"
+Rscript -e "rmarkdown::render('15-kdm6b-subcluster-abundance.Rmd', params = list(input_rds = 'cart_myeloid_subtypes.rds', ranking_tsv = 'myeloid_kdm6b_subcluster_ranking_and_groups.tsv', subtype_label = 'myeloid'), output_file = '15-kdm6b-myeloid-subcluster-abundance.html')"
+
+# Test differential abundance of T-cell subclusters using sccomp
+Rscript -e "rmarkdown::render('15-kdm6b-subcluster-abundance.Rmd', params = list(input_rds = 'cart_tcell_subtypes.rds', ranking_tsv = 'tcell_kdm6b_subcluster_ranking_and_groups.tsv', subtype_label = 'tcell'), output_file = '15-kdm6b-tcell-subcluster-abundance.html')"
 
 # Compare transcriptional profiles of Kdm6b-high and Kdm6b-low myeloid subclusters
 Rscript -e "rmarkdown::render('16-kdm6b-myeloid-transcriptional-comparison.Rmd')"
@@ -60,5 +63,3 @@ Rscript -e "rmarkdown::render('17-kdm6b-myeloid-gene-correlations.Rmd')"
 # Summarize myeloid immune-program gene expression and UCell scores
 Rscript -e "rmarkdown::render('18-kdm6b-myeloid-immune-programs.Rmd')"
 
-# Test differential abundance of Kdm6b-defined T-cell subclusters using sccomp
-Rscript -e "rmarkdown::render('19-kdm6b-tcell-subcluster-abundance.Rmd')"
