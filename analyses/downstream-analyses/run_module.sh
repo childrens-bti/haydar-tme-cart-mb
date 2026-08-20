@@ -59,3 +59,6 @@ Rscript -e "rmarkdown::render('17-kdm6b-myeloid-gene-correlations.Rmd')"
 
 # Summarize myeloid immune-program gene expression and UCell scores
 Rscript -e "rmarkdown::render('18-kdm6b-myeloid-immune-programs.Rmd')"
+
+# Test differential abundance of Kdm6b-defined T-cell subclusters using sccomp
+Rscript -e "rmarkdown::render('19-kdm6b-tcell-subcluster-abundance.Rmd')"
