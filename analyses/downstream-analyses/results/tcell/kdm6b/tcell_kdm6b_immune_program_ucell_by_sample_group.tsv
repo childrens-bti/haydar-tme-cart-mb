@@ -1,0 +1,145 @@
+program	sample	kdm6b_group	n_cells	median_ucell_score
+Cytotoxicity	41BB-L_pos_T_D1	Kdm6b-high	63	0.1665552956899432
+Cytotoxicity	41BB-L_pos_T_D1	Kdm6b-low	96	0.1644949326205591
+Cytotoxicity	41BB-L_pos_T_D2	Kdm6b-high	124	0.2930727252478004
+Cytotoxicity	41BB-L_pos_T_D2	Kdm6b-low	156	0.22758659093440248
+Cytotoxicity	B7H3_pos_T_D1	Kdm6b-high	128	0.1641608196903887
+Cytotoxicity	B7H3_pos_T_D1	Kdm6b-low	327	0.16510747299253814
+Cytotoxicity	B7H3_pos_T_D2	Kdm6b-high	156	0.26681701748524334
+Cytotoxicity	B7H3_pos_T_D2	Kdm6b-low	470	0.28199131306381553
+Cytotoxicity	CD28-41BB_pos_T_D1	Kdm6b-high	65	0.22207372758659094
+Cytotoxicity	CD28-41BB_pos_T_D1	Kdm6b-low	42	0.16388239224858003
+Cytotoxicity	CD28-41BB_pos_T_D2	Kdm6b-high	78	0.2775643167390578
+Cytotoxicity	CD28-41BB_pos_T_D2	Kdm6b-low	145	0.2028065486134314
+Cytotoxicity	CD8-41BB_pos_T_D1	Kdm6b-high	460	0.2480788506515202
+Cytotoxicity	CD8-41BB_pos_T_D1	Kdm6b-low	568	0.1929780599175855
+Cytotoxicity	CD8-41BB_pos_T_D2	Kdm6b-high	118	0.19606860452166164
+Cytotoxicity	CD8-41BB_pos_T_D2	Kdm6b-low	127	0.16521884396926156
+Cytotoxicity	STOP_pos_T_D1	Kdm6b-high	41	0.16649961020158144
+Cytotoxicity	STOP_pos_T_D1	Kdm6b-low	99	0.16599844080632586
+Cytotoxicity	STOP_pos_T_D2	Kdm6b-high	103	0.2236886067490812
+Cytotoxicity	STOP_pos_T_D2	Kdm6b-low	171	0.16382670676021827
+Cytotoxicity	Tumor_only_D1	Kdm6b-high	44	0.32509188105579684
+Cytotoxicity	Tumor_only_D1	Kdm6b-low	48	0.16630471099231542
+Cytotoxicity	Tumor_only_D2	Kdm6b-high	32	0.25353602851097007
+Cytotoxicity	Tumor_only_D2	Kdm6b-low	28	0.18381779708208046
+Expansion/proliferation	41BB-L_pos_T_D1	Kdm6b-high	63	0
+Expansion/proliferation	41BB-L_pos_T_D1	Kdm6b-low	96	0
+Expansion/proliferation	41BB-L_pos_T_D2	Kdm6b-high	124	0
+Expansion/proliferation	41BB-L_pos_T_D2	Kdm6b-low	156	0
+Expansion/proliferation	B7H3_pos_T_D1	Kdm6b-high	128	0
+Expansion/proliferation	B7H3_pos_T_D1	Kdm6b-low	327	0
+Expansion/proliferation	B7H3_pos_T_D2	Kdm6b-high	156	0
+Expansion/proliferation	B7H3_pos_T_D2	Kdm6b-low	470	0
+Expansion/proliferation	CD28-41BB_pos_T_D1	Kdm6b-high	65	0
+Expansion/proliferation	CD28-41BB_pos_T_D1	Kdm6b-low	42	0
+Expansion/proliferation	CD28-41BB_pos_T_D2	Kdm6b-high	78	0
+Expansion/proliferation	CD28-41BB_pos_T_D2	Kdm6b-low	145	0
+Expansion/proliferation	CD8-41BB_pos_T_D1	Kdm6b-high	460	0
+Expansion/proliferation	CD8-41BB_pos_T_D1	Kdm6b-low	568	0
+Expansion/proliferation	CD8-41BB_pos_T_D2	Kdm6b-high	118	0
+Expansion/proliferation	CD8-41BB_pos_T_D2	Kdm6b-low	127	0
+Expansion/proliferation	STOP_pos_T_D1	Kdm6b-high	41	0
+Expansion/proliferation	STOP_pos_T_D1	Kdm6b-low	99	0
+Expansion/proliferation	STOP_pos_T_D2	Kdm6b-high	103	0
+Expansion/proliferation	STOP_pos_T_D2	Kdm6b-low	171	0
+Expansion/proliferation	Tumor_only_D1	Kdm6b-high	44	0
+Expansion/proliferation	Tumor_only_D1	Kdm6b-low	48	0
+Expansion/proliferation	Tumor_only_D2	Kdm6b-high	32	0
+Expansion/proliferation	Tumor_only_D2	Kdm6b-low	28	0
+Memory/stem-like	41BB-L_pos_T_D1	Kdm6b-high	63	0
+Memory/stem-like	41BB-L_pos_T_D1	Kdm6b-low	96	0
+Memory/stem-like	41BB-L_pos_T_D2	Kdm6b-high	124	0
+Memory/stem-like	41BB-L_pos_T_D2	Kdm6b-low	156	0
+Memory/stem-like	B7H3_pos_T_D1	Kdm6b-high	128	0
+Memory/stem-like	B7H3_pos_T_D1	Kdm6b-low	327	0
+Memory/stem-like	B7H3_pos_T_D2	Kdm6b-high	156	0
+Memory/stem-like	B7H3_pos_T_D2	Kdm6b-low	470	0
+Memory/stem-like	CD28-41BB_pos_T_D1	Kdm6b-high	65	0
+Memory/stem-like	CD28-41BB_pos_T_D1	Kdm6b-low	42	0.04645242070116862
+Memory/stem-like	CD28-41BB_pos_T_D2	Kdm6b-high	78	0.051210350584307174
+Memory/stem-like	CD28-41BB_pos_T_D2	Kdm6b-low	145	0.018530884808013348
+Memory/stem-like	CD8-41BB_pos_T_D1	Kdm6b-high	460	0
+Memory/stem-like	CD8-41BB_pos_T_D1	Kdm6b-low	568	0
+Memory/stem-like	CD8-41BB_pos_T_D2	Kdm6b-high	118	0.09870617696160272
+Memory/stem-like	CD8-41BB_pos_T_D2	Kdm6b-low	127	0.08664440734557599
+Memory/stem-like	STOP_pos_T_D1	Kdm6b-high	41	0
+Memory/stem-like	STOP_pos_T_D1	Kdm6b-low	99	0
+Memory/stem-like	STOP_pos_T_D2	Kdm6b-high	103	0
+Memory/stem-like	STOP_pos_T_D2	Kdm6b-low	171	0
+Memory/stem-like	Tumor_only_D1	Kdm6b-high	44	0
+Memory/stem-like	Tumor_only_D1	Kdm6b-low	48	0
+Memory/stem-like	Tumor_only_D2	Kdm6b-high	32	0
+Memory/stem-like	Tumor_only_D2	Kdm6b-low	28	0.02328881469115196
+Exhaustion/dysfunction	41BB-L_pos_T_D1	Kdm6b-high	63	0
+Exhaustion/dysfunction	41BB-L_pos_T_D1	Kdm6b-low	96	0.049498997995991945
+Exhaustion/dysfunction	41BB-L_pos_T_D2	Kdm6b-high	124	0
+Exhaustion/dysfunction	41BB-L_pos_T_D2	Kdm6b-low	156	0
+Exhaustion/dysfunction	B7H3_pos_T_D1	Kdm6b-high	128	0
+Exhaustion/dysfunction	B7H3_pos_T_D1	Kdm6b-low	327	0
+Exhaustion/dysfunction	B7H3_pos_T_D2	Kdm6b-high	156	0
+Exhaustion/dysfunction	B7H3_pos_T_D2	Kdm6b-low	470	0.1133934535738143
+Exhaustion/dysfunction	CD28-41BB_pos_T_D1	Kdm6b-high	65	0
+Exhaustion/dysfunction	CD28-41BB_pos_T_D1	Kdm6b-low	42	0
+Exhaustion/dysfunction	CD28-41BB_pos_T_D2	Kdm6b-high	78	0
+Exhaustion/dysfunction	CD28-41BB_pos_T_D2	Kdm6b-low	145	0
+Exhaustion/dysfunction	CD8-41BB_pos_T_D1	Kdm6b-high	460	0
+Exhaustion/dysfunction	CD8-41BB_pos_T_D1	Kdm6b-low	568	0.08340013360053444
+Exhaustion/dysfunction	CD8-41BB_pos_T_D2	Kdm6b-high	118	0
+Exhaustion/dysfunction	CD8-41BB_pos_T_D2	Kdm6b-low	127	0
+Exhaustion/dysfunction	STOP_pos_T_D1	Kdm6b-high	41	0
+Exhaustion/dysfunction	STOP_pos_T_D1	Kdm6b-low	99	0
+Exhaustion/dysfunction	STOP_pos_T_D2	Kdm6b-high	103	0
+Exhaustion/dysfunction	STOP_pos_T_D2	Kdm6b-low	171	0
+Exhaustion/dysfunction	Tumor_only_D1	Kdm6b-high	44	0
+Exhaustion/dysfunction	Tumor_only_D1	Kdm6b-low	48	0
+Exhaustion/dysfunction	Tumor_only_D2	Kdm6b-high	32	0
+Exhaustion/dysfunction	Tumor_only_D2	Kdm6b-low	28	0
+IFN response	41BB-L_pos_T_D1	Kdm6b-high	63	0
+IFN response	41BB-L_pos_T_D1	Kdm6b-low	96	0
+IFN response	41BB-L_pos_T_D2	Kdm6b-high	124	0.17604340567612686
+IFN response	41BB-L_pos_T_D2	Kdm6b-low	156	0.23384808013355596
+IFN response	B7H3_pos_T_D1	Kdm6b-high	128	0
+IFN response	B7H3_pos_T_D1	Kdm6b-low	327	0.1764607679465776
+IFN response	B7H3_pos_T_D2	Kdm6b-high	156	0.13772954924874792
+IFN response	B7H3_pos_T_D2	Kdm6b-low	470	0.242779632721202
+IFN response	CD28-41BB_pos_T_D1	Kdm6b-high	65	0
+IFN response	CD28-41BB_pos_T_D1	Kdm6b-low	42	0
+IFN response	CD28-41BB_pos_T_D2	Kdm6b-high	78	0
+IFN response	CD28-41BB_pos_T_D2	Kdm6b-low	145	0.1009181969949916
+IFN response	CD8-41BB_pos_T_D1	Kdm6b-high	460	0
+IFN response	CD8-41BB_pos_T_D1	Kdm6b-low	568	0
+IFN response	CD8-41BB_pos_T_D2	Kdm6b-high	118	0
+IFN response	CD8-41BB_pos_T_D2	Kdm6b-low	127	0.06393989983305515
+IFN response	STOP_pos_T_D1	Kdm6b-high	41	0.16060100166944913
+IFN response	STOP_pos_T_D1	Kdm6b-low	99	0.1555091819699499
+IFN response	STOP_pos_T_D2	Kdm6b-high	103	0
+IFN response	STOP_pos_T_D2	Kdm6b-low	171	0.02287145242070121
+IFN response	Tumor_only_D1	Kdm6b-high	44	0
+IFN response	Tumor_only_D1	Kdm6b-low	48	0.15930717863105176
+IFN response	Tumor_only_D2	Kdm6b-high	32	0.04924874791318862
+IFN response	Tumor_only_D2	Kdm6b-low	28	0.1362687813021703
+Chemokine responsiveness	41BB-L_pos_T_D1	Kdm6b-high	63	0
+Chemokine responsiveness	41BB-L_pos_T_D1	Kdm6b-low	96	0.22468847352024923
+Chemokine responsiveness	41BB-L_pos_T_D2	Kdm6b-high	124	0
+Chemokine responsiveness	41BB-L_pos_T_D2	Kdm6b-low	156	0.18758344459279042
+Chemokine responsiveness	B7H3_pos_T_D1	Kdm6b-high	128	0
+Chemokine responsiveness	B7H3_pos_T_D1	Kdm6b-low	327	0
+Chemokine responsiveness	B7H3_pos_T_D2	Kdm6b-high	156	0.181186025812194
+Chemokine responsiveness	B7H3_pos_T_D2	Kdm6b-low	470	0.20666444147752555
+Chemokine responsiveness	CD28-41BB_pos_T_D1	Kdm6b-high	65	0.22975077881619943
+Chemokine responsiveness	CD28-41BB_pos_T_D1	Kdm6b-low	42	0.10797730307076098
+Chemokine responsiveness	CD28-41BB_pos_T_D2	Kdm6b-high	78	0.17222963951935916
+Chemokine responsiveness	CD28-41BB_pos_T_D2	Kdm6b-low	145	0.24833110814419224
+Chemokine responsiveness	CD8-41BB_pos_T_D1	Kdm6b-high	460	0.29795282599020917
+Chemokine responsiveness	CD8-41BB_pos_T_D1	Kdm6b-low	568	0.2302514463729417
+Chemokine responsiveness	CD8-41BB_pos_T_D2	Kdm6b-high	118	0.24443702714730747
+Chemokine responsiveness	CD8-41BB_pos_T_D2	Kdm6b-low	127	0.28860703159768575
+Chemokine responsiveness	STOP_pos_T_D1	Kdm6b-high	41	0
+Chemokine responsiveness	STOP_pos_T_D1	Kdm6b-low	99	0.23242100578549174
+Chemokine responsiveness	STOP_pos_T_D2	Kdm6b-high	103	0.2091677792612372
+Chemokine responsiveness	STOP_pos_T_D2	Kdm6b-low	171	0.2136181575433912
+Chemokine responsiveness	Tumor_only_D1	Kdm6b-high	44	0.2103916332888296
+Chemokine responsiveness	Tumor_only_D1	Kdm6b-low	48	0
+Chemokine responsiveness	Tumor_only_D2	Kdm6b-high	32	0.11710057854917666
+Chemokine responsiveness	Tumor_only_D2	Kdm6b-low	28	0.213006230529595

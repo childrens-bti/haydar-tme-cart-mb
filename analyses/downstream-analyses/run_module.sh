@@ -64,4 +64,7 @@ Rscript -e "rmarkdown::render('16-kdm6b-transcriptional-comparison.Rmd', params 
 Rscript -e "rmarkdown::render('17-kdm6b-myeloid-gene-correlations.Rmd')"
 
 # Summarize myeloid immune-program gene expression and UCell scores
-Rscript -e "rmarkdown::render('18-kdm6b-myeloid-immune-programs.Rmd')"
+Rscript -e "rmarkdown::render('18-kdm6b-immune-programs.Rmd', params = list(input_rds = 'cart_myeloid_subtypes.rds', ranking_tsv = 'myeloid_kdm6b_subcluster_ranking_and_groups.tsv', subtype_label = 'myeloid'), output_file = '18-kdm6b-myeloid-immune-programs.html')"
+
+# Summarize T-cell immune-program gene expression and UCell scores
+Rscript -e "rmarkdown::render('18-kdm6b-immune-programs.Rmd', params = list(input_rds = 'cart_tcell_subtypes.rds', ranking_tsv = 'tcell_kdm6b_subcluster_ranking_and_groups.tsv', subtype_label = 'tcell'), output_file = '18-kdm6b-tcell-immune-programs.html')"

@@ -41,9 +41,9 @@ results do not support describing it as myeloid-exclusive.
 
 Outputs:
 
-- `plots/myeloid/kdm6b/kdm6b_myeloid_featureplot.pdf`
-- `plots/myeloid/kdm6b/kdm6b_myeloid_violin_by_subcluster.pdf`
-- `results/myeloid/kdm6b/kdm6b_pseudobulk_by_sample.tsv`
+- `plots/myeloid/myeloid_kdm6b_featureplot.pdf`
+- `plots/myeloid/myeloid_kdm6b_violin_by_subcluster.pdf`
+- `results/myeloid/kdm6b_pseudobulk_by_sample.tsv`
 
 ### 3. Which myeloid subclusters are Kdm6b-high?
 
@@ -61,8 +61,8 @@ individual-cell Kdm6b classifications.
 
 Output:
 
-- `results/myeloid/kdm6b/kdm6b_subcluster_ranking_and_groups.tsv`
-- `plots/myeloid/kdm6b/kdm6b_subcluster_ranking.pdf`
+- `results/myeloid/myeloid_kdm6b_subcluster_ranking_and_groups.tsv`
+- `plots/myeloid/myeloid_kdm6b_subcluster_ranking.pdf`
 
 ### 4. Are Kdm6b-high subclusters enriched in effective CAR conditions?
 
@@ -87,8 +87,8 @@ Kdm6b-high enrichment effect.
 
 Outputs:
 
-- `plots/myeloid/kdm6b/kdm6b_high_low_subcluster_enrichment_across_conditions.pdf`
-- `results/myeloid/kdm6b/kdm6b_high_low_subcluster_differential_abundance.tsv`
+- `\plots/myeloid/myeloid_kdm6b_high_low_subcluster_enrichment_across_conditions.pdf`
+- `results/myeloid/myeloid_kdm6b_high_low_subcluster_differential_abundance.tsv`
 
 ### 5. Are Kdm6b-low subclusters depleted or unchanged in 41BB-L?
 
@@ -125,11 +125,11 @@ transcriptional programs.
 
 Outputs:
 
-- `plots/myeloid/kdm6b/myeloid_kdm6b_high_vs_low_pseudobulk_gene_heatmap.pdf`
-- `plots/myeloid/kdm6b/myeloid_kdm6b_high_vs_low_hallmark_gsea_dotplot.pdf`
-- `results/myeloid/kdm6b/myeloid_kdm6b_high_vs_low_paired_deseq2.tsv`
-- `results/myeloid/kdm6b/myeloid_kdm6b_high_vs_low_hallmark_gsea.tsv`
-- `results/myeloid/kdm6b/myeloid_kdm6b_high_vs_low_heatmap_genes.tsv`
+- `plots/myeloid/myeloid_kdm6b_high_vs_low_pseudobulk_gene_heatmap.pdf`
+- `plots/myeloid/myeloid_kdm6b_high_vs_low_hallmark_gsea_dotplot.pdf`
+- `results/myeloid/myeloid_kdm6b_high_vs_low_paired_deseq2.tsv`
+- `results/myeloid/myeloid_kdm6b_high_vs_low_hallmark_gsea.tsv`
+- `results/myeloid/myeloid_kdm6b_high_vs_low_heatmap_genes.tsv`
 
 #### Immune-program genes and UCell scores
 
@@ -148,15 +148,15 @@ than a broad increase across all immune programs.
 
 Outputs:
 
-- `plots/myeloid/kdm6b/myeloid_kdm6b_immune_program_gene_high_vs_low_boxplots.pdf`
-- `plots/myeloid/kdm6b/myeloid_kdm6b_immune_program_gene_violin_by_subcluster.pdf`
-- `plots/myeloid/kdm6b/myeloid_kdm6b_immune_program_ucell_high_vs_low_boxplots.pdf`
-- `plots/myeloid/kdm6b/myeloid_kdm6b_immune_program_ucell_violin_by_subcluster.pdf`
-- `results/myeloid/kdm6b/myeloid_kdm6b_immune_program_gene_high_vs_low.tsv`
-- `results/myeloid/kdm6b/myeloid_kdm6b_immune_program_genes_by_subcluster.tsv`
-- `results/myeloid/kdm6b/myeloid_kdm6b_immune_program_ucell_by_sample_group.tsv`
-- `results/myeloid/kdm6b/myeloid_kdm6b_immune_program_ucell_by_subcluster.tsv`
-- `results/myeloid/kdm6b/myeloid_kdm6b_immune_program_ucell_high_vs_low.tsv`
+- `plots/myeloid/myeloid_kdm6b_immune_program_gene_high_vs_low_boxplots.pdf`
+- `plots/myeloid/myeloid_kdm6b_immune_program_gene_violin_by_subcluster.pdf`
+- `plots/myeloid/myeloid_kdm6b_immune_program_ucell_high_vs_low_boxplots.pdf`
+- `plots/myeloid/myeloid_kdm6b_immune_program_ucell_violin_by_subcluster.pdf`
+- `results/myeloid/myeloid_kdm6b_immune_program_gene_high_vs_low.tsv`
+- `results/myeloid/myeloid_kdm6b_immune_program_genes_by_subcluster.tsv`
+- `results/myeloid/myeloid_kdm6b_immune_program_ucell_by_sample_group.tsv`
+- `results/myeloid/myeloid_kdm6b_immune_program_ucell_by_subcluster.tsv`
+- `results/myeloid/myeloid_kdm6b_immune_program_ucell_high_vs_low.tsv`
 
 #### Sample-level Kdm6b correlations
 
@@ -173,14 +173,14 @@ be treated as supportive trends rather than definitive evidence.
 
 Outputs:
 
-- `plots/myeloid/kdm6b/myeloid_kdm6b_correlation_antigen_presentation_scatterplots.pdf`
-- `plots/myeloid/kdm6b/myeloid_kdm6b_correlation_antigen_presentation_dotplot.pdf`
-- `plots/myeloid/kdm6b/myeloid_kdm6b_correlation_inflammatory_activation_scatterplots.pdf`
-- `plots/myeloid/kdm6b/myeloid_kdm6b_correlation_inflammatory_activation_dotplot.pdf`
-- `plots/myeloid/kdm6b/myeloid_kdm6b_correlation_t_cell_recruitment_scatterplots.pdf`
-- `plots/myeloid/kdm6b/myeloid_kdm6b_correlation_t_cell_recruitment_dotplot.pdf`
-- `results/myeloid/kdm6b/myeloid_kdm6b_gene_correlation_summary.tsv`
-- `results/myeloid/kdm6b/myeloid_kdm6b_gene_mean_expression_by_sample.tsv`
+- `plots/myeloid/myeloid_kdm6b_correlation_antigen_presentation_scatterplots.pdf`
+- `plots/myeloid/myeloid_kdm6b_correlation_antigen_presentation_dotplot.pdf`
+- `plots/myeloid/myeloid_kdm6b_correlation_inflammatory_activation_scatterplots.pdf`
+- `plots/myeloid/myeloid_kdm6b_correlation_inflammatory_activation_dotplot.pdf`
+- `plots/myeloid/myeloid_kdm6b_correlation_t_cell_recruitment_scatterplots.pdf`
+- `plots/myeloid/myeloid_kdm6b_correlation_t_cell_recruitment_dotplot.pdf`
+- `results/myeloid/myeloid_kdm6b_gene_correlation_summary.tsv`
+- `results/myeloid/myeloid_kdm6b_gene_mean_expression_by_sample.tsv`
 
 ### 7. Does the Kdm6b-high state appear consistent with immune-supportive remodeling?
 

@@ -1810,50 +1810,8 @@ for (gene_name in unique_program_genes) {
       y = &quot;Log-normalized RNA expression&quot;
     )
   print(p_gene_violin)
-}</code></pre>
-<pre><code>## Rasterizing points since number of points exceeds 100,000.
-## To disable this behavior set `raster=FALSE`
-## Rasterizing points since number of points exceeds 100,000.
-## To disable this behavior set `raster=FALSE`
-## Rasterizing points since number of points exceeds 100,000.
-## To disable this behavior set `raster=FALSE`
-## Rasterizing points since number of points exceeds 100,000.
-## To disable this behavior set `raster=FALSE`
-## Rasterizing points since number of points exceeds 100,000.
-## To disable this behavior set `raster=FALSE`
-## Rasterizing points since number of points exceeds 100,000.
-## To disable this behavior set `raster=FALSE`
-## Rasterizing points since number of points exceeds 100,000.
-## To disable this behavior set `raster=FALSE`
-## Rasterizing points since number of points exceeds 100,000.
-## To disable this behavior set `raster=FALSE`
-## Rasterizing points since number of points exceeds 100,000.
-## To disable this behavior set `raster=FALSE`
-## Rasterizing points since number of points exceeds 100,000.
-## To disable this behavior set `raster=FALSE`
-## Rasterizing points since number of points exceeds 100,000.
-## To disable this behavior set `raster=FALSE`
-## Rasterizing points since number of points exceeds 100,000.
-## To disable this behavior set `raster=FALSE`
-## Rasterizing points since number of points exceeds 100,000.
-## To disable this behavior set `raster=FALSE`
-## Rasterizing points since number of points exceeds 100,000.
-## To disable this behavior set `raster=FALSE`
-## Rasterizing points since number of points exceeds 100,000.
-## To disable this behavior set `raster=FALSE`
-## Rasterizing points since number of points exceeds 100,000.
-## To disable this behavior set `raster=FALSE`
-## Rasterizing points since number of points exceeds 100,000.
-## To disable this behavior set `raster=FALSE`
-## Rasterizing points since number of points exceeds 100,000.
-## To disable this behavior set `raster=FALSE`
-## Rasterizing points since number of points exceeds 100,000.
-## To disable this behavior set `raster=FALSE`
-## Rasterizing points since number of points exceeds 100,000.
-## To disable this behavior set `raster=FALSE`
-## Rasterizing points since number of points exceeds 100,000.
-## To disable this behavior set `raster=FALSE`</code></pre>
-<pre class="r"><code>grDevices::dev.off()</code></pre>
+}
+grDevices::dev.off()</code></pre>
 <pre><code>## png 
 ##   2</code></pre>
 </div>
@@ -2108,12 +2066,15 @@ readr::write_tsv(
 )
 
 ucell_high_low_tests</code></pre>
-<pre><code>## # A tibble: 3 × 7
+<pre><code>## # A tibble: 6 × 7
 ##   program    n_samples median_high_score median_low_score median_paired_differ…¹
 ##   &lt;fct&gt;          &lt;int&gt;             &lt;dbl&gt;            &lt;dbl&gt;                  &lt;dbl&gt;
-## 1 Antigen p…        12             0.191           0.182                -0.00738
-## 2 Inflammat…        12             0.119           0.0909                0.0314 
-## 3 T-cell re…        12             0               0                     0      
+## 1 Cytotoxic…        12             0.236            0.166                 0.0566
+## 2 Expansion…        12             0                0                     0     
+## 3 Memory/st…        12             0                0                     0     
+## 4 Exhaustio…        12             0                0                     0     
+## 5 IFN respo…        12             0                0.119                -0.0609
+## 6 Chemokine…        12             0.177            0.213                -0.0348
 ## # ℹ abbreviated name: ¹​median_paired_difference
 ## # ℹ 2 more variables: p_value &lt;dbl&gt;, adjusted_p_value &lt;dbl&gt;</code></pre>
 <pre class="r"><code>ucell_violin_data &lt;- cell_scores %&gt;%
