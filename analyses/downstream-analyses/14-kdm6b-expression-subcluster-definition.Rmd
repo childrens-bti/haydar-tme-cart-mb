@@ -12,7 +12,9 @@ This analysis addresses:
 
 1. compare pseudobulk `Kdm6b` expression across treatments in all cells, T cells, and myeloid cells
 2. visualize `Kdm6b` in the myeloid compartment
-3. define Kdm6b-high and Kdm6b-low myeloid subclusters.
+3. Define Kdm6b-high and Kdm6b-low myeloid subclusters.
+4. Visualize `Kdm6b` in within the T cell compartment
+5. Define Kdm6b-high and Kdm6b-low T cell subclusters.
 
 ## Setup
 
@@ -112,24 +114,12 @@ tcell_pseudobulk <- aggregate_kdm6b_by_sample(
   condition_levels = condition_levels,
   gene = gene
 )
-
-rm(tcell_obj)
-invisible(gc())
 ```
 
 ### Myeloid cells
 
 ```{r pseudobulk-myeloid-cells, message=FALSE, warning=FALSE}
 myeloid_obj <- readRDS(input_files$myeloid)
-observed_seurat_clusters <- unique(as.character(myeloid_obj$seurat_clusters))
-if (!setequal(observed_seurat_clusters, as.character(0:15))) {
-  stop("Expected Seurat clusters 0-15 in the myeloid object.")
-}
-
-myeloid_obj$seurat_clusters <- factor(
-  as.character(myeloid_obj$seurat_clusters),
-  levels = as.character(0:15)
-)
 
 myeloid_pseudobulk <- aggregate_kdm6b_by_sample(
   obj = myeloid_obj,
@@ -217,7 +207,7 @@ ggsave(
 The integrated reduction is used only for visualization. `Kdm6b` expression is
 drawn from the normalized RNA assay.
 
-```{r myeloid-kdm6b-featureplot, fig.width=9, fig.height=7}
+```{r myeloid-kdm6b-featureplot, fig.width=6, fig.height=5}
 p_kdm6b_feature <- FeaturePlot(
   myeloid_obj,
   features = gene,
@@ -234,8 +224,8 @@ p_kdm6b_feature
 ggsave(
   filename = file.path(plot_dir, "kdm6b_myeloid_featureplot.pdf"),
   plot = p_kdm6b_feature,
-  width = 9,
-  height = 7,
+  width = 6,
+  height = 5,
   device = cairo_pdf
 )
 ```
@@ -255,8 +245,7 @@ p_kdm6b_violin <- VlnPlot(
     legend.background = element_rect(fill = "white", color = NA),
     legend.key = element_rect(fill = "white", color = NA),
     panel.grid.major = element_line(color = "grey90"),
-    panel.grid.minor = element_blank(),
-    axis.text.x = element_text(angle = 45, hjust = 1)
+    panel.grid.minor = element_blank()
   ) &
   labs(
     title = "Kdm6b expression by myeloid subcluster",
@@ -277,23 +266,23 @@ ggsave(
 
 ## 3. Define Kdm6b-high and Kdm6b-low myeloid subclusters
 
-### Sample-level subcluster ranking
-
 For each qualifying sample/subcluster profile, calculate mean log-normalized
 Kdm6b expression. Rank subclusters by the median across samples, using detection
 fraction only to break ties.
 
-```{r aggregate-rank-subclusters, message=FALSE, warning=FALSE}
+```{r aggregate-rank-myeloid-subclusters, message=FALSE, warning=FALSE}
 kdm6b_sample_subcluster <- aggregate_kdm6b_by_sample_cluster(
   obj = myeloid_obj,
   condition_levels = condition_levels,
-  gene = gene
+  gene = gene,
+  subtype_col = "myeloid_subtype"
 )
 
 kdm6b_subcluster_ranking <- rank_kdm6b_subclusters(
   sample_cluster_table = kdm6b_sample_subcluster,
   min_cells_per_profile = min_cells_per_profile,
-  tail_fraction = tail_fraction
+  tail_fraction = tail_fraction,
+  subtype_col = "myeloid_subtype"
 )
 
 readr::write_tsv(
@@ -302,7 +291,7 @@ readr::write_tsv(
 )
 ```
 
-```{r plot-subcluster-ranking, fig.width=11, fig.height=8}
+```{r plot-myeloid-subcluster-ranking, fig.width=11, fig.height=8}
 group_colors <- c(
   "Kdm6b-high" = "#B2182B",
   "Intermediate" = "#BDBDBD",
@@ -370,8 +359,164 @@ p_ranking <- ggplot(
 p_ranking
 
 ggsave(
-  filename = file.path(plot_dir, "kdm6b_subcluster_ranking.pdf"),
+  filename = file.path(plot_dir, "kdm6b_myeloid_subcluster_ranking.pdf"),
   plot = p_ranking,
+  width = 11,
+  height = 8,
+  device = cairo_pdf,
+  bg = "white"
+)
+```
+
+## 4. Visualize Kdm6b expression within the T cell compartment
+
+```{r tcell-kdm6b-featureplot, fig.width=6, fig.height=5}
+tcell_results_dir <- file.path(analysis_dir, "results", "tcell", "kdm6b")
+tcell_plot_dir <- file.path(analysis_dir, "plots", "tcell", "kdm6b")
+dir.create(tcell_results_dir, recursive = TRUE, showWarnings = FALSE)
+dir.create(tcell_plot_dir, recursive = TRUE, showWarnings = FALSE)
+
+p_tcell_kdm6b_feature <- FeaturePlot(
+  tcell_obj,
+  features = gene,
+  reduction = "umap",
+  min.cutoff = "q05",
+  max.cutoff = "q95",
+  order = TRUE,
+  raster = TRUE
+) +
+  ggtitle("Kdm6b expression in T cells")
+
+p_tcell_kdm6b_feature
+
+ggsave(
+  filename = file.path(tcell_plot_dir, "kdm6b_tcell_featureplot.pdf"),
+  plot = p_tcell_kdm6b_feature,
+  width = 6,
+  height = 5,
+  device = cairo_pdf)
+```
+
+```{r tcell-kdm6b-violin, fig.width=12, fig.height=6}
+p_tcell_kdm6b_violin <- VlnPlot(
+  tcell_obj,
+  features = gene,
+  group.by = "seurat_clusters",
+  assay = "RNA",
+  pt.size = 0
+) &
+  theme_Publication() &
+  theme(
+    panel.background = element_rect(fill = "white", color = NA),
+    plot.background = element_rect(fill = "white", color = NA),
+    legend.background = element_rect(fill = "white", color = NA),
+    legend.key = element_rect(fill = "white", color = NA),
+    panel.grid.major = element_line(color = "grey90"),
+    panel.grid.minor = element_blank()
+  ) &
+  labs(
+    title = "Kdm6b expression by T-cell subcluster",
+    x = "Seurat cluster",
+    y = "Log-normalized RNA expression"
+  )
+
+p_tcell_kdm6b_violin
+
+ggsave(
+  filename = file.path(tcell_plot_dir, "kdm6b_tcell_violin_by_subcluster.pdf"),
+  plot = p_tcell_kdm6b_violin,
+  width = 12,
+  height = 6,
+  device = cairo_pdf)
+```
+
+## 5. Define Kdm6b-high and Kdm6b-low tcell subclusters
+
+```{r aggregate-rank-tcell-subclusters, message=FALSE, warning=FALSE}
+tcell_sample_subcluster <- aggregate_kdm6b_by_sample_cluster(
+  obj = tcell_obj,
+  condition_levels = condition_levels,
+  gene = gene,
+  subtype_col = "tcell_subtype"
+)
+
+tcell_subcluster_ranking <- rank_kdm6b_subclusters(
+  sample_cluster_table = tcell_sample_subcluster,
+  min_cells_per_profile = min_cells_per_profile,
+  tail_fraction = tail_fraction,
+  subtype_col = "tcell_subtype"
+)
+
+readr::write_tsv(
+  tcell_subcluster_ranking,
+  file.path(tcell_results_dir, "kdm6b_tcell_subcluster_ranking_and_groups.tsv")
+)
+```
+
+```{r plot-tcell-subcluster-ranking, fig.width=11, fig.height=8}
+tcell_ranking_plot_data <- tcell_subcluster_ranking %>%
+  dplyr::mutate(
+    kdm6b_group = factor(
+      kdm6b_group,
+      levels = c(
+        "Kdm6b-high",
+        "Intermediate",
+        "Kdm6b-low"
+      )
+    )
+  ) %>%
+  dplyr::arrange(
+    kdm6b_group,
+    kdm6b_rank,
+    as.integer(subcluster)
+  ) %>%
+  dplyr::mutate(
+    seurat_cluster = factor(
+      subcluster,
+      levels = rev(unique(as.character(subcluster)))
+    )
+  )
+
+p_tcell_ranking <- ggplot(
+  tcell_ranking_plot_data,
+  aes(
+    x = seurat_cluster,
+    y = median_log_expression,
+    color = kdm6b_group
+  )
+) +
+  geom_errorbar(
+    aes(
+      ymin = q25_log_expression,
+      ymax = q75_log_expression
+    ),
+    width = 0.25,
+    linewidth = 0.5
+  ) +
+  geom_point(size = 3) +
+  scale_x_discrete(drop = FALSE) +
+  coord_flip() +
+  scale_color_manual(values = group_colors, drop = FALSE) +
+  theme_Publication() +
+  theme(
+    panel.background = element_rect(fill = "white", color = NA),
+    plot.background = element_rect(fill = "white", color = NA),
+    legend.key = element_rect(fill = "white", color = NA),
+    legend.position = "right"
+  ) +
+  labs(
+    title = "Sample-level Kdm6b ranking of T-cell subclusters",
+    subtitle = "Points are medians; error bars are sample-level interquartile ranges",
+    x = "Seurat cluster",
+    y = "Median sample-level mean log-normalized Kdm6b expression",
+    color = "Kdm6b group"
+  )
+
+p_tcell_ranking
+
+ggsave(
+  filename = file.path(tcell_plot_dir, "kdm6b_tcell_subcluster_ranking.pdf"),
+  plot = p_tcell_ranking,
   width = 11,
   height = 8,
   device = cairo_pdf,
