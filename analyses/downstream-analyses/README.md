@@ -19,11 +19,11 @@
 11. `11-tcell-composition-analysis.Rmd`: performs refined T cell subtype composition analysis using sccomp with 41BB-L and tumor as the baseline references and generates composition plots.
 12. `12-tcell-cd4-cd8-annotation.Rmd`: identifies clean CD4-like and CD8-like T cells using marker expression and ScGate support, adds ProjecTILs and cluster-level annotations, calculates AUCell program scores, and saves prepared CD4-like and CD8-like Seurat objects.
 13. `13-tcell-cd4-cd8-slingshot.Rmd`: loads the prepared objects, runs condition-specific and all-condition Slingshot analyses, caches successful trajectory inference, and generates pseudotime, lineage, gene-trend, and AUCell program outputs.
-14. `14-kdm6b-expression-subcluster-definition.Rmd`: compares sample-level pseudobulk Kdm6b expression across all cells, T cells, and myeloid cells; visualizes Kdm6b within myeloid cells; and ranks numeric myeloid subclusters to define Kdm6b-high and Kdm6b-low groups.
-15. `15-kdm6b-myeloid-subcluster-abundance.Rmd`: quantifies myeloid subcluster proportions, tests all 16 numeric subclusters with sccomp using 41BB-L as the reference, and summarizes differential abundance for Kdm6b-high and Kdm6b-low subclusters.
-16. `16-kdm6b-myeloid-transcriptional-comparison.Rmd`: compares Kdm6b-high and Kdm6b-low myeloid subclusters using paired sample-level pseudobulk profiles, DESeq2 differential expression, Hallmark GSEA, and a heatmap of the top genes in each direction.
-17. `17-kdm6b-myeloid-gene-correlations.Rmd`: calculates mean log-normalized expression per sample across all myeloid cells, correlates sample-level Kdm6b and immune-program expression using Spearman correlation, and generates program-specific correlation dot plots and faceted sample-level scatter plots for antigen presentation, inflammatory activation, and T-cell recruitment.
-18. `18-kdm6b-myeloid-immune-programs.Rmd`: summarizes antigen-presentation, inflammatory-activation, and T-cell-recruitment gene expression and UCell program scores across myeloid subclusters, with violin plots ordered by sequential Seurat cluster; compares Kdm6b-high versus Kdm6b-low groups, excluding intermediate subclusters, using sample-level paired Wilcoxon tests.
+14. `14-kdm6b-expression-subcluster-definition.Rmd`: compares Kdm6b pseudobulk expression across compartments, visualizes Kdm6b expression, and independently defines Kdm6b-high, intermediate, and low subclusters for myeloid cells and T cells.
+15. `15-kdm6b-subcluster-abundance.Rmd`: parameterized sccomp analysis of numeric subcluster abundance using 41BB-L as the reference. The runner executes it separately for myeloid and T-cell objects.
+16. `16-kdm6b-transcriptional-comparison.Rmd`: parameterized paired sample-level pseudobulk DESeq2 and Hallmark GSEA comparison of Kdm6b-high versus Kdm6b-low subclusters for myeloid cells and T cells.
+17. `17-kdm6b-myeloid-gene-correlations.Rmd`: correlates sample-level myeloid Kdm6b expression with predefined immune-program genes using Spearman correlation.
+18. `18-kdm6b-immune-programs.Rmd`: parameterized gene-expression and UCell summaries for predefined immune programs in myeloid cells and T cells, including paired high-versus-low comparisons.
 
 ## Analysis module directory structure
 ```
@@ -56,14 +56,17 @@ downstream-analyses/
 ├── 13-tcell-cd4-cd8-slingshot.html
 ├── 14-kdm6b-expression-subcluster-definition.Rmd
 ├── 14-kdm6b-expression-subcluster-definition.html
-├── 15-kdm6b-myeloid-subcluster-abundance.Rmd
 ├── 15-kdm6b-myeloid-subcluster-abundance.html
-├── 16-kdm6b-myeloid-transcriptional-comparison.Rmd
+├── 15-kdm6b-subcluster-abundance.Rmd
+├── 15-kdm6b-tcell-subcluster-abundance.html
 ├── 16-kdm6b-myeloid-transcriptional-comparison.html
+├── 16-kdm6b-tcell-transcriptional-comparison.html
+├── 16-kdm6b-transcriptional-comparison.Rmd
 ├── 17-kdm6b-myeloid-gene-correlations.Rmd
 ├── 17-kdm6b-myeloid-gene-correlations.html
-├── 18-kdm6b-myeloid-immune-programs.Rmd
+├── 18-kdm6b-immune-programs.Rmd
 ├── 18-kdm6b-myeloid-immune-programs.html
+├── 18-kdm6b-tcell-immune-programs.html
 ├── README.md
 ├── input
 │   ├── cart_lineage_markers.csv
@@ -136,24 +139,24 @@ downstream-analyses/
 │   │   │   ├── myeloid_volcano_pseudobulk_tumor_vs_allCAR.pdf
 │   │   │   └── myeloid_volcano_pseudobulk_tumor_vs_rest.pdf
 │   │   ├── kdm6b
-│   │   │   ├── kdm6b_high_low_subcluster_enrichment_across_conditions.pdf
-│   │   │   ├── kdm6b_myeloid_featureplot.pdf
-│   │   │   ├── kdm6b_myeloid_violin_by_subcluster.pdf
 │   │   │   ├── kdm6b_pseudobulk_expression_by_compartment.pdf
-│   │   │   ├── kdm6b_subcluster_ranking.pdf
+│   │   │   ├── myeloid_kdm6b_correlation_antigen_presentation_dotplot.pdf
+│   │   │   ├── myeloid_kdm6b_correlation_antigen_presentation_scatterplots.pdf
+│   │   │   ├── myeloid_kdm6b_correlation_inflammatory_activation_dotplot.pdf
+│   │   │   ├── myeloid_kdm6b_correlation_inflammatory_activation_scatterplots.pdf
+│   │   │   ├── myeloid_kdm6b_correlation_t_cell_recruitment_dotplot.pdf
+│   │   │   ├── myeloid_kdm6b_correlation_t_cell_recruitment_scatterplots.pdf
+│   │   │   ├── myeloid_kdm6b_featureplot.pdf
+│   │   │   ├── myeloid_kdm6b_high_low_subcluster_enrichment_across_conditions.pdf
 │   │   │   ├── myeloid_kdm6b_high_vs_low_hallmark_gsea_dotplot.pdf
 │   │   │   ├── myeloid_kdm6b_high_vs_low_pseudobulk_gene_heatmap.pdf
-│   │   │   ├── myeloid_subcluster_composition_sccomp_41BBL_baseline.pdf
-│   │   │   ├── myeloid_kdm6b_correlation_antigen_presentation_scatterplots.pdf
-│   │   │   ├── myeloid_kdm6b_correlation_inflammatory_activation_scatterplots.pdf
-│   │   │   ├── myeloid_kdm6b_correlation_t_cell_recruitment_scatterplots.pdf
-│   │   │   ├── myeloid_kdm6b_correlation_antigen_presentation_dotplot.pdf
-│   │   │   ├── myeloid_kdm6b_correlation_inflammatory_activation_dotplot.pdf
-│   │   │   ├── myeloid_kdm6b_correlation_t_cell_recruitment_dotplot.pdf
-│   │   │   ├── myeloid_kdm6b_immune_program_gene_violin_by_subcluster.pdf
-│   │   │   ├── myeloid_kdm6b_immune_program_ucell_violin_by_subcluster.pdf
 │   │   │   ├── myeloid_kdm6b_immune_program_gene_high_vs_low_boxplots.pdf
+│   │   │   ├── myeloid_kdm6b_immune_program_gene_violin_by_subcluster.pdf
 │   │   │   ├── myeloid_kdm6b_immune_program_ucell_high_vs_low_boxplots.pdf
+│   │   │   ├── myeloid_kdm6b_immune_program_ucell_violin_by_subcluster.pdf
+│   │   │   ├── myeloid_kdm6b_subcluster_ranking.pdf
+│   │   │   ├── myeloid_kdm6b_violin_by_subcluster.pdf
+│   │   │   ├── myeloid_subcluster_composition_sccomp_41BBL_baseline.pdf
 │   │   │   └── myeloid_subcluster_proportions_stacked_barplot.png
 │   │   ├── myeloid_dotplot_subcluster_markers.pdf
 │   │   ├── myeloid_dotplot_subcluster_markers_panelE.pdf
@@ -183,20 +186,83 @@ downstream-analyses/
 │   │   ├── umap_cd8_myeloid_subtypes.png
 │   │   └── umap_stop_myeloid_subtypes.png
 │   └── tcell
-│       ├── figure_2E_tcell_marker_dotplot_by_condition.pdf
-│       ├── supplementary_figure_5B_tcell_marker_dotplot_by_subtype.pdf
 │       ├── CD4-trajectory
-│       │   ├── tcell_CD4_like_<condition>_slingshot_aucell_program_pseudotime_tracks.pdf
-│       │   ├── tcell_CD4_like_<condition>_slingshot_gene_trend_curves_all_lineages.pdf
-│       │   ├── tcell_CD4_like_<condition>_slingshot_lineage_curves_each_lineage_umap.pdf
-│       │   ├── tcell_CD4_like_<condition>_slingshot_pseudotime_all_lineages_summary.pdf
-│       │   └── tcell_CD4_like_<condition>_slingshot_pseudotime_umap.pdf
+│       │   ├── tcell_CD4_like_41BB_L_slingshot_aucell_program_pseudotime_tracks.pdf
+│       │   ├── tcell_CD4_like_41BB_L_slingshot_gene_trend_curves_all_lineages.pdf
+│       │   ├── tcell_CD4_like_41BB_L_slingshot_lineage_curves_each_lineage_umap.pdf
+│       │   ├── tcell_CD4_like_41BB_L_slingshot_pseudotime_all_lineages_summary.pdf
+│       │   ├── tcell_CD4_like_41BB_L_slingshot_pseudotime_umap.pdf
+│       │   ├── tcell_CD4_like_B7H3_slingshot_aucell_program_pseudotime_tracks.pdf
+│       │   ├── tcell_CD4_like_B7H3_slingshot_gene_trend_curves_all_lineages.pdf
+│       │   ├── tcell_CD4_like_B7H3_slingshot_lineage_curves_each_lineage_umap.pdf
+│       │   ├── tcell_CD4_like_B7H3_slingshot_pseudotime_all_lineages_summary.pdf
+│       │   ├── tcell_CD4_like_B7H3_slingshot_pseudotime_umap.pdf
+│       │   ├── tcell_CD4_like_CD28_41BB_slingshot_aucell_program_pseudotime_tracks.pdf
+│       │   ├── tcell_CD4_like_CD28_41BB_slingshot_gene_trend_curves_all_lineages.pdf
+│       │   ├── tcell_CD4_like_CD28_41BB_slingshot_lineage_curves_each_lineage_umap.pdf
+│       │   ├── tcell_CD4_like_CD28_41BB_slingshot_pseudotime_all_lineages_summary.pdf
+│       │   ├── tcell_CD4_like_CD28_41BB_slingshot_pseudotime_umap.pdf
+│       │   ├── tcell_CD4_like_CD8_41BB_slingshot_aucell_program_pseudotime_tracks.pdf
+│       │   ├── tcell_CD4_like_CD8_41BB_slingshot_gene_trend_curves_all_lineages.pdf
+│       │   ├── tcell_CD4_like_CD8_41BB_slingshot_lineage_curves_each_lineage_umap.pdf
+│       │   ├── tcell_CD4_like_CD8_41BB_slingshot_pseudotime_all_lineages_summary.pdf
+│       │   ├── tcell_CD4_like_CD8_41BB_slingshot_pseudotime_umap.pdf
+│       │   ├── tcell_CD4_like_STOP_slingshot_aucell_program_pseudotime_tracks.pdf
+│       │   ├── tcell_CD4_like_STOP_slingshot_gene_trend_curves_all_lineages.pdf
+│       │   ├── tcell_CD4_like_STOP_slingshot_lineage_curves_each_lineage_umap.pdf
+│       │   ├── tcell_CD4_like_STOP_slingshot_pseudotime_all_lineages_summary.pdf
+│       │   ├── tcell_CD4_like_STOP_slingshot_pseudotime_umap.pdf
+│       │   ├── tcell_CD4_like_all_conditions_slingshot_aucell_program_pseudotime_tracks.pdf
+│       │   ├── tcell_CD4_like_all_conditions_slingshot_gene_trend_curves_all_lineages.pdf
+│       │   ├── tcell_CD4_like_all_conditions_slingshot_lineage_curves_each_lineage_umap.pdf
+│       │   ├── tcell_CD4_like_all_conditions_slingshot_pseudotime_all_lineages_summary.pdf
+│       │   └── tcell_CD4_like_all_conditions_slingshot_pseudotime_umap.pdf
 │       ├── CD8-trajectory
-│       │   ├── tcell_CD8_like_<condition>_slingshot_aucell_program_pseudotime_tracks.pdf
-│       │   ├── tcell_CD8_like_<condition>_slingshot_gene_trend_curves_all_lineages.pdf
-│       │   ├── tcell_CD8_like_<condition>_slingshot_lineage_curves_each_lineage_umap.pdf
-│       │   ├── tcell_CD8_like_<condition>_slingshot_pseudotime_all_lineages_summary.pdf
-│       │   └── tcell_CD8_like_<condition>_slingshot_pseudotime_umap.pdf
+│       │   ├── tcell_CD8_like_41BB_L_slingshot_aucell_program_pseudotime_tracks.pdf
+│       │   ├── tcell_CD8_like_41BB_L_slingshot_gene_trend_curves_all_lineages.pdf
+│       │   ├── tcell_CD8_like_41BB_L_slingshot_lineage_curves_each_lineage_umap.pdf
+│       │   ├── tcell_CD8_like_41BB_L_slingshot_pseudotime_all_lineages_summary.pdf
+│       │   ├── tcell_CD8_like_41BB_L_slingshot_pseudotime_umap.pdf
+│       │   ├── tcell_CD8_like_B7H3_slingshot_aucell_program_pseudotime_tracks.pdf
+│       │   ├── tcell_CD8_like_B7H3_slingshot_gene_trend_curves_all_lineages.pdf
+│       │   ├── tcell_CD8_like_B7H3_slingshot_lineage_curves_each_lineage_umap.pdf
+│       │   ├── tcell_CD8_like_B7H3_slingshot_pseudotime_all_lineages_summary.pdf
+│       │   ├── tcell_CD8_like_B7H3_slingshot_pseudotime_umap.pdf
+│       │   ├── tcell_CD8_like_CD28_41BB_slingshot_aucell_program_pseudotime_tracks.pdf
+│       │   ├── tcell_CD8_like_CD28_41BB_slingshot_gene_trend_curves_all_lineages.pdf
+│       │   ├── tcell_CD8_like_CD28_41BB_slingshot_lineage_curves_each_lineage_umap.pdf
+│       │   ├── tcell_CD8_like_CD28_41BB_slingshot_pseudotime_all_lineages_summary.pdf
+│       │   ├── tcell_CD8_like_CD28_41BB_slingshot_pseudotime_umap.pdf
+│       │   ├── tcell_CD8_like_CD8_41BB_slingshot_aucell_program_pseudotime_tracks.pdf
+│       │   ├── tcell_CD8_like_CD8_41BB_slingshot_gene_trend_curves_all_lineages.pdf
+│       │   ├── tcell_CD8_like_CD8_41BB_slingshot_lineage_curves_each_lineage_umap.pdf
+│       │   ├── tcell_CD8_like_CD8_41BB_slingshot_pseudotime_all_lineages_summary.pdf
+│       │   ├── tcell_CD8_like_CD8_41BB_slingshot_pseudotime_umap.pdf
+│       │   ├── tcell_CD8_like_STOP_slingshot_aucell_program_pseudotime_tracks.pdf
+│       │   ├── tcell_CD8_like_STOP_slingshot_gene_trend_curves_all_lineages.pdf
+│       │   ├── tcell_CD8_like_STOP_slingshot_lineage_curves_each_lineage_umap.pdf
+│       │   ├── tcell_CD8_like_STOP_slingshot_pseudotime_all_lineages_summary.pdf
+│       │   ├── tcell_CD8_like_STOP_slingshot_pseudotime_umap.pdf
+│       │   ├── tcell_CD8_like_all_conditions_slingshot_aucell_program_pseudotime_tracks.pdf
+│       │   ├── tcell_CD8_like_all_conditions_slingshot_gene_trend_curves_all_lineages.pdf
+│       │   ├── tcell_CD8_like_all_conditions_slingshot_lineage_curves_each_lineage_umap.pdf
+│       │   ├── tcell_CD8_like_all_conditions_slingshot_pseudotime_all_lineages_summary.pdf
+│       │   └── tcell_CD8_like_all_conditions_slingshot_pseudotime_umap.pdf
+│       ├── figure_2E_tcell_marker_dotplot_by_condition.pdf
+│       ├── kdm6b
+│       │   ├── tcell_kdm6b_featureplot.pdf
+│       │   ├── tcell_kdm6b_high_low_subcluster_enrichment_across_conditions.pdf
+│       │   ├── tcell_kdm6b_high_vs_low_hallmark_gsea_dotplot.pdf
+│       │   ├── tcell_kdm6b_high_vs_low_pseudobulk_gene_heatmap.pdf
+│       │   ├── tcell_kdm6b_immune_program_gene_high_vs_low_boxplots.pdf
+│       │   ├── tcell_kdm6b_immune_program_gene_violin_by_subcluster.pdf
+│       │   ├── tcell_kdm6b_immune_program_ucell_high_vs_low_boxplots.pdf
+│       │   ├── tcell_kdm6b_immune_program_ucell_violin_by_subcluster.pdf
+│       │   ├── tcell_kdm6b_subcluster_ranking.pdf
+│       │   ├── tcell_kdm6b_violin_by_subcluster.pdf
+│       │   ├── tcell_subcluster_composition_sccomp_41BBL_baseline.pdf
+│       │   └── tcell_subcluster_proportions_stacked_barplot.png
+│       ├── supplementary_figure_5B_tcell_marker_dotplot_by_subtype.pdf
 │       ├── tcell_cd4_cd8_marker_expression_umap.pdf
 │       ├── tcell_cd4_cd8_marker_groups_and_score_scatter.pdf
 │       ├── tcell_cd4_cd8_projectils_labels_umap.pdf
@@ -232,13 +298,13 @@ downstream-analyses/
 │       ├── tcell_slingshot_lineage_curves_overview_umap.pdf
 │       ├── tcell_slingshot_pseudotime_all_lineages_summary.pdf
 │       ├── tcell_slingshot_pseudotime_umap.pdf
+│       ├── tcell_subtype_composition_sccomp_41BBL_baseline.pdf
+│       ├── tcell_subtype_composition_sccomp_STOP_baseline.pdf
+│       ├── tcell_subtype_composition_sccomp_tumor_baseline.pdf
 │       ├── tcell_subtype_milor_STOP_baseline_effect_dotplot.pdf
 │       ├── tcell_subtype_milor_STOP_baseline_logFC_boxplot.pdf
 │       ├── tcell_subtype_milor_tumor_baseline_effect_dotplot.pdf
 │       ├── tcell_subtype_milor_tumor_baseline_logFC_boxplot.pdf
-│       ├── tcell_subtype_composition_sccomp_41BBL_baseline.pdf
-│       ├── tcell_subtype_composition_sccomp_STOP_baseline.pdf
-│       ├── tcell_subtype_composition_sccomp_tumor_baseline.pdf
 │       ├── tcell_top_old_label_per_new_cluster_barplot.pdf
 │       ├── tcell_volcano_pseudobulk_Activated_CD4_effector_helper_like_T_cells_vs_rest.pdf
 │       ├── tcell_volcano_pseudobulk_Activated_effector_CD8_T_cells_stress_vs_rest.pdf
@@ -315,19 +381,19 @@ downstream-analyses/
 │   │   │   ├── myeloid_GSEA_pseudobulk_tumor_vs_allCAR_hallmark.csv
 │   │   │   └── myeloid_GSEA_pseudobulk_tumor_vs_rest_hallmark.csv
 │   │   ├── kdm6b
-│   │   │   ├── kdm6b_high_low_subcluster_differential_abundance.tsv
 │   │   │   ├── kdm6b_pseudobulk_by_sample.tsv
-│   │   │   ├── kdm6b_subcluster_ranking_and_groups.tsv
+│   │   │   ├── myeloid_kdm6b_gene_correlation_summary.tsv
+│   │   │   ├── myeloid_kdm6b_gene_mean_expression_by_sample.tsv
+│   │   │   ├── myeloid_kdm6b_high_low_subcluster_differential_abundance.tsv
 │   │   │   ├── myeloid_kdm6b_high_vs_low_hallmark_gsea.tsv
 │   │   │   ├── myeloid_kdm6b_high_vs_low_heatmap_genes.tsv
 │   │   │   ├── myeloid_kdm6b_high_vs_low_paired_deseq2.tsv
-│   │   │   ├── myeloid_kdm6b_gene_correlation_summary.tsv
-│   │   │   ├── myeloid_kdm6b_gene_mean_expression_by_sample.tsv
-│   │   │   ├── myeloid_kdm6b_immune_program_genes_by_subcluster.tsv
 │   │   │   ├── myeloid_kdm6b_immune_program_gene_high_vs_low.tsv
-│   │   │   ├── myeloid_kdm6b_immune_program_ucell_by_subcluster.tsv
+│   │   │   ├── myeloid_kdm6b_immune_program_genes_by_subcluster.tsv
 │   │   │   ├── myeloid_kdm6b_immune_program_ucell_by_sample_group.tsv
+│   │   │   ├── myeloid_kdm6b_immune_program_ucell_by_subcluster.tsv
 │   │   │   ├── myeloid_kdm6b_immune_program_ucell_high_vs_low.tsv
+│   │   │   ├── myeloid_kdm6b_subcluster_ranking_and_groups.tsv
 │   │   │   └── myeloid_subcluster_composition_sccomp_41BBL_baseline_results.tsv
 │   │   ├── myeloid_subtype_composition_sccomp_41BBL_baseline_results.tsv
 │   │   ├── myeloid_subtype_composition_sccomp_STOP_baseline_results.tsv
@@ -341,21 +407,52 @@ downstream-analyses/
 │   │   ├── myeloid_subtype_proportions.tsv
 │   │   └── myeloid_treatment_markers.csv
 │   └── tcell
-│       ├── cart_tcell_subtypes.rds
 │       ├── CD4-trajectory
-│       │   ├── tcell_CD4_like_<analysis>_slingshot_aucell_program_pseudotime_tracks.csv
-│       │   ├── tcell_CD4_like_<analysis>_slingshot_result.rds
+│       │   ├── tcell_CD4_like_41BB_L_slingshot_aucell_program_pseudotime_tracks.csv
+│       │   ├── tcell_CD4_like_41BB_L_slingshot_result.rds
+│       │   ├── tcell_CD4_like_B7H3_slingshot_aucell_program_pseudotime_tracks.csv
+│       │   ├── tcell_CD4_like_B7H3_slingshot_result.rds
+│       │   ├── tcell_CD4_like_CD28_41BB_slingshot_aucell_program_pseudotime_tracks.csv
+│       │   ├── tcell_CD4_like_CD28_41BB_slingshot_result.rds
+│       │   ├── tcell_CD4_like_CD8_41BB_slingshot_aucell_program_pseudotime_tracks.csv
+│       │   ├── tcell_CD4_like_CD8_41BB_slingshot_result.rds
+│       │   ├── tcell_CD4_like_STOP_slingshot_aucell_program_pseudotime_tracks.csv
+│       │   ├── tcell_CD4_like_STOP_slingshot_result.rds
+│       │   ├── tcell_CD4_like_all_conditions_slingshot_aucell_program_pseudotime_tracks.csv
 │       │   ├── tcell_CD4_like_all_conditions_slingshot_pseudotime_summary.csv
 │       │   ├── tcell_CD4_like_all_conditions_slingshot_qc.csv
+│       │   ├── tcell_CD4_like_all_conditions_slingshot_result.rds
 │       │   ├── tcell_CD4_like_condition_slingshot_pseudotime_summary.csv
 │       │   └── tcell_CD4_like_condition_slingshot_qc.csv
 │       ├── CD8-trajectory
-│       │   ├── tcell_CD8_like_<analysis>_slingshot_aucell_program_pseudotime_tracks.csv
-│       │   ├── tcell_CD8_like_<analysis>_slingshot_result.rds
+│       │   ├── tcell_CD8_like_41BB_L_slingshot_aucell_program_pseudotime_tracks.csv
+│       │   ├── tcell_CD8_like_41BB_L_slingshot_result.rds
+│       │   ├── tcell_CD8_like_B7H3_slingshot_aucell_program_pseudotime_tracks.csv
+│       │   ├── tcell_CD8_like_B7H3_slingshot_result.rds
+│       │   ├── tcell_CD8_like_CD28_41BB_slingshot_aucell_program_pseudotime_tracks.csv
+│       │   ├── tcell_CD8_like_CD28_41BB_slingshot_result.rds
+│       │   ├── tcell_CD8_like_CD8_41BB_slingshot_aucell_program_pseudotime_tracks.csv
+│       │   ├── tcell_CD8_like_CD8_41BB_slingshot_result.rds
+│       │   ├── tcell_CD8_like_STOP_slingshot_aucell_program_pseudotime_tracks.csv
+│       │   ├── tcell_CD8_like_STOP_slingshot_result.rds
+│       │   ├── tcell_CD8_like_all_conditions_slingshot_aucell_program_pseudotime_tracks.csv
 │       │   ├── tcell_CD8_like_all_conditions_slingshot_pseudotime_summary.csv
 │       │   ├── tcell_CD8_like_all_conditions_slingshot_qc.csv
+│       │   ├── tcell_CD8_like_all_conditions_slingshot_result.rds
 │       │   ├── tcell_CD8_like_condition_slingshot_pseudotime_summary.csv
 │       │   └── tcell_CD8_like_condition_slingshot_qc.csv
+│       ├── kdm6b
+│       │   ├── tcell_kdm6b_high_low_subcluster_differential_abundance.tsv
+│       │   ├── tcell_kdm6b_high_vs_low_hallmark_gsea.tsv
+│       │   ├── tcell_kdm6b_high_vs_low_heatmap_genes.tsv
+│       │   ├── tcell_kdm6b_high_vs_low_paired_deseq2.tsv
+│       │   ├── tcell_kdm6b_immune_program_gene_high_vs_low.tsv
+│       │   ├── tcell_kdm6b_immune_program_genes_by_subcluster.tsv
+│       │   ├── tcell_kdm6b_immune_program_ucell_by_sample_group.tsv
+│       │   ├── tcell_kdm6b_immune_program_ucell_by_subcluster.tsv
+│       │   ├── tcell_kdm6b_immune_program_ucell_high_vs_low.tsv
+│       │   ├── tcell_kdm6b_subcluster_ranking_and_groups.tsv
+│       │   └── tcell_subcluster_composition_sccomp_41BBL_baseline_results.tsv
 │       ├── tcell_DESeq2_pseudobulk_Activated_CD4_effector_helper_like_T_cells_vs_rest.csv
 │       ├── tcell_DESeq2_pseudobulk_Activated_effector_CD8_T_cells_stress_vs_rest.csv
 │       ├── tcell_DESeq2_pseudobulk_Antigen_presenting_myeloid_cells_vs_rest.csv
@@ -390,15 +487,15 @@ downstream-analyses/
 │       ├── tcell_reclustered_proportions.tsv
 │       ├── tcell_reclustered_top30_markers_per_cluster.csv
 │       ├── tcell_slingshot_fast_spearman_pseudotime_gene_screen.csv
+│       ├── tcell_subtype_composition_sccomp_41BBL_baseline_results.tsv
+│       ├── tcell_subtype_composition_sccomp_STOP_baseline_results.tsv
+│       ├── tcell_subtype_composition_sccomp_tumor_baseline_results.tsv
 │       ├── tcell_subtype_milor_STOP_baseline_effect_summary.tsv
 │       ├── tcell_subtype_milor_STOP_baseline_results.tsv
 │       ├── tcell_subtype_milor_STOP_baseline_threshold_summary.tsv
 │       ├── tcell_subtype_milor_tumor_baseline_effect_summary.tsv
 │       ├── tcell_subtype_milor_tumor_baseline_results.tsv
 │       ├── tcell_subtype_milor_tumor_baseline_threshold_summary.tsv
-│       ├── tcell_subtype_composition_sccomp_41BBL_baseline_results.tsv
-│       ├── tcell_subtype_composition_sccomp_STOP_baseline_results.tsv
-│       ├── tcell_subtype_composition_sccomp_tumor_baseline_results.tsv
 │       └── tcell_top_old_label_per_new_cluster.tsv
 ├── run_module.sh
 └── util
