@@ -1,0 +1,326 @@
+subcluster	gene	mean_log_expression	detection_fraction	program	subtype	kdm6b_group
+3	Ccl3	0.369258709477949	0.11407766990291263	Cytotoxicity	NK-like cytotoxic lymphocytes	Kdm6b-high
+9	Ccl3	0.02811515041083329	0.008849557522123894	Cytotoxicity	γδ T cells	Kdm6b-high
+12	Ccl3	0.03737001607889006	0.014705882352941176	Cytotoxicity	Th2-like inflammatory T cells	Kdm6b-high
+11	Ccl3	0.03718908898845074	0.013215859030837005	Cytotoxicity	γδ / Th17-like T cells	Intermediate
+5	Ccl3	0.16770274090435602	0.047895500725689405	Cytotoxicity	Activated CD4 effector / helper-like T cells	Intermediate
+6	Ccl3	0.7434829696666257	0.23014586709886548	Cytotoxicity	Antigen-presenting myeloid cells	Intermediate
+8	Ccl3	0.09859044809589351	0.02857142857142857	Cytotoxicity	Terminally differentiated cytotoxic T cells	Intermediate
+1	Ccl3	0.030192342607121163	0.009976976208749041	Cytotoxicity	Treg	Intermediate
+0	Ccl3	0.07936135650904438	0.028744326777609682	Cytotoxicity	Quiescent T cells	Intermediate
+7	Ccl3	0.05533453638777807	0.017094017094017096	Cytotoxicity	Naïve / central-memory T cells	Intermediate
+10	Ccl3	0.07841925101047163	0.03322259136212625	Cytotoxicity	IFN-responsive T cells	Kdm6b-low
+4	Ccl3	0.08110827073272422	0.026515151515151516	Cytotoxicity	Cycling / proliferating CAR T cells	Kdm6b-low
+2	Ccl3	0.10771235400347856	0.036317567567567564	Cytotoxicity	Activated effector CD8 T cells (stress)	Kdm6b-low
+3	Ccl4	0.5419377731473978	0.17718446601941748	Cytotoxicity	NK-like cytotoxic lymphocytes	Kdm6b-high
+9	Ccl4	0.05059775944623782	0.01991150442477876	Cytotoxicity	γδ T cells	Kdm6b-high
+12	Ccl4	0.029533434810144234	0.014705882352941176	Cytotoxicity	Th2-like inflammatory T cells	Kdm6b-high
+11	Ccl4	0.027781464668745964	0.00881057268722467	Cytotoxicity	γδ / Th17-like T cells	Intermediate
+5	Ccl4	0.27641626797964314	0.08127721335268505	Cytotoxicity	Activated CD4 effector / helper-like T cells	Intermediate
+6	Ccl4	0.6163558699685673	0.21231766612641814	Cytotoxicity	Antigen-presenting myeloid cells	Intermediate
+8	Ccl4	0.2321831203014683	0.08131868131868132	Cytotoxicity	Terminally differentiated cytotoxic T cells	Intermediate
+1	Ccl4	0.0717654659159603	0.023791250959324637	Cytotoxicity	Treg	Intermediate
+0	Ccl4	0.19151400539147115	0.06278366111951589	Cytotoxicity	Quiescent T cells	Intermediate
+7	Ccl4	0.05287676747187318	0.017094017094017096	Cytotoxicity	Naïve / central-memory T cells	Intermediate
+10	Ccl4	0.24347821135023098	0.08970099667774087	Cytotoxicity	IFN-responsive T cells	Kdm6b-low
+4	Ccl4	0.09280907248717898	0.03282828282828283	Cytotoxicity	Cycling / proliferating CAR T cells	Kdm6b-low
+2	Ccl4	0.3860483212448529	0.1241554054054054	Cytotoxicity	Activated effector CD8 T cells (stress)	Kdm6b-low
+3	Gzmb	2.0077985130667675	0.6092233009708737	Cytotoxicity	NK-like cytotoxic lymphocytes	Kdm6b-high
+9	Gzmb	0.48418273471528517	0.17256637168141592	Cytotoxicity	γδ T cells	Kdm6b-high
+12	Gzmb	0.0917577447699094	0.029411764705882353	Cytotoxicity	Th2-like inflammatory T cells	Kdm6b-high
+11	Gzmb	0.4719896686683499	0.15859030837004406	Cytotoxicity	γδ / Th17-like T cells	Intermediate
+5	Gzmb	0.5057135471156149	0.14078374455732948	Cytotoxicity	Activated CD4 effector / helper-like T cells	Intermediate
+6	Gzmb	0.7818412631375445	0.2852512155591572	Cytotoxicity	Antigen-presenting myeloid cells	Intermediate
+8	Gzmb	2.212330650449143	0.5692307692307692	Cytotoxicity	Terminally differentiated cytotoxic T cells	Intermediate
+1	Gzmb	1.0220310088760312	0.32233307751343054	Cytotoxicity	Treg	Intermediate
+0	Gzmb	0.5627156696518378	0.17322239031770045	Cytotoxicity	Quiescent T cells	Intermediate
+7	Gzmb	0.05907239007661665	0.02564102564102564	Cytotoxicity	Naïve / central-memory T cells	Intermediate
+10	Gzmb	1.1005990273372472	0.3122923588039867	Cytotoxicity	IFN-responsive T cells	Kdm6b-low
+4	Gzmb	0.7933492499539361	0.2727272727272727	Cytotoxicity	Cycling / proliferating CAR T cells	Kdm6b-low
+2	Gzmb	1.1735945429145895	0.32010135135135137	Cytotoxicity	Activated effector CD8 T cells (stress)	Kdm6b-low
+3	Ifng	0.891096505840375	0.3422330097087379	Cytotoxicity	NK-like cytotoxic lymphocytes	Kdm6b-high
+9	Ifng	0.4798248958523751	0.20353982300884957	Cytotoxicity	γδ T cells	Kdm6b-high
+12	Ifng	0.07241824676629072	0.03676470588235294	Cytotoxicity	Th2-like inflammatory T cells	Kdm6b-high
+11	Ifng	0.1489798874482195	0.07048458149779736	Cytotoxicity	γδ / Th17-like T cells	Intermediate
+5	Ifng	0.7567111979302256	0.29753265602322204	Cytotoxicity	Activated CD4 effector / helper-like T cells	Intermediate
+6	Ifng	0.7506846427851868	0.3581847649918963	Cytotoxicity	Antigen-presenting myeloid cells	Intermediate
+8	Ifng	0.8704911544000399	0.3824175824175824	Cytotoxicity	Terminally differentiated cytotoxic T cells	Intermediate
+1	Ifng	0.22544190021538882	0.09132770529547199	Cytotoxicity	Treg	Intermediate
+0	Ifng	0.5943508082472687	0.21633888048411498	Cytotoxicity	Quiescent T cells	Intermediate
+7	Ifng	0.15240189690883538	0.05641025641025641	Cytotoxicity	Naïve / central-memory T cells	Intermediate
+10	Ifng	1.262727463858063	0.4219269102990033	Cytotoxicity	IFN-responsive T cells	Kdm6b-low
+4	Ifng	0.6808566561407581	0.30808080808080807	Cytotoxicity	Cycling / proliferating CAR T cells	Kdm6b-low
+2	Ifng	1.528980630101493	0.5016891891891891	Cytotoxicity	Activated effector CD8 T cells (stress)	Kdm6b-low
+3	Nkg7	2.9973050619598127	0.8859223300970874	Cytotoxicity	NK-like cytotoxic lymphocytes	Kdm6b-high
+9	Nkg7	2.0265359224904587	0.7190265486725663	Cytotoxicity	γδ T cells	Kdm6b-high
+12	Nkg7	0.11697078697799876	0.051470588235294115	Cytotoxicity	Th2-like inflammatory T cells	Kdm6b-high
+11	Nkg7	0.35942872730845427	0.15859030837004406	Cytotoxicity	γδ / Th17-like T cells	Intermediate
+5	Nkg7	1.468175421481457	0.4702467343976778	Cytotoxicity	Activated CD4 effector / helper-like T cells	Intermediate
+6	Nkg7	1.504259684559672	0.6012965964343598	Cytotoxicity	Antigen-presenting myeloid cells	Intermediate
+8	Nkg7	3.364899587736804	0.9516483516483516	Cytotoxicity	Terminally differentiated cytotoxic T cells	Intermediate
+1	Nkg7	0.9088212995740387	0.33614735226400616	Cytotoxicity	Treg	Intermediate
+0	Nkg7	1.504387969636635	0.4977307110438729	Cytotoxicity	Quiescent T cells	Intermediate
+7	Nkg7	0.520834583586368	0.21025641025641026	Cytotoxicity	Naïve / central-memory T cells	Intermediate
+10	Nkg7	2.0036907602192633	0.6312292358803987	Cytotoxicity	IFN-responsive T cells	Kdm6b-low
+4	Nkg7	1.5912073001905667	0.5808080808080808	Cytotoxicity	Cycling / proliferating CAR T cells	Kdm6b-low
+2	Nkg7	2.7248837285667142	0.7947635135135135	Cytotoxicity	Activated effector CD8 T cells (stress)	Kdm6b-low
+3	Prf1	1.3627891018654077	0.537621359223301	Cytotoxicity	NK-like cytotoxic lymphocytes	Kdm6b-high
+9	Prf1	0.16463214422838648	0.08849557522123894	Cytotoxicity	γδ T cells	Kdm6b-high
+12	Prf1	0.0195778516693048	0.007352941176470588	Cytotoxicity	Th2-like inflammatory T cells	Kdm6b-high
+11	Prf1	0.013196467450797802	0.00881057268722467	Cytotoxicity	γδ / Th17-like T cells	Intermediate
+5	Prf1	0.1776706066357872	0.09579100145137881	Cytotoxicity	Activated CD4 effector / helper-like T cells	Intermediate
+6	Prf1	0.1537842832323483	0.11345218800648298	Cytotoxicity	Antigen-presenting myeloid cells	Intermediate
+8	Prf1	0.5440372291561137	0.2813186813186813	Cytotoxicity	Terminally differentiated cytotoxic T cells	Intermediate
+1	Prf1	0.04936133485016662	0.03069838833461243	Cytotoxicity	Treg	Intermediate
+0	Prf1	0.13672074256005198	0.059001512859304085	Cytotoxicity	Quiescent T cells	Intermediate
+7	Prf1	0.0699083632168141	0.03418803418803419	Cytotoxicity	Naïve / central-memory T cells	Intermediate
+10	Prf1	0.16799351823639122	0.08637873754152824	Cytotoxicity	IFN-responsive T cells	Kdm6b-low
+4	Prf1	0.11252057686844537	0.06944444444444445	Cytotoxicity	Cycling / proliferating CAR T cells	Kdm6b-low
+2	Prf1	0.2965528101991934	0.14949324324324326	Cytotoxicity	Activated effector CD8 T cells (stress)	Kdm6b-low
+3	Mki67	0.0051006551342184375	0.0024271844660194173	Expansion/proliferation	NK-like cytotoxic lymphocytes	Kdm6b-high
+9	Mki67	0.009771183365976951	0.004424778761061947	Expansion/proliferation	γδ T cells	Kdm6b-high
+12	Mki67	0.016177015364005502	0.007352941176470588	Expansion/proliferation	Th2-like inflammatory T cells	Kdm6b-high
+11	Mki67	0.05772604455757461	0.039647577092511016	Expansion/proliferation	γδ / Th17-like T cells	Intermediate
+5	Mki67	0.10288557755922671	0.05079825834542816	Expansion/proliferation	Activated CD4 effector / helper-like T cells	Intermediate
+6	Mki67	0.9845797298826415	0.49432739059967584	Expansion/proliferation	Antigen-presenting myeloid cells	Intermediate
+8	Mki67	0.015352237446775259	0.008791208791208791	Expansion/proliferation	Terminally differentiated cytotoxic T cells	Intermediate
+1	Mki67	0.06706356102101026	0.03223330775134305	Expansion/proliferation	Treg	Intermediate
+0	Mki67	0.024090789316173537	0.009833585476550681	Expansion/proliferation	Quiescent T cells	Intermediate
+7	Mki67	0.011953532935193386	0.005128205128205128	Expansion/proliferation	Naïve / central-memory T cells	Intermediate
+10	Mki67	0.038289382215697304	0.016611295681063124	Expansion/proliferation	IFN-responsive T cells	Kdm6b-low
+4	Mki67	1.9843056719620313	0.7967171717171717	Expansion/proliferation	Cycling / proliferating CAR T cells	Kdm6b-low
+2	Mki67	0.03920874721545018	0.018581081081081082	Expansion/proliferation	Activated effector CD8 T cells (stress)	Kdm6b-low
+3	Stmn1	0.04377936817984698	0.01699029126213592	Expansion/proliferation	NK-like cytotoxic lymphocytes	Kdm6b-high
+9	Stmn1	0	0	Expansion/proliferation	γδ T cells	Kdm6b-high
+12	Stmn1	0.04028991492118508	0.014705882352941176	Expansion/proliferation	Th2-like inflammatory T cells	Kdm6b-high
+11	Stmn1	0.015984173117827037	0.00881057268722467	Expansion/proliferation	γδ / Th17-like T cells	Intermediate
+5	Stmn1	0.08816794025448334	0.036284470246734396	Expansion/proliferation	Activated CD4 effector / helper-like T cells	Intermediate
+6	Stmn1	1.2987410117714138	0.5072933549432739	Expansion/proliferation	Antigen-presenting myeloid cells	Intermediate
+8	Stmn1	0.01378641603519847	0.006593406593406593	Expansion/proliferation	Terminally differentiated cytotoxic T cells	Intermediate
+1	Stmn1	0.03470997169445321	0.013814274750575594	Expansion/proliferation	Treg	Intermediate
+0	Stmn1	0.02571532768072585	0.009077155824508321	Expansion/proliferation	Quiescent T cells	Intermediate
+7	Stmn1	0.03011380514632328	0.010256410256410256	Expansion/proliferation	Naïve / central-memory T cells	Intermediate
+10	Stmn1	0.01724136207490311	0.006644518272425249	Expansion/proliferation	IFN-responsive T cells	Kdm6b-low
+4	Stmn1	2.4819186522795245	0.8409090909090909	Expansion/proliferation	Cycling / proliferating CAR T cells	Kdm6b-low
+2	Stmn1	0.012910630285513286	0.005067567567567568	Expansion/proliferation	Activated effector CD8 T cells (stress)	Kdm6b-low
+3	Top2a	0.08516491722122772	0.04247572815533981	Expansion/proliferation	NK-like cytotoxic lymphocytes	Kdm6b-high
+9	Top2a	0.05684717567269823	0.028761061946902654	Expansion/proliferation	γδ T cells	Kdm6b-high
+12	Top2a	0.0516016448600672	0.029411764705882353	Expansion/proliferation	Th2-like inflammatory T cells	Kdm6b-high
+11	Top2a	0.10474433016186827	0.07488986784140969	Expansion/proliferation	γδ / Th17-like T cells	Intermediate
+5	Top2a	0.18314302145206954	0.11175616835994194	Expansion/proliferation	Activated CD4 effector / helper-like T cells	Intermediate
+6	Top2a	0.9734559763651847	0.4813614262560778	Expansion/proliferation	Antigen-presenting myeloid cells	Intermediate
+8	Top2a	0.13891695344064137	0.07472527472527472	Expansion/proliferation	Terminally differentiated cytotoxic T cells	Intermediate
+1	Top2a	0.12112740044703249	0.06293169608595549	Expansion/proliferation	Treg	Intermediate
+0	Top2a	0.08544156623690649	0.038577912254160365	Expansion/proliferation	Quiescent T cells	Intermediate
+7	Top2a	0.01793876536481037	0.008547008547008548	Expansion/proliferation	Naïve / central-memory T cells	Intermediate
+10	Top2a	0.03976387568887165	0.019933554817275746	Expansion/proliferation	IFN-responsive T cells	Kdm6b-low
+4	Top2a	2.1066735609335843	0.8068181818181818	Expansion/proliferation	Cycling / proliferating CAR T cells	Kdm6b-low
+2	Top2a	0.10626681118551189	0.05827702702702703	Expansion/proliferation	Activated effector CD8 T cells (stress)	Kdm6b-low
+3	Ccr7	0.036122845477792924	0.01820388349514563	Memory/stem-like	NK-like cytotoxic lymphocytes	Kdm6b-high
+9	Ccr7	0.09532916209673183	0.04424778761061947	Memory/stem-like	γδ T cells	Kdm6b-high
+12	Ccr7	0.009812285158414194	0.007352941176470588	Memory/stem-like	Th2-like inflammatory T cells	Kdm6b-high
+11	Ccr7	0.08422513671511682	0.048458149779735685	Memory/stem-like	γδ / Th17-like T cells	Intermediate
+5	Ccr7	0.24572176420776914	0.12191582002902758	Memory/stem-like	Activated CD4 effector / helper-like T cells	Intermediate
+6	Ccr7	0.26277963389952247	0.19448946515397084	Memory/stem-like	Antigen-presenting myeloid cells	Intermediate
+8	Ccr7	0.23423461954881006	0.11648351648351649	Memory/stem-like	Terminally differentiated cytotoxic T cells	Intermediate
+1	Ccr7	0.17598311200254355	0.0844205679201842	Memory/stem-like	Treg	Intermediate
+0	Ccr7	0.15928673143690117	0.07034795763993948	Memory/stem-like	Quiescent T cells	Intermediate
+7	Ccr7	0.5228207571031046	0.22905982905982905	Memory/stem-like	Naïve / central-memory T cells	Intermediate
+10	Ccr7	0.09936446238266618	0.05647840531561462	Memory/stem-like	IFN-responsive T cells	Kdm6b-low
+4	Ccr7	0.1807633286955639	0.12121212121212122	Memory/stem-like	Cycling / proliferating CAR T cells	Kdm6b-low
+2	Ccr7	0.039709815671775936	0.022804054054054054	Memory/stem-like	Activated effector CD8 T cells (stress)	Kdm6b-low
+3	Il7r	0.09864307547809338	0.050970873786407765	Memory/stem-like	NK-like cytotoxic lymphocytes	Kdm6b-high
+9	Il7r	0.7387434647732379	0.34513274336283184	Memory/stem-like	γδ T cells	Kdm6b-high
+12	Il7r	1.4838395127705004	0.6029411764705882	Memory/stem-like	Th2-like inflammatory T cells	Kdm6b-high
+11	Il7r	1.781794122941142	0.6960352422907489	Memory/stem-like	γδ / Th17-like T cells	Intermediate
+5	Il7r	0.6350485146881736	0.3178519593613933	Memory/stem-like	Activated CD4 effector / helper-like T cells	Intermediate
+6	Il7r	0.45953452137959705	0.3079416531604538	Memory/stem-like	Antigen-presenting myeloid cells	Intermediate
+8	Il7r	0.49630677109798826	0.26593406593406593	Memory/stem-like	Terminally differentiated cytotoxic T cells	Intermediate
+1	Il7r	0.6303088204970437	0.30237912509593246	Memory/stem-like	Treg	Intermediate
+0	Il7r	0.5253972550605414	0.21860816944024206	Memory/stem-like	Quiescent T cells	Intermediate
+7	Il7r	0.8621654202342413	0.35213675213675216	Memory/stem-like	Naïve / central-memory T cells	Intermediate
+10	Il7r	0.28956636861272955	0.14285714285714285	Memory/stem-like	IFN-responsive T cells	Kdm6b-low
+4	Il7r	0.3728756064031035	0.2474747474747475	Memory/stem-like	Cycling / proliferating CAR T cells	Kdm6b-low
+2	Il7r	0.4652029358113309	0.20692567567567569	Memory/stem-like	Activated effector CD8 T cells (stress)	Kdm6b-low
+3	Lef1	0.2912012784266	0.14684466019417475	Memory/stem-like	NK-like cytotoxic lymphocytes	Kdm6b-high
+9	Lef1	0.7849298284135795	0.36504424778761063	Memory/stem-like	γδ T cells	Kdm6b-high
+12	Lef1	0.14646092266261354	0.07352941176470588	Memory/stem-like	Th2-like inflammatory T cells	Kdm6b-high
+11	Lef1	0.3273034947958898	0.19383259911894274	Memory/stem-like	γδ / Th17-like T cells	Intermediate
+5	Lef1	0.29247976178000296	0.1799709724238026	Memory/stem-like	Activated CD4 effector / helper-like T cells	Intermediate
+6	Lef1	0.28301108955952	0.21393841166936792	Memory/stem-like	Antigen-presenting myeloid cells	Intermediate
+8	Lef1	0.29514097570415165	0.17142857142857143	Memory/stem-like	Terminally differentiated cytotoxic T cells	Intermediate
+1	Lef1	0.2722027143557083	0.15195702225633154	Memory/stem-like	Treg	Intermediate
+0	Lef1	0.3530575126703824	0.16036308623298035	Memory/stem-like	Quiescent T cells	Intermediate
+7	Lef1	1.2467603649941994	0.48717948717948717	Memory/stem-like	Naïve / central-memory T cells	Intermediate
+10	Lef1	0.24095497141426422	0.12624584717607973	Memory/stem-like	IFN-responsive T cells	Kdm6b-low
+4	Lef1	0.3368821382737429	0.24242424242424243	Memory/stem-like	Cycling / proliferating CAR T cells	Kdm6b-low
+2	Lef1	0.2795489922513419	0.13935810810810811	Memory/stem-like	Activated effector CD8 T cells (stress)	Kdm6b-low
+3	Tcf7	0.17010482187586407	0.09466019417475728	Memory/stem-like	NK-like cytotoxic lymphocytes	Kdm6b-high
+9	Tcf7	0.4099834416848437	0.21902654867256638	Memory/stem-like	γδ T cells	Kdm6b-high
+12	Tcf7	0.16769066877674788	0.08823529411764706	Memory/stem-like	Th2-like inflammatory T cells	Kdm6b-high
+11	Tcf7	0.2706025770180165	0.14977973568281938	Memory/stem-like	γδ / Th17-like T cells	Intermediate
+5	Tcf7	0.27559110516797697	0.17271407837445574	Memory/stem-like	Activated CD4 effector / helper-like T cells	Intermediate
+6	Tcf7	0.18555283981742948	0.1393841166936791	Memory/stem-like	Antigen-presenting myeloid cells	Intermediate
+8	Tcf7	0.10318376282574818	0.07032967032967033	Memory/stem-like	Terminally differentiated cytotoxic T cells	Intermediate
+1	Tcf7	0.0565533450367218	0.03607060629316961	Memory/stem-like	Treg	Intermediate
+0	Tcf7	0.1943357840281219	0.09304084720121028	Memory/stem-like	Quiescent T cells	Intermediate
+7	Tcf7	0.6054910845020991	0.26495726495726496	Memory/stem-like	Naïve / central-memory T cells	Intermediate
+10	Tcf7	0.22045494648388914	0.11960132890365449	Memory/stem-like	IFN-responsive T cells	Kdm6b-low
+4	Tcf7	0.12804619073086917	0.09974747474747475	Memory/stem-like	Cycling / proliferating CAR T cells	Kdm6b-low
+2	Tcf7	0.17558976265795917	0.08952702702702703	Memory/stem-like	Activated effector CD8 T cells (stress)	Kdm6b-low
+3	Entpd1	0.12129084524740007	0.055825242718446605	Exhaustion/dysfunction	NK-like cytotoxic lymphocytes	Kdm6b-high
+9	Entpd1	0.04752419896989915	0.022123893805309734	Exhaustion/dysfunction	γδ T cells	Kdm6b-high
+12	Entpd1	0.045995403096263876	0.022058823529411766	Exhaustion/dysfunction	Th2-like inflammatory T cells	Kdm6b-high
+11	Entpd1	0.03175466767113914	0.01762114537444934	Exhaustion/dysfunction	γδ / Th17-like T cells	Intermediate
+5	Entpd1	0.0958939174791715	0.05224963715529753	Exhaustion/dysfunction	Activated CD4 effector / helper-like T cells	Intermediate
+6	Entpd1	0.3768571887892391	0.2544570502431118	Exhaustion/dysfunction	Antigen-presenting myeloid cells	Intermediate
+8	Entpd1	0.16934570439968988	0.08791208791208792	Exhaustion/dysfunction	Terminally differentiated cytotoxic T cells	Intermediate
+1	Entpd1	0.2645987300200068	0.13200306983883345	Exhaustion/dysfunction	Treg	Intermediate
+0	Entpd1	0.13498828175602762	0.056732223903177004	Exhaustion/dysfunction	Quiescent T cells	Intermediate
+7	Entpd1	0.0345331994756974	0.015384615384615385	Exhaustion/dysfunction	Naïve / central-memory T cells	Intermediate
+10	Entpd1	0.13587049620286282	0.06312292358803986	Exhaustion/dysfunction	IFN-responsive T cells	Kdm6b-low
+4	Entpd1	0.200496087824803	0.13383838383838384	Exhaustion/dysfunction	Cycling / proliferating CAR T cells	Kdm6b-low
+2	Entpd1	0.20319861633547148	0.10135135135135136	Exhaustion/dysfunction	Activated effector CD8 T cells (stress)	Kdm6b-low
+3	Havcr2	0.03431851904758719	0.01699029126213592	Exhaustion/dysfunction	NK-like cytotoxic lymphocytes	Kdm6b-high
+9	Havcr2	0.01711016995394911	0.008849557522123894	Exhaustion/dysfunction	γδ T cells	Kdm6b-high
+12	Havcr2	0.09668424894052345	0.051470588235294115	Exhaustion/dysfunction	Th2-like inflammatory T cells	Kdm6b-high
+11	Havcr2	0.08265405756585542	0.039647577092511016	Exhaustion/dysfunction	γδ / Th17-like T cells	Intermediate
+5	Havcr2	0.2009117007196487	0.10595065312046444	Exhaustion/dysfunction	Activated CD4 effector / helper-like T cells	Intermediate
+6	Havcr2	0.5174992545076086	0.3387358184764992	Exhaustion/dysfunction	Antigen-presenting myeloid cells	Intermediate
+8	Havcr2	0.4565191961114996	0.23076923076923078	Exhaustion/dysfunction	Terminally differentiated cytotoxic T cells	Intermediate
+1	Havcr2	0.2671726100901789	0.1335379892555641	Exhaustion/dysfunction	Treg	Intermediate
+0	Havcr2	0.09577804596577355	0.040090771558245086	Exhaustion/dysfunction	Quiescent T cells	Intermediate
+7	Havcr2	0.04103623820227628	0.018803418803418803	Exhaustion/dysfunction	Naïve / central-memory T cells	Intermediate
+10	Havcr2	0.081243008804199	0.03986710963455149	Exhaustion/dysfunction	IFN-responsive T cells	Kdm6b-low
+4	Havcr2	0.19801793153713818	0.1351010101010101	Exhaustion/dysfunction	Cycling / proliferating CAR T cells	Kdm6b-low
+2	Havcr2	0.29114509202579275	0.13935810810810811	Exhaustion/dysfunction	Activated effector CD8 T cells (stress)	Kdm6b-low
+3	Lag3	0.08570237020770398	0.0412621359223301	Exhaustion/dysfunction	NK-like cytotoxic lymphocytes	Kdm6b-high
+9	Lag3	0.07374280592766146	0.03761061946902655	Exhaustion/dysfunction	γδ T cells	Kdm6b-high
+12	Lag3	0.062750670871039	0.029411764705882353	Exhaustion/dysfunction	Th2-like inflammatory T cells	Kdm6b-high
+11	Lag3	0.04884963742486681	0.02643171806167401	Exhaustion/dysfunction	γδ / Th17-like T cells	Intermediate
+5	Lag3	0.5913040407468354	0.24963715529753266	Exhaustion/dysfunction	Activated CD4 effector / helper-like T cells	Intermediate
+6	Lag3	0.5944173815175253	0.3338735818476499	Exhaustion/dysfunction	Antigen-presenting myeloid cells	Intermediate
+8	Lag3	0.6178039552137352	0.27692307692307694	Exhaustion/dysfunction	Terminally differentiated cytotoxic T cells	Intermediate
+1	Lag3	0.43090711361530565	0.18265541059094398	Exhaustion/dysfunction	Treg	Intermediate
+0	Lag3	0.19737882356225225	0.08093797276853253	Exhaustion/dysfunction	Quiescent T cells	Intermediate
+7	Lag3	0.10909640510516765	0.04957264957264957	Exhaustion/dysfunction	Naïve / central-memory T cells	Intermediate
+10	Lag3	0.47203095397316197	0.19269102990033224	Exhaustion/dysfunction	IFN-responsive T cells	Kdm6b-low
+4	Lag3	0.3549625356099184	0.20202020202020202	Exhaustion/dysfunction	Cycling / proliferating CAR T cells	Kdm6b-low
+2	Lag3	0.48084521334672087	0.19594594594594594	Exhaustion/dysfunction	Activated effector CD8 T cells (stress)	Kdm6b-low
+3	Pdcd1	0.1026489286544494	0.044902912621359224	Exhaustion/dysfunction	NK-like cytotoxic lymphocytes	Kdm6b-high
+9	Pdcd1	0.2811713530165229	0.12389380530973451	Exhaustion/dysfunction	γδ T cells	Kdm6b-high
+12	Pdcd1	1.0874481240026386	0.41911764705882354	Exhaustion/dysfunction	Th2-like inflammatory T cells	Kdm6b-high
+11	Pdcd1	1.1160194422460046	0.4845814977973568	Exhaustion/dysfunction	γδ / Th17-like T cells	Intermediate
+5	Pdcd1	1.2574071286503685	0.5239477503628447	Exhaustion/dysfunction	Activated CD4 effector / helper-like T cells	Intermediate
+6	Pdcd1	0.8089434922722996	0.46353322528363045	Exhaustion/dysfunction	Antigen-presenting myeloid cells	Intermediate
+8	Pdcd1	1.610444541905713	0.6043956043956044	Exhaustion/dysfunction	Terminally differentiated cytotoxic T cells	Intermediate
+1	Pdcd1	0.7716520971470262	0.33691481197237144	Exhaustion/dysfunction	Treg	Intermediate
+0	Pdcd1	0.46466191114854244	0.17851739788199697	Exhaustion/dysfunction	Quiescent T cells	Intermediate
+7	Pdcd1	0.1464225339393101	0.05641025641025641	Exhaustion/dysfunction	Naïve / central-memory T cells	Intermediate
+10	Pdcd1	0.5144031191311451	0.2159468438538206	Exhaustion/dysfunction	IFN-responsive T cells	Kdm6b-low
+4	Pdcd1	1.0106566567814053	0.4962121212121212	Exhaustion/dysfunction	Cycling / proliferating CAR T cells	Kdm6b-low
+2	Pdcd1	0.5320759967318023	0.23226351351351351	Exhaustion/dysfunction	Activated effector CD8 T cells (stress)	Kdm6b-low
+3	Tox	0.167946677833673	0.09101941747572816	Exhaustion/dysfunction	NK-like cytotoxic lymphocytes	Kdm6b-high
+9	Tox	0.15414708540678032	0.08628318584070796	Exhaustion/dysfunction	γδ T cells	Kdm6b-high
+12	Tox	0.2076559377933465	0.10294117647058823	Exhaustion/dysfunction	Th2-like inflammatory T cells	Kdm6b-high
+11	Tox	0.21851199647465538	0.13656387665198239	Exhaustion/dysfunction	γδ / Th17-like T cells	Intermediate
+5	Tox	0.4247676117383769	0.23802612481857766	Exhaustion/dysfunction	Activated CD4 effector / helper-like T cells	Intermediate
+6	Tox	0.2402763488329175	0.20097244732576985	Exhaustion/dysfunction	Antigen-presenting myeloid cells	Intermediate
+8	Tox	0.20486241671663571	0.11648351648351649	Exhaustion/dysfunction	Terminally differentiated cytotoxic T cells	Intermediate
+1	Tox	0.3676863472165685	0.19570222563315426	Exhaustion/dysfunction	Treg	Intermediate
+0	Tox	0.12821810238219805	0.057488653555219364	Exhaustion/dysfunction	Quiescent T cells	Intermediate
+7	Tox	0.17032583809415652	0.08205128205128205	Exhaustion/dysfunction	Naïve / central-memory T cells	Intermediate
+10	Tox	0.19489341408878832	0.09966777408637874	Exhaustion/dysfunction	IFN-responsive T cells	Kdm6b-low
+4	Tox	0.40048324348273834	0.2765151515151515	Exhaustion/dysfunction	Cycling / proliferating CAR T cells	Kdm6b-low
+2	Tox	0.20871771538446451	0.10557432432432433	Exhaustion/dysfunction	Activated effector CD8 T cells (stress)	Kdm6b-low
+3	Ifit3	0.07357637781983245	0.032766990291262135	IFN response	NK-like cytotoxic lymphocytes	Kdm6b-high
+9	Ifit3	0.1533426602583238	0.06637168141592921	IFN response	γδ T cells	Kdm6b-high
+12	Ifit3	0.10779884572232466	0.051470588235294115	IFN response	Th2-like inflammatory T cells	Kdm6b-high
+11	Ifit3	0.10165249531394406	0.04405286343612335	IFN response	γδ / Th17-like T cells	Intermediate
+5	Ifit3	0.09402495137615688	0.04499274310595065	IFN response	Activated CD4 effector / helper-like T cells	Intermediate
+6	Ifit3	0.2879362604865323	0.14748784440842788	IFN response	Antigen-presenting myeloid cells	Intermediate
+8	Ifit3	0.13881704603074427	0.06593406593406594	IFN response	Terminally differentiated cytotoxic T cells	Intermediate
+1	Ifit3	0.1958086560619452	0.07828089025326171	IFN response	Treg	Intermediate
+0	Ifit3	0.2421978860006954	0.09531013615733737	IFN response	Quiescent T cells	Intermediate
+7	Ifit3	0.1326573068717389	0.05811965811965812	IFN response	Naïve / central-memory T cells	Intermediate
+10	Ifit3	2.35815983690061	0.7873754152823921	IFN response	IFN-responsive T cells	Kdm6b-low
+4	Ifit3	0.0874705360104643	0.04419191919191919	IFN response	Cycling / proliferating CAR T cells	Kdm6b-low
+2	Ifit3	0.43820888329982777	0.17314189189189189	IFN response	Activated effector CD8 T cells (stress)	Kdm6b-low
+3	Irf7	0.8032123264280797	0.33495145631067963	IFN response	NK-like cytotoxic lymphocytes	Kdm6b-high
+9	Irf7	0.6642847514119161	0.2920353982300885	IFN response	γδ T cells	Kdm6b-high
+12	Irf7	0.25657008234483214	0.11764705882352941	IFN response	Th2-like inflammatory T cells	Kdm6b-high
+11	Irf7	0.40416747877825765	0.19823788546255505	IFN response	γδ / Th17-like T cells	Intermediate
+5	Irf7	0.34123987357965724	0.17126269956458637	IFN response	Activated CD4 effector / helper-like T cells	Intermediate
+6	Irf7	0.8882604840140361	0.43111831442463533	IFN response	Antigen-presenting myeloid cells	Intermediate
+8	Irf7	0.43025484389793084	0.23296703296703297	IFN response	Terminally differentiated cytotoxic T cells	Intermediate
+1	Irf7	0.64823176222636	0.27935533384497313	IFN response	Treg	Intermediate
+0	Irf7	0.5784165628331873	0.2216338880484115	IFN response	Quiescent T cells	Intermediate
+7	Irf7	0.4637033124476455	0.19487179487179487	IFN response	Naïve / central-memory T cells	Intermediate
+10	Irf7	2.263524851048169	0.7940199335548173	IFN response	IFN-responsive T cells	Kdm6b-low
+4	Irf7	0.40851846772867545	0.21717171717171718	IFN response	Cycling / proliferating CAR T cells	Kdm6b-low
+2	Irf7	0.7577713618657573	0.3125	IFN response	Activated effector CD8 T cells (stress)	Kdm6b-low
+3	Isg15	0.24449633783915303	0.1104368932038835	IFN response	NK-like cytotoxic lymphocytes	Kdm6b-high
+9	Isg15	0.2948541494996963	0.13053097345132744	IFN response	γδ T cells	Kdm6b-high
+12	Isg15	0.3879548349062599	0.16176470588235295	IFN response	Th2-like inflammatory T cells	Kdm6b-high
+11	Isg15	0.27218540899468346	0.1277533039647577	IFN response	γδ / Th17-like T cells	Intermediate
+5	Isg15	0.3883158803472321	0.17706821480406387	IFN response	Activated CD4 effector / helper-like T cells	Intermediate
+6	Isg15	0.7054699650371623	0.3338735818476499	IFN response	Antigen-presenting myeloid cells	Intermediate
+8	Isg15	0.41859072979009154	0.2043956043956044	IFN response	Terminally differentiated cytotoxic T cells	Intermediate
+1	Isg15	0.6228994873955723	0.2563315425940138	IFN response	Treg	Intermediate
+0	Isg15	0.4101931636939151	0.1573373676248109	IFN response	Quiescent T cells	Intermediate
+7	Isg15	0.3077766252395717	0.11965811965811966	IFN response	Naïve / central-memory T cells	Intermediate
+10	Isg15	2.588148171566286	0.813953488372093	IFN response	IFN-responsive T cells	Kdm6b-low
+4	Isg15	0.4203602052965215	0.2032828282828283	IFN response	Cycling / proliferating CAR T cells	Kdm6b-low
+2	Isg15	0.48007194186918056	0.19679054054054054	IFN response	Activated effector CD8 T cells (stress)	Kdm6b-low
+3	Stat1	0.20533262682665782	0.10800970873786407	IFN response	NK-like cytotoxic lymphocytes	Kdm6b-high
+9	Stat1	0.3512360136804792	0.17920353982300885	IFN response	γδ T cells	Kdm6b-high
+12	Stat1	0.2650497232060769	0.1323529411764706	IFN response	Th2-like inflammatory T cells	Kdm6b-high
+11	Stat1	0.5149389163939041	0.28634361233480177	IFN response	γδ / Th17-like T cells	Intermediate
+5	Stat1	0.5364894895162416	0.2946298984034833	IFN response	Activated CD4 effector / helper-like T cells	Intermediate
+6	Stat1	0.5991859358280854	0.4100486223662885	IFN response	Antigen-presenting myeloid cells	Intermediate
+8	Stat1	0.6073914943307006	0.33186813186813185	IFN response	Terminally differentiated cytotoxic T cells	Intermediate
+1	Stat1	0.821507233489651	0.37989255564082886	IFN response	Treg	Intermediate
+0	Stat1	0.37364109799045336	0.1649016641452345	IFN response	Quiescent T cells	Intermediate
+7	Stat1	0.3994071177799831	0.16923076923076924	IFN response	Naïve / central-memory T cells	Intermediate
+10	Stat1	1.455738995039965	0.5813953488372093	IFN response	IFN-responsive T cells	Kdm6b-low
+4	Stat1	0.5430445364516917	0.36237373737373735	IFN response	Cycling / proliferating CAR T cells	Kdm6b-low
+2	Stat1	0.5025336665626764	0.24070945945945946	IFN response	Activated effector CD8 T cells (stress)	Kdm6b-low
+3	Ccr5	2.0280171281681247	0.6662621359223301	Chemokine responsiveness	NK-like cytotoxic lymphocytes	Kdm6b-high
+9	Ccr5	1.0397370090490154	0.3938053097345133	Chemokine responsiveness	γδ T cells	Kdm6b-high
+12	Ccr5	0.19392597681620044	0.08823529411764706	Chemokine responsiveness	Th2-like inflammatory T cells	Kdm6b-high
+11	Ccr5	0.5058889875266701	0.20704845814977973	Chemokine responsiveness	γδ / Th17-like T cells	Intermediate
+5	Ccr5	0.5309825825324489	0.22931785195936139	Chemokine responsiveness	Activated CD4 effector / helper-like T cells	Intermediate
+6	Ccr5	1.3730931142659182	0.6126418152350082	Chemokine responsiveness	Antigen-presenting myeloid cells	Intermediate
+8	Ccr5	2.0671252522274908	0.7296703296703296	Chemokine responsiveness	Terminally differentiated cytotoxic T cells	Intermediate
+1	Ccr5	1.0419703463766583	0.39370683039140447	Chemokine responsiveness	Treg	Intermediate
+0	Ccr5	0.8770286345891468	0.3154311649016641	Chemokine responsiveness	Quiescent T cells	Intermediate
+7	Ccr5	0.17702233137059262	0.07179487179487179	Chemokine responsiveness	Naïve / central-memory T cells	Intermediate
+10	Ccr5	1.1025726868966248	0.38870431893687707	Chemokine responsiveness	IFN-responsive T cells	Kdm6b-low
+4	Ccr5	0.8760843669007282	0.4078282828282828	Chemokine responsiveness	Cycling / proliferating CAR T cells	Kdm6b-low
+2	Ccr5	1.3919827866341723	0.5168918918918919	Chemokine responsiveness	Activated effector CD8 T cells (stress)	Kdm6b-low
+3	Ccr7	0.036122845477792924	0.01820388349514563	Chemokine responsiveness	NK-like cytotoxic lymphocytes	Kdm6b-high
+9	Ccr7	0.09532916209673183	0.04424778761061947	Chemokine responsiveness	γδ T cells	Kdm6b-high
+12	Ccr7	0.009812285158414194	0.007352941176470588	Chemokine responsiveness	Th2-like inflammatory T cells	Kdm6b-high
+11	Ccr7	0.08422513671511682	0.048458149779735685	Chemokine responsiveness	γδ / Th17-like T cells	Intermediate
+5	Ccr7	0.24572176420776914	0.12191582002902758	Chemokine responsiveness	Activated CD4 effector / helper-like T cells	Intermediate
+6	Ccr7	0.26277963389952247	0.19448946515397084	Chemokine responsiveness	Antigen-presenting myeloid cells	Intermediate
+8	Ccr7	0.23423461954881006	0.11648351648351649	Chemokine responsiveness	Terminally differentiated cytotoxic T cells	Intermediate
+1	Ccr7	0.17598311200254355	0.0844205679201842	Chemokine responsiveness	Treg	Intermediate
+0	Ccr7	0.15928673143690117	0.07034795763993948	Chemokine responsiveness	Quiescent T cells	Intermediate
+7	Ccr7	0.5228207571031046	0.22905982905982905	Chemokine responsiveness	Naïve / central-memory T cells	Intermediate
+10	Ccr7	0.09936446238266618	0.05647840531561462	Chemokine responsiveness	IFN-responsive T cells	Kdm6b-low
+4	Ccr7	0.1807633286955639	0.12121212121212122	Chemokine responsiveness	Cycling / proliferating CAR T cells	Kdm6b-low
+2	Ccr7	0.039709815671775936	0.022804054054054054	Chemokine responsiveness	Activated effector CD8 T cells (stress)	Kdm6b-low
+3	Cxcr3	0.15016249712433588	0.07888349514563107	Chemokine responsiveness	NK-like cytotoxic lymphocytes	Kdm6b-high
+9	Cxcr3	0.4149392869216978	0.21460176991150443	Chemokine responsiveness	γδ T cells	Kdm6b-high
+12	Cxcr3	0.012302679526931324	0.007352941176470588	Chemokine responsiveness	Th2-like inflammatory T cells	Kdm6b-high
+11	Cxcr3	0.1376377879849424	0.07488986784140969	Chemokine responsiveness	γδ / Th17-like T cells	Intermediate
+5	Cxcr3	0.38706275040310584	0.21335268505079827	Chemokine responsiveness	Activated CD4 effector / helper-like T cells	Intermediate
+6	Cxcr3	0.3826881842435488	0.26094003241491087	Chemokine responsiveness	Antigen-presenting myeloid cells	Intermediate
+8	Cxcr3	0.3478292643220633	0.21318681318681318	Chemokine responsiveness	Terminally differentiated cytotoxic T cells	Intermediate
+1	Cxcr3	0.5578117746386428	0.2601688411358404	Chemokine responsiveness	Treg	Intermediate
+0	Cxcr3	0.4747191201229361	0.2042360060514372	Chemokine responsiveness	Quiescent T cells	Intermediate
+7	Cxcr3	0.1378453310412603	0.06153846153846154	Chemokine responsiveness	Naïve / central-memory T cells	Intermediate
+10	Cxcr3	0.6071199571148107	0.2823920265780731	Chemokine responsiveness	IFN-responsive T cells	Kdm6b-low
+4	Cxcr3	0.4905466390065092	0.30303030303030304	Chemokine responsiveness	Cycling / proliferating CAR T cells	Kdm6b-low
+2	Cxcr3	0.6932220817089313	0.3217905405405405	Chemokine responsiveness	Activated effector CD8 T cells (stress)	Kdm6b-low

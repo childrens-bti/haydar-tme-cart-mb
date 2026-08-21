@@ -1,4 +1,4 @@
-subcluster	gene	mean_log_expression	detection_fraction	program	myeloid_subtype	kdm6b_group
+subcluster	gene	mean_log_expression	detection_fraction	program	subtype	kdm6b_group
 4	B2m	1.2019498271784343	0.4794682422451994	Antigen presentation	Inflammatory activated microglia	Kdm6b-high
 10	B2m	1.2532320027015484	0.5181945416375088	Antigen presentation	Perivascular macrophages (chemokine-producing)	Kdm6b-high
 0	B2m	1.2708486243356834	0.5240941352259992	Antigen presentation	Early activated microglia	Kdm6b-high

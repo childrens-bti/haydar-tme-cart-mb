@@ -1,5 +1,5 @@
 ---
-title: "18-kdm6b-myeloid-immune-programs"
+title: "18-kdm6b-immune-programs"
 author: "Bicna Song"
 date: "`r Sys.Date()`"
 output:
@@ -8,13 +8,17 @@ output:
     toc_float: TRUE
 params:
   input_rds: "cart_myeloid_subtypes.rds"
-  ranking_tsv: "kdm6b_subcluster_ranking_and_groups.tsv"
+  ranking_tsv: "myeloid_kdm6b_subcluster_ranking_and_groups.tsv"
+  subtype_label: "myeloid"
 ---
 
-This analysis evaluates antigen-presentation, inflammatory-activation, and
-T-cell-recruitment programs across myeloid subclusters. Gene-level expression
-and detection are summarized by numeric subcluster, and UCell scores are
-calculated for each myeloid cell.
+This analysis evaluates predefined immune programs across selected-compartment
+subclusters. For myeloid cells, the programs are antigen presentation,
+inflammatory activation, and T-cell recruitment. For T cells, the programs are
+cytotoxicity, expansion/proliferation, memory/stem-like, exhaustion/dysfunction,
+IFN response, and chemokine responsiveness. Gene-level expression and detection
+are summarized by numeric subcluster, and UCell scores are calculated for each
+selected-compartment cell.
 
 Program scores are summarized across all subclusters, including intermediate
 subclusters. The Kdm6b-high versus Kdm6b-low comparison excludes intermediate
@@ -39,8 +43,19 @@ suppressPackageStartupMessages({
 root_dir <- find_root(has_dir(".git"))
 data_dir <- file.path(root_dir, "data", "v5")
 analysis_dir <- file.path(root_dir, "analyses", "downstream-analyses")
-results_dir <- file.path(analysis_dir, "results", "myeloid", "kdm6b")
-plot_dir <- file.path(analysis_dir, "plots", "myeloid", "kdm6b")
+analysis_label <- params$subtype_label
+compartment_label <- dplyr::case_when(
+  analysis_label == "tcell" ~ "T-cell",
+  analysis_label == "myeloid" ~ "myeloid",
+  TRUE ~ analysis_label
+)
+subtype_col <- paste0(analysis_label, "_subtype")
+if (!analysis_label %in% c("myeloid", "tcell")) {
+  stop("subtype_label must be either myeloid or tcell.")
+}
+results_dir <- file.path(analysis_dir, "results", analysis_label, "kdm6b")
+plot_dir <- file.path(analysis_dir, "plots", analysis_label, "kdm6b")
+output_prefix <- paste0(analysis_label, "_kdm6b_immune_program_")
 
 dir.create(results_dir, recursive = TRUE, showWarnings = FALSE)
 dir.create(plot_dir, recursive = TRUE, showWarnings = FALSE)
@@ -60,22 +75,57 @@ if (length(missing_input_files) > 0) {
   stop("Missing input file(s): ", paste(missing_input_files, collapse = ", "))
 }
 
-program_levels <- c(
-  "Antigen presentation",
-  "Inflammatory activation",
-  "T-cell recruitment"
-)
-program_signatures <- list(
-  Antigen_presentation = c(
-    "H2-Ab1", "Cd74", "H2-Eb1", "B2m", "Psmb8", "Tap1", "Tapbp"
+program_signatures_by_compartment <- list(
+  myeloid = list(
+    Antigen_presentation = c(
+      "H2-Ab1", "Cd74", "H2-Eb1", "B2m", "Psmb8", "Tap1", "Tapbp"
+    ),
+    Inflammatory_activation = c(
+      "Il12b", "Ifngr1", "Stat1", "Irf1", "Irf7", "Cxcl9", "Cxcl10", "Tnf"
+    ),
+    T_cell_recruitment = c(
+      "Ccl5", "Cxcl9", "Cxcl10", "Xcl1", "Xcr1", "Ccr7", "Ccl19", "Ccl21a"
+    )
   ),
-  Inflammatory_activation = c(
-    "Il12b", "Ifngr1", "Stat1", "Irf1", "Irf7", "Cxcl9", "Cxcl10", "Tnf"
-  ),
-  T_cell_recruitment = c(
-    "Ccl5", "Cxcl9", "Cxcl10", "Xcl1", "Xcr1", "Ccr7", "Ccl19", "Ccl21a"
+  tcell = list(
+    Cytotoxicity = c(
+      "Gzmb", "Prf1", "Nkg7", "Ifng", "Ccl3", "Ccl4"
+    ),
+    Expansion_proliferation = c(
+      "Mki67", "Top2a", "Stmn1"
+    ),
+    Memory_stem_like = c(
+      "Tcf7", "Il7r", "Ccr7", "Lef1"
+    ),
+    Exhaustion_dysfunction = c(
+      "Pdcd1", "Lag3", "Havcr2", "Tox", "Entpd1"
+    ),
+    IFN_response = c(
+      "Isg15", "Ifit3", "Stat1", "Irf7"
+    ),
+    Chemokine_responsiveness = c(
+      "Cxcr3", "Ccr5", "Ccr7"
+    )
   )
 )
+program_labels_by_compartment <- list(
+  myeloid = c(
+    Antigen_presentation = "Antigen presentation",
+    Inflammatory_activation = "Inflammatory activation",
+    T_cell_recruitment = "T-cell recruitment"
+  ),
+  tcell = c(
+    Cytotoxicity = "Cytotoxicity",
+    Expansion_proliferation = "Expansion/proliferation",
+    Memory_stem_like = "Memory/stem-like",
+    Exhaustion_dysfunction = "Exhaustion/dysfunction",
+    IFN_response = "IFN response",
+    Chemokine_responsiveness = "Chemokine responsiveness"
+  )
+)
+program_signatures <- program_signatures_by_compartment[[analysis_label]]
+program_labels <- program_labels_by_compartment[[analysis_label]]
+program_levels <- unname(program_labels[names(program_signatures)])
 program_key <- tibble::tibble(
   score_name = names(program_signatures),
   program = factor(program_levels, levels = program_levels)
@@ -96,8 +146,9 @@ kdm6b_group_colors <- c(
 ## Load data and map Kdm6b groups
 
 ```{r load-data}
-myeloid_obj <- readRDS(input_file)
+obj <- readRDS(input_file)
 kdm6b_ranking <- readr::read_tsv(ranking_file, show_col_types = FALSE) %>%
+  dplyr::rename(subtype = dplyr::all_of(subtype_col)) %>%
   dplyr::mutate(
     subcluster = as.character(subcluster),
     kdm6b_group = factor(
@@ -107,17 +158,17 @@ kdm6b_ranking <- readr::read_tsv(ranking_file, show_col_types = FALSE) %>%
   )
 
 required_metadata <- c("sample", "seurat_clusters")
-required_ranking_columns <- c("subcluster", "myeloid_subtype", "kdm6b_group")
-stopifnot(all(required_metadata %in% colnames(myeloid_obj@meta.data)))
+required_ranking_columns <- c("subcluster", "subtype", "kdm6b_group")
+stopifnot(all(required_metadata %in% colnames(obj@meta.data)))
 stopifnot(all(required_ranking_columns %in% colnames(kdm6b_ranking)))
 
 if (anyDuplicated(kdm6b_ranking$subcluster)) {
   stop("Each subcluster must have one Kdm6b group assignment.")
 }
 
-observed_subclusters <- unique(as.character(myeloid_obj$seurat_clusters))
+observed_subclusters <- unique(as.character(obj$seurat_clusters))
 if (!setequal(observed_subclusters, kdm6b_ranking$subcluster)) {
-  stop("The ranking table and myeloid object contain different subclusters.")
+  stop("The ranking table and selected-compartment object contain different subclusters.")
 }
 
 subcluster_levels <- as.character(sort(as.integer(observed_subclusters)))
@@ -150,32 +201,32 @@ cluster_colors <- setNames(
   scales::hue_pal()(length(subcluster_levels)),
   subcluster_levels
 )[subcluster_plot_levels]
-myeloid_obj$seurat_clusters <- factor(
-  as.character(myeloid_obj$seurat_clusters),
+obj$seurat_clusters <- factor(
+  as.character(obj$seurat_clusters),
   levels = subcluster_plot_levels
 )
 
 group_index <- match(
-  as.character(myeloid_obj$seurat_clusters),
+  as.character(obj$seurat_clusters),
   kdm6b_ranking$subcluster
 )
 cell_kdm6b_group <- kdm6b_ranking$kdm6b_group[group_index]
 if (anyNA(cell_kdm6b_group)) {
   stop("At least one cell could not be assigned to a Kdm6b group.")
 }
-myeloid_obj$kdm6b_group <- factor(
+obj$kdm6b_group <- factor(
   cell_kdm6b_group,
   levels = kdm6b_group_levels
 )
 
-SeuratObject::DefaultAssay(myeloid_obj) <- "RNA"
+SeuratObject::DefaultAssay(obj) <- "RNA"
 log_expression <- SeuratObject::GetAssayData(
-  myeloid_obj,
+  obj,
   assay = "RNA",
   layer = "data"
 )
 raw_counts <- SeuratObject::GetAssayData(
-  myeloid_obj,
+  obj,
   assay = "RNA",
   layer = "counts"
 )
@@ -186,10 +237,10 @@ if (length(missing_genes) > 0) {
 }
 ```
 
-## Gene expression across myeloid subclusters
+## Gene expression across selected-compartment subclusters
 
 The violin plots show the distribution of log-normalized expression for each
-gene across myeloid subclusters.
+gene across selected-compartment subclusters.
 
 ```{r summarize-gene-expression}
 unique_program_genes <- unique(program_genes$gene)
@@ -197,7 +248,7 @@ unique_program_genes <- unique(program_genes$gene)
 gene_expression_by_subcluster <- dplyr::bind_rows(lapply(
   subcluster_levels,
   function(subcluster) {
-    cell_index <- which(myeloid_obj$seurat_clusters == subcluster)
+    cell_index <- which(obj$seurat_clusters == subcluster)
     tibble::tibble(
       subcluster = subcluster,
       gene = unique_program_genes,
@@ -213,7 +264,7 @@ gene_expression_by_subcluster <- dplyr::bind_rows(lapply(
   dplyr::left_join(program_genes, by = "gene", relationship = "many-to-many") %>%
   dplyr::left_join(
     kdm6b_ranking %>%
-      dplyr::select(subcluster, myeloid_subtype, kdm6b_group),
+      dplyr::select(subcluster, subtype, kdm6b_group),
     by = "subcluster"
   ) %>%
   dplyr::mutate(
@@ -225,7 +276,7 @@ gene_expression_by_subcluster <- dplyr::bind_rows(lapply(
 readr::write_tsv(
   gene_expression_by_subcluster %>%
     dplyr::select(-score_name),
-  file.path(results_dir, "myeloid_kdm6b_immune_program_genes_by_subcluster.tsv")
+  file.path(results_dir, paste0(output_prefix, "genes_by_subcluster.tsv"))
 )
 ```
 
@@ -235,7 +286,7 @@ gene_expression_long <- tibble::as_tibble(
   rownames = "cell"
 ) %>%
   dplyr::left_join(
-    myeloid_obj@meta.data %>%
+    obj@meta.data %>%
       tibble::rownames_to_column("cell") %>%
       dplyr::transmute(
         cell,
@@ -262,12 +313,12 @@ gene_expression_long <- tibble::as_tibble(
 
 gene_violin_file <- file.path(
   plot_dir,
-  "myeloid_kdm6b_immune_program_gene_violin_by_subcluster.pdf"
+  paste0(output_prefix, "gene_violin_by_subcluster.pdf")
 )
 grDevices::pdf(gene_violin_file, width = 12, height = 6, bg = "white")
 for (gene_name in unique_program_genes) {
   p_gene_violin <- VlnPlot(
-    myeloid_obj,
+    obj,
     features = gene_name,
     group.by = "seurat_clusters",
     assay = "RNA",
@@ -291,7 +342,7 @@ for (gene_name in unique_program_genes) {
       legend.position = "none"
     ) &
     labs(
-      title = paste(gene_name, "expression by myeloid subcluster"),
+      title = paste(gene_name, "expression by", compartment_label, "subcluster"),
       x = "Seurat cluster",
       y = "Log-normalized RNA expression"
     )
@@ -350,7 +401,7 @@ gene_high_low_tests <- gene_expression_by_sample_group %>%
 
 readr::write_tsv(
   gene_high_low_tests,
-  file.path(results_dir, "myeloid_kdm6b_immune_program_gene_high_vs_low.tsv")
+  file.path(results_dir, paste0(output_prefix, "gene_high_vs_low.tsv"))
 )
 ```
 
@@ -365,7 +416,7 @@ gene_boxplot_data <- gene_expression_by_sample_group %>%
 
 gene_boxplot_file <- file.path(
   plot_dir,
-  "myeloid_kdm6b_immune_program_gene_high_vs_low_boxplots.pdf"
+  paste0(output_prefix, "gene_high_vs_low_boxplots.pdf")
 )
 grDevices::pdf(gene_boxplot_file, width = 8, height = 6, bg = "white")
 gene_boxplot_labels <- gene_high_low_tests %>%
@@ -455,22 +506,22 @@ grDevices::dev.off()
 
 ## UCell program scores
 
-UCell scores are calculated for every myeloid cell. The object is not saved;
+UCell scores are calculated for every selected-compartment cell. The object is not saved;
 only sample- and subcluster-level summaries are written.
 
 ```{r calculate-ucell-scores, message=FALSE, warning=FALSE}
-myeloid_obj <- UCell::AddModuleScore_UCell(
-  myeloid_obj,
+obj <- UCell::AddModuleScore_UCell(
+  obj,
   features = program_signatures,
   name = ""
 )
 
 score_columns <- names(program_signatures)
-if (!all(score_columns %in% colnames(myeloid_obj@meta.data))) {
+if (!all(score_columns %in% colnames(obj@meta.data))) {
   stop("UCell did not create the expected score columns.")
 }
 
-cell_scores <- myeloid_obj@meta.data %>%
+cell_scores <- obj@meta.data %>%
   tibble::rownames_to_column("cell") %>%
   dplyr::select(
     cell,
@@ -502,7 +553,7 @@ ucell_by_subcluster <- cell_scores %>%
     .groups = "drop"
   ) %>%
   dplyr::left_join(
-    kdm6b_ranking %>% dplyr::select(subcluster, myeloid_subtype),
+    kdm6b_ranking %>% dplyr::select(subcluster, subtype),
     by = "subcluster"
   ) %>%
   dplyr::arrange(program, as.integer(subcluster))
@@ -546,15 +597,15 @@ ucell_high_low_tests <- ucell_by_sample_group %>%
 
 readr::write_tsv(
   ucell_by_subcluster,
-  file.path(results_dir, "myeloid_kdm6b_immune_program_ucell_by_subcluster.tsv")
+  file.path(results_dir, paste0(output_prefix, "ucell_by_subcluster.tsv"))
 )
 readr::write_tsv(
   ucell_by_sample_group,
-  file.path(results_dir, "myeloid_kdm6b_immune_program_ucell_by_sample_group.tsv")
+  file.path(results_dir, paste0(output_prefix, "ucell_by_sample_group.tsv"))
 )
 readr::write_tsv(
   ucell_high_low_tests,
-  file.path(results_dir, "myeloid_kdm6b_immune_program_ucell_high_vs_low.tsv")
+  file.path(results_dir, paste0(output_prefix, "ucell_high_vs_low.tsv"))
 )
 
 ucell_high_low_tests
@@ -569,7 +620,7 @@ ucell_violin_data <- cell_scores %>%
 
 ucell_violin_file <- file.path(
   plot_dir,
-  "myeloid_kdm6b_immune_program_ucell_violin_by_subcluster.pdf"
+  paste0(output_prefix, "ucell_violin_by_subcluster.pdf")
 )
 grDevices::pdf(ucell_violin_file, width = 12, height = 6, bg = "white")
 for (program_name in program_levels) {
@@ -599,7 +650,7 @@ for (program_name in program_levels) {
       legend.position = "none"
     ) +
     labs(
-      title = paste(program_name, "UCell score by myeloid subcluster"),
+      title = paste(program_name, "UCell score by", compartment_label, "subcluster"),
       x = "Seurat cluster",
       y = "UCell score"
     )
@@ -624,7 +675,7 @@ ucell_boxplot_data <- ucell_by_sample_group %>%
 
 ucell_boxplot_file <- file.path(
   plot_dir,
-  "myeloid_kdm6b_immune_program_ucell_high_vs_low_boxplots.pdf"
+  paste0(output_prefix, "ucell_high_vs_low_boxplots.pdf")
 )
 grDevices::pdf(ucell_boxplot_file, width = 6, height = 5, bg = "white")
 for (program_name in program_levels) {
