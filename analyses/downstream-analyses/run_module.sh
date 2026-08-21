@@ -55,11 +55,13 @@ Rscript -e "rmarkdown::render('15-kdm6b-subcluster-abundance.Rmd', params = list
 Rscript -e "rmarkdown::render('15-kdm6b-subcluster-abundance.Rmd', params = list(input_rds = 'cart_tcell_subtypes.rds', ranking_tsv = 'tcell_kdm6b_subcluster_ranking_and_groups.tsv', subtype_label = 'tcell'), output_file = '15-kdm6b-tcell-subcluster-abundance.html')"
 
 # Compare transcriptional profiles of Kdm6b-high and Kdm6b-low myeloid subclusters
-Rscript -e "rmarkdown::render('16-kdm6b-myeloid-transcriptional-comparison.Rmd')"
+Rscript -e "rmarkdown::render('16-kdm6b-transcriptional-comparison.Rmd', params = list(input_rds = 'cart_myeloid_subtypes.rds', ranking_tsv = 'myeloid_kdm6b_subcluster_ranking_and_groups.tsv', subtype_label = 'myeloid'), output_file = '16-kdm6b-myeloid-transcriptional-comparison.html')"
+
+# Compare transcriptional profiles of Kdm6b-high and Kdm6b-low T-cell subclusters
+Rscript -e "rmarkdown::render('16-kdm6b-transcriptional-comparison.Rmd', params = list(input_rds = 'cart_tcell_subtypes.rds', ranking_tsv = 'tcell_kdm6b_subcluster_ranking_and_groups.tsv', subtype_label = 'tcell'), output_file = '16-kdm6b-tcell-transcriptional-comparison.html')"
 
 # Correlate Kdm6b expression with immune-program genes across all myeloid cells
 Rscript -e "rmarkdown::render('17-kdm6b-myeloid-gene-correlations.Rmd')"
 
 # Summarize myeloid immune-program gene expression and UCell scores
 Rscript -e "rmarkdown::render('18-kdm6b-myeloid-immune-programs.Rmd')"
-
