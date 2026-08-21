@@ -1,5 +1,5 @@
 ---
-title: "15-kdm6b-myeloid-subcluster-abundance"
+title: "15-kdm6b-subcluster-abundance"
 author: "Bicna Song"
 date: "`r Sys.Date()`"
 output:
@@ -8,11 +8,12 @@ output:
     toc_float: TRUE
 params:
   input_rds: "cart_myeloid_subtypes.rds"
-  ranking_tsv: "kdm6b_subcluster_ranking_and_groups.tsv"
+  ranking_tsv: "myeloid_kdm6b_subcluster_ranking_and_groups.tsv"
+  subtype_label: "myeloid"
   condition_levels: !r c("41BB-L", "B7H3", "CD28-41BB", "CD8-41BB", "STOP", "tumor")
 ---
 
-This analysis quantifies the abundance of the 16 numeric myeloid subclusters and
+This analysis quantifies the abundance of numeric subclusters in the selected compartment and
 tests their differential abundance across treatment conditions. The sccomp model
 uses biological samples as replicates and 41BB-L as the reference condition.
 
@@ -30,8 +31,9 @@ suppressPackageStartupMessages({
 root_dir <- find_root(has_dir(".git"))
 data_dir <- file.path(root_dir, "data", "v5")
 analysis_dir <- file.path(root_dir, "analyses", "downstream-analyses")
-results_dir <- file.path(analysis_dir, "results", "myeloid", "kdm6b")
-plot_dir <- file.path(analysis_dir, "plots", "myeloid", "kdm6b")
+analysis_label <- params$subtype_label
+results_dir <- file.path(analysis_dir, "results", analysis_label, "kdm6b")
+plot_dir <- file.path(analysis_dir, "plots", analysis_label, "kdm6b")
 
 dir.create(results_dir, recursive = TRUE, showWarnings = FALSE)
 dir.create(plot_dir, recursive = TRUE, showWarnings = FALSE)
@@ -58,24 +60,39 @@ if (length(missing_input_files) > 0) {
 ## Load data
 
 ```{r load-data}
-myeloid_obj <- readRDS(input_file)
+obj <- readRDS(input_file)
 kdm6b_ranking <- readr::read_tsv(ranking_file, show_col_types = FALSE) %>%
   dplyr::mutate(subcluster = as.character(subcluster))
 
 required_metadata <- c("sample", "condition", "seurat_clusters")
+ranking_subtype_col <- paste0(analysis_label, "_subtype")
+kdm6b_ranking <- kdm6b_ranking %>%
+  dplyr::rename(subtype = dplyr::all_of(ranking_subtype_col))
+
+if (analysis_label == "tcell") {
+  kdm6b_ranking <- kdm6b_ranking %>%
+    dplyr::mutate(
+      subtype = dplyr::if_else(
+        subcluster == "4",
+        "Cycling / proliferating T cells",
+        subtype
+      )
+    )
+}
+
 required_ranking_columns <- c(
-  "subcluster", "myeloid_subtype", "kdm6b_rank", "kdm6b_group"
+  "subcluster", "subtype", "kdm6b_rank", "kdm6b_group"
 )
 
-stopifnot(all(required_metadata %in% colnames(myeloid_obj@meta.data)))
+stopifnot(all(required_metadata %in% colnames(obj@meta.data)))
 stopifnot(all(required_ranking_columns %in% colnames(kdm6b_ranking)))
 
-observed_conditions <- unique(as.character(myeloid_obj$condition))
+observed_conditions <- unique(as.character(obj$condition))
 if (!setequal(observed_conditions, condition_levels)) {
   stop("The observed treatment conditions do not match condition_levels.")
 }
 
-observed_subclusters <- unique(as.character(myeloid_obj$seurat_clusters))
+observed_subclusters <- unique(as.character(obj$seurat_clusters))
 if (!setequal(observed_subclusters, kdm6b_ranking$subcluster)) {
   stop("The ranking table and myeloid object contain different subclusters.")
 }
@@ -83,29 +100,29 @@ if (!setequal(observed_subclusters, kdm6b_ranking$subcluster)) {
 subcluster_levels <- as.character(
   sort(as.integer(observed_subclusters))
 )
-myeloid_obj$condition <- factor(
-  as.character(myeloid_obj$condition),
+obj$condition <- factor(
+  as.character(obj$condition),
   levels = condition_levels
 )
-myeloid_obj$seurat_clusters <- factor(
-  as.character(myeloid_obj$seurat_clusters),
+obj$seurat_clusters <- factor(
+  as.character(obj$seurat_clusters),
   levels = subcluster_levels
 )
 
-sample_condition_check <- myeloid_obj@meta.data %>%
+sample_condition_check <- obj@meta.data %>%
   dplyr::distinct(sample, condition) %>%
   dplyr::count(sample, name = "n_conditions")
 if (any(sample_condition_check$n_conditions != 1)) {
   stop("Each biological sample must map to exactly one condition.")
 }
 
-table(myeloid_obj$seurat_clusters, myeloid_obj$condition)
+table(obj$seurat_clusters, obj$condition)
 ```
 
-## Myeloid subcluster proportions
+## Subcluster proportions
 
 ```{r plot-subcluster-proportions, fig.width=8, fig.height=5}
-subcluster_proportions <- myeloid_obj@meta.data %>%
+subcluster_proportions <- obj@meta.data %>%
   dplyr::count(condition, cell_group = seurat_clusters, name = "n_cells") %>%
   dplyr::group_by(condition) %>%
   dplyr::mutate(proportion = n_cells / sum(n_cells)) %>%
@@ -131,7 +148,7 @@ p_subcluster_proportions <- ggplot(
 p_subcluster_proportions
 
 ggsave(
-  file.path(plot_dir, "myeloid_subcluster_proportions_stacked_barplot.png"),
+  file.path(plot_dir, paste0(analysis_label, "_subcluster_proportions_stacked_barplot.png")),
   plot = p_subcluster_proportions,
   width = 8,
   height = 5,
@@ -139,37 +156,37 @@ ggsave(
 )
 ```
 
-## All myeloid subcluster differential abundance
+## All subcluster differential abundance
 
 This model tests all 16 numeric subclusters. B7H3, CD28-41BB, CD8-41BB, STOP,
 and tumor are each compared with the 41BB-L reference condition.
 
-```{r sccomp-myeloid-subclusters, message=FALSE, warning=FALSE}
-sccomp_myeloid_subclusters <- run_sccomp_composition(
-  obj = myeloid_obj,
+```{r sccomp-subclusters, message=FALSE, warning=FALSE}
+sccomp_subclusters <- run_sccomp_composition(
+  obj = obj,
   cell_group_col = "seurat_clusters",
   condition_levels = condition_levels,
-  analysis_label = "myeloid_subcluster",
+  analysis_label = paste0(analysis_label, "_subcluster"),
   output_suffix = "41BBL_baseline",
   reference_label = "41BB-L reference",
   results_dir = results_dir
 )
 
-myeloid_subcluster_sccomp_result <- sccomp_myeloid_subclusters$result
+subcluster_sccomp_result <- sccomp_subclusters$result
 ```
 
-```{r plot-sccomp-myeloid-subclusters, fig.width=16, fig.height=9}
-p_sccomp_myeloid_subclusters <- myeloid_subcluster_sccomp_result %>%
+```{r plot-sccomp-subclusters, fig.width=16, fig.height=9}
+p_sccomp_subclusters <- subcluster_sccomp_result %>%
   sccomp::plot_1D_intervals(significance_statistic = "FDR")
 
-p_sccomp_myeloid_subclusters
+p_sccomp_subclusters
 
 ggsave(
   file.path(
     plot_dir,
-    "myeloid_subcluster_composition_sccomp_41BBL_baseline.pdf"
+    paste0(analysis_label, "_subcluster_composition_sccomp_41BBL_baseline.pdf")
   ),
-  plot = p_sccomp_myeloid_subclusters,
+  plot = p_sccomp_subclusters,
   width = 16,
   height = 9,
   bg = "white"
@@ -184,7 +201,7 @@ fitted compositional model. Effects and intervals are reoriented to report
 41BB-L relative to each comparison condition.
 
 ```{r summarize-kdm6b-high-low-subclusters}
-kdm6b_high_low_sccomp <- myeloid_subcluster_sccomp_result %>%
+kdm6b_high_low_sccomp <- subcluster_sccomp_result %>%
   dplyr::filter(parameter != "(Intercept)") %>%
   dplyr::mutate(
     cell_group = as.character(cell_group),
@@ -194,7 +211,7 @@ kdm6b_high_low_sccomp <- myeloid_subcluster_sccomp_result %>%
     kdm6b_ranking %>%
       dplyr::select(
         cell_group = subcluster,
-        myeloid_subtype,
+        subtype,
         kdm6b_rank,
         kdm6b_group
       ),
@@ -222,7 +239,7 @@ kdm6b_high_low_sccomp <- myeloid_subcluster_sccomp_result %>%
   ) %>%
   dplyr::select(
     subcluster = cell_group,
-    myeloid_subtype,
+    subtype,
     kdm6b_rank,
     kdm6b_group,
     comparison,
@@ -249,7 +266,7 @@ readr::write_tsv(
   kdm6b_high_low_sccomp,
   file.path(
     results_dir,
-    "kdm6b_high_low_subcluster_differential_abundance.tsv"
+    paste0(analysis_label, "_kdm6b_high_low_subcluster_differential_abundance.tsv")
   )
 )
 
@@ -261,7 +278,7 @@ subcluster_label_levels <- kdm6b_ranking %>%
   dplyr::filter(kdm6b_group %in% c("Kdm6b-high", "Kdm6b-low")) %>%
   dplyr::arrange(kdm6b_group, kdm6b_rank) %>%
   dplyr::transmute(
-    label = paste0("Cluster ", subcluster, ": ", myeloid_subtype)
+    label = paste0("Cluster ", subcluster, ": ", subtype)
   ) %>%
   dplyr::pull(label)
 
@@ -276,7 +293,7 @@ kdm6b_high_low_plot_data <- kdm6b_high_low_sccomp %>%
       levels = paste("41BB-L vs", condition_levels[-1])
     ),
     subcluster_label = factor(
-      paste0("Cluster ", subcluster, ": ", myeloid_subtype),
+      paste0("Cluster ", subcluster, ": ", subtype),
       levels = rev(subcluster_label_levels)
     ),
     significance_label = ifelse(c_FDR < 0.05, "*", "")
@@ -326,11 +343,12 @@ p_kdm6b_high_low_enrichment
 ggsave(
   file.path(
     plot_dir,
-    "kdm6b_high_low_subcluster_enrichment_across_conditions.pdf"
+    paste0(analysis_label, "_kdm6b_high_low_subcluster_enrichment_across_conditions.pdf")
   ),
   plot = p_kdm6b_high_low_enrichment,
   width = 10,
   height = 7,
+  device = cairo_pdf,
   bg = "white"
 )
 ```
