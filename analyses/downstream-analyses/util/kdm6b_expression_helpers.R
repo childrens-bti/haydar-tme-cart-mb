@@ -1,12 +1,11 @@
 # ==============================================================================
-# Kdm6b expression and myeloid-subcluster definition helpers
+# Kdm6b expression and subcluster definition helpers
 # Author: Bicna Song
 # Date: 2026-08-10
 #
 # Purpose:
 #   Support 14-kdm6b-expression-subcluster-definition.Rmd by creating
-#   pseudobulk summaries and defining Kdm6b-high and Kdm6b-low myeloid
-#   subcluster groups.
+#   pseudobulk summaries and defining Kdm6b-high and Kdm6b-low subcluster groups.
 #
 # ==============================================================================
 
@@ -137,30 +136,27 @@ aggregate_kdm6b_by_sample <- function(obj,
     )
 }
 
-#' Aggregate Kdm6b expression within sample-by-myeloid-subcluster profiles
+#' Aggregate Kdm6b expression within sample-by-subcluster profiles
 #'
 #' Creates one expression profile for every observed combination of biological
-#' sample and numeric myeloid subcluster. Kdm6b is summarized by detection
+#' sample and numeric subcluster. Kdm6b is summarized by detection
 #' fraction and mean log-normalized expression.
 #'
-#' @param obj Myeloid Seurat object containing joined RNA `counts` and `data`
-#'   layers plus `sample`, `condition`, `seurat_clusters`, and
-#'   `myeloid_subtype` metadata columns.
+#' @param obj Seurat object containing joined RNA `counts` and `data`
+#'   layers plus `sample`, `condition`, `seurat_clusters`, and `subtype`
+#'   metadata columns.
 #' @param condition_levels Character vector defining allowed treatment
 #'   conditions and their factor order.
 #' @param gene Gene symbol to summarize. Defaults to `"Kdm6b"`.
 #'
 #' @return Tibble with one row per observed sample/subcluster combination,
 #'   including cell count, detection fraction, and mean expression.
-#'
-#' @details Numeric `seurat_clusters` are retained rather than collapsed to
-#'   `myeloid_subtype`, because multiple numeric clusters can share one named
-#'   subtype while having different Kdm6b expression.
 aggregate_kdm6b_by_sample_cluster <- function(obj,
                                               condition_levels,
-                                              gene = "Kdm6b") {
+                                              gene = "Kdm6b",
+                                              subtype_col) {
   required_metadata <- c(
-    "sample", "condition", "seurat_clusters", "myeloid_subtype"
+    "sample", "condition", "seurat_clusters", subtype_col
   )
   stopifnot(all(required_metadata %in% colnames(obj@meta.data)))
   stopifnot(gene %in% rownames(obj))
@@ -173,7 +169,7 @@ aggregate_kdm6b_by_sample_cluster <- function(obj,
   )
 
   if (anyNA(condition_factor)) {
-    stop("At least one myeloid cell has a condition outside condition_levels.")
+    stop("At least one cell has a condition outside condition_levels.")
   }
 
   obj@meta.data %>%
@@ -181,13 +177,11 @@ aggregate_kdm6b_by_sample_cluster <- function(obj,
       sample = as.character(sample),
       condition = condition_factor,
       subcluster = as.character(seurat_clusters),
-      myeloid_subtype = as.character(myeloid_subtype),
+      !!subtype_col := as.character(obj@meta.data[[subtype_col]]),
       kdm6b_detected = as.numeric(counts[gene, ]) > 0,
       kdm6b_log_expression = as.numeric(log_data[gene, ])
     ) %>%
-    dplyr::group_by(
-      sample, condition, subcluster, myeloid_subtype
-    ) %>%
+    dplyr::group_by(sample, condition, subcluster, .data[[subtype_col]]) %>%
     dplyr::summarise(
       n_cells = dplyr::n(),
       kdm6b_detection_fraction = mean(kdm6b_detected),
@@ -197,7 +191,7 @@ aggregate_kdm6b_by_sample_cluster <- function(obj,
     dplyr::arrange(as.integer(subcluster), condition, sample)
 }
 
-#' Rank myeloid subclusters and assign Kdm6b groups
+#' Rank subclusters and assign Kdm6b groups
 #'
 #' Ranks numeric subclusters by the median, across samples, of mean
 #' log-normalized Kdm6b expression. Each qualifying sample/subcluster profile
@@ -215,12 +209,13 @@ aggregate_kdm6b_by_sample_cluster <- function(obj,
 #'   summaries, sample and condition counts, rank, and `kdm6b_group`.
 rank_kdm6b_subclusters <- function(sample_cluster_table,
                                    min_cells_per_profile = 20,
-                                   tail_fraction = 0.25) {
+                                   tail_fraction = 0.25,
+                                   subtype_col) {
   stopifnot(tail_fraction > 0, tail_fraction < 0.5)
   stopifnot(min_cells_per_profile > 0)
 
   cluster_totals <- sample_cluster_table %>%
-    dplyr::group_by(subcluster, myeloid_subtype) %>%
+    dplyr::group_by(subcluster, .data[[subtype_col]]) %>%
     dplyr::summarise(
       total_cells = sum(n_cells),
       .groups = "drop"
@@ -228,7 +223,7 @@ rank_kdm6b_subclusters <- function(sample_cluster_table,
 
   ranking <- sample_cluster_table %>%
     dplyr::filter(n_cells >= min_cells_per_profile) %>%
-    dplyr::group_by(subcluster, myeloid_subtype) %>%
+    dplyr::group_by(subcluster, .data[[subtype_col]]) %>%
     dplyr::summarise(
       n_sample_profiles = dplyr::n(),
       n_conditions = dplyr::n_distinct(condition),
@@ -252,7 +247,7 @@ rank_kdm6b_subclusters <- function(sample_cluster_table,
       ),
       .groups = "drop"
     ) %>%
-    dplyr::right_join(cluster_totals, by = c("subcluster", "myeloid_subtype")) %>%
+    dplyr::right_join(cluster_totals, by = c("subcluster", subtype_col)) %>%
     dplyr::mutate(
       n_sample_profiles = dplyr::coalesce(n_sample_profiles, 0L),
       n_conditions = dplyr::coalesce(n_conditions, 0L)
