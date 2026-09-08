@@ -143,10 +143,15 @@ RUN apt-get update && apt-get -y --no-install-recommends install \
 RUN R -e 'remotes::install_version("hdf5r", version = "1.3.10", type = "source", upgrade = "never")'
 # SeuratExtend 1.2.10
 RUN R -e 'remotes::install_github("huayc09/SeuratExtend", ref = "f567d9c22a43ac538aedca0e4630421a23bd568f", dependencies = TRUE, upgrade = "never")'
-# loupeR 1.1.5: exports Seurat objects to 10x Genomics .cloupe files. The
-# louper executable is installed separately via loupeR::setup(), which has an
-# interactive 10x licence-acceptance flow and is therefore not run at build time.
+# loupeR 1.1.5: exports Seurat objects to 10x Genomics .cloupe files.
 RUN R -e 'remotes::install_github("10XGenomics/loupeR", ref = "d8d4ad6176b07f0486d3266c5fb9ea9ecd5b24c0", dependencies = TRUE, upgrade = "never")'
+
+# loupeR's louper binary and EULA marker default to a per-user R data directory.
+# Use a shared, read-only-at-runtime location so the Rocker rstudio user can use
+# the binary installed during the root-owned image build. AUTO_ACCEPT_EULA=true
+# records the image maintainer's acceptance of the 10x EULA during the build.
+ENV LOUPER_USER_DATA_DIR=/opt/loupeR
+RUN AUTO_ACCEPT_EULA=true R --vanilla -e 'loupeR::setup()'
 
 RUN R -e 'expected_versions <- c( \
             remotes = "2.5.0", BiocManager = "1.30.23", \
