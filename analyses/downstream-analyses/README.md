@@ -19,6 +19,7 @@
 11. `11-tcell-composition-analysis.Rmd`: performs refined T cell subtype composition analysis using sccomp with 41BB-L and tumor as the baseline references and generates composition plots.
 12. `12-tcell-cd4-cd8-annotation.Rmd`: identifies clean CD4-like and CD8-like T cells using marker expression and ScGate support, adds ProjecTILs and cluster-level annotations, calculates AUCell program scores, and saves prepared CD4-like and CD8-like Seurat objects.
 13. `13-tcell-cd4-cd8-slingshot.Rmd`: loads the prepared objects, runs condition-specific and all-condition Slingshot analyses, caches successful trajectory inference, and generates pseudotime, lineage, gene-trend, and AUCell program outputs.
+19. `19-generate-loupe-files.R`: exports the finalized all-cell, myeloid, and T-cell Seurat objects as Loupe Browser `.cloupe` files, with descriptive annotations and paired PCA/UMAP coordinate tables.
 
 ## Analysis module directory structure
 
