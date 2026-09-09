@@ -20,18 +20,33 @@ dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
 
 export_specs <- list(
   list(
+    export_name = "all_cells",
     object_path = file.path(root_dir, "data", "v5", "cart_annotated.rds"),
-    annotation_column = "cell_type",
+    metadata_columns = c(
+      "sample", "condition", "cell_type", "general_label", "immgen_label",
+      "seurat_clusters"
+    ),
+    identity_column = "cell_type",
     output_stem = "cart_all_cells"
   ),
   list(
+    export_name = "myeloid",
     object_path = file.path(root_dir, "data", "v5", "cart_myeloid_subtypes.rds"),
-    annotation_column = "myeloid_subtype",
+    metadata_columns = c(
+      "sample", "condition", "cell_type", "general_label", "immgen_label",
+      "seurat_clusters", "myeloid_subtype"
+    ),
+    identity_column = "myeloid_subtype",
     output_stem = "cart_myeloid_subtypes"
   ),
   list(
+    export_name = "tcell",
     object_path = file.path(root_dir, "data", "v5", "cart_tcell_subtypes.rds"),
-    annotation_column = "tcell_subtype",
+    metadata_columns = c(
+      "sample", "condition", "cell_type", "general_label", "immgen_label",
+      "seurat_clusters", "tcell_subtype"
+    ),
+    identity_column = "tcell_subtype",
     output_stem = "cart_tcell_subtypes"
   )
 )
@@ -70,20 +85,32 @@ export_loupe <- function(specification) {
   # loupeR exports the active assay's counts layer.  Force the raw RNA assay
   # here so integrated, normalized, and scaled values are never exported.
   DefaultAssay(object) <- "RNA"
-  if (!specification$annotation_column %in% colnames(object[[]])) {
+  missing_metadata_columns <- setdiff(
+    specification$metadata_columns,
+    colnames(object[[]])
+  )
+  if (length(missing_metadata_columns) > 0) {
     stop(
-      "Missing descriptive annotation column '",
-      specification$annotation_column, "' in ", specification$object_path
+      "Missing metadata column(s) in ", specification$object_path, ": ",
+      paste(missing_metadata_columns, collapse = ", ")
     )
   }
 
-  annotation <- as.character(object[[specification$annotation_column]][, 1])
-  if (anyNA(annotation) || any(!nzchar(annotation))) {
+  metadata <- object[[]][, specification$metadata_columns, drop = FALSE]
+  metadata[] <- lapply(metadata, as.character)
+  invalid_metadata_columns <- names(metadata)[vapply(
+    metadata,
+    function(x) anyNA(x) || any(!nzchar(x)),
+    logical(1)
+  )]
+  if (length(invalid_metadata_columns) > 0) {
     stop(
-      "Annotation column '", specification$annotation_column,
-      "' contains missing or empty labels"
+      "Metadata column(s) contain missing or empty labels: ",
+      paste(invalid_metadata_columns, collapse = ", ")
     )
   }
+  primary_annotation_column <- specification$identity_column
+  annotation <- metadata[[primary_annotation_column]]
 
   pca_embeddings <- validate_reduction(object, "pca", minimum_dimensions = 2)
   umap_embeddings <- validate_reduction(object, "umap", minimum_dimensions = 2)
@@ -102,7 +129,7 @@ export_loupe <- function(specification) {
     pca_2 = pca_embeddings[, 2],
     umap_1 = umap_embeddings[rownames(pca_embeddings), 1],
     umap_2 = umap_embeddings[rownames(pca_embeddings), 2],
-    cluster = annotation[match(rownames(pca_embeddings), rownames(object[[]]))],
+    metadata[match(rownames(pca_embeddings), rownames(metadata)), , drop = FALSE],
     check.names = FALSE
   )
   coordinate_path <- file.path(
@@ -125,14 +152,16 @@ export_loupe <- function(specification) {
     assay = DefaultAssay(object)
   )
   Idents(object) <- factor(annotation)
-  object[[specification$annotation_column]] <- factor(annotation)
+  for (metadata_column in specification$metadata_columns) {
+    object[[metadata_column]] <- factor(metadata[[metadata_column]])
+  }
 
   create_loupe_from_seurat(
     obj = object,
     output_dir = output_dir,
     output_name = specification$output_stem,
-    metadata_cols = specification$annotation_column,
-    dedup_clusters = TRUE
+    metadata_cols = specification$metadata_columns,
+    dedup_clusters = FALSE
   )
 
   message("Created: ", loupe_path)
