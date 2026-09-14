@@ -229,14 +229,15 @@ export_loupe <- function(specification) {
     row.names = FALSE, na = ""
   )
 
-  # loupeR serializes only two-dimensional reductions.  Retain PC1/PC2 under
-  # the standard 'pca' name in this in-memory export copy and leave the source
-  # RDS unchanged; UMAP is already two dimensional.
-  object[["pca"]] <- CreateDimReducObject(
-    embeddings = pca_embeddings[, 1:2, drop = FALSE],
-    key = "PC_",
-    assay = DefaultAssay(object)
-  )
+  # PCA remains available in the coordinate table, but is omitted from the
+  # Cloupe file so the subtype-specific UMAP is the only projection on open.
+  object[["pca"]] <- NULL
+  # The inherited merged UMAP is not valid after subset-specific reprocessing.
+  # Keep only the recomputed `umap` reduction so Loupe has one unambiguous UMAP
+  # projection for each myeloid or T-cell export.
+  if ("merged_umap" %in% Reductions(object)) {
+    object[["merged_umap"]] <- NULL
+  }
   Idents(object) <- factor(annotation)
   for (metadata_column in specification$metadata_columns) {
     object[[metadata_column]] <- factor(metadata[[metadata_column]])
