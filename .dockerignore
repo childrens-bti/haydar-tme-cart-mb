@@ -1,0 +1,5 @@
+# The image only copies the Dockerfile (ADD Dockerfile .), so keep everything
+# else, including data/, analysis outputs, and git history, out of the build
+# context.
+*
+!Dockerfile

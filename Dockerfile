@@ -19,17 +19,19 @@ RUN apt-get update -qq && apt-get -y --no-install-recommends install \
     libxml2-dev \
     libmagick++-dev
 
-# libmagick++-dev is needed for coloblindr to install
-RUN apt-get -y --no-install-recommends install \
+# libmagick++-dev is needed for colorblindr to install
+RUN apt-get update && apt-get -y --no-install-recommends install \
     libgdal-dev \
     libudunits2-dev \
-    libmagick++-dev \
     libgsl27 \
-    libgsl-dev
+    libgsl-dev \
+    libmagick++-dev \
+ && rm -rf /var/lib/apt/lists/*
 
 # Required for installing pdftools, which is a dependency of gridGraphics
-RUN apt-get -y --no-install-recommends install \
-    libpoppler-cpp-dev
+RUN apt-get update && apt-get -y --no-install-recommends install \
+    libpoppler-cpp-dev \
+ && rm -rf /var/lib/apt/lists/*
 
 # Install java
 RUN apt-get update && apt-get -y --no-install-recommends install \
