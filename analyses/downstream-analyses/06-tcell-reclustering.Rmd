@@ -29,9 +29,13 @@ data_dir <- file.path(root_dir, "data", "v5")
 analysis_dir <- file.path(root_dir, "analyses", "downstream-analyses")
 results_dir <- file.path(analysis_dir, "results", "tcell")
 plot_dir <- file.path(analysis_dir, "plots", "tcell")
+gsea_results_dir <- file.path(results_dir, "GSEA")
+gsea_plot_dir <- file.path(plot_dir, "GSEA")
 
 dir.create(results_dir, recursive = TRUE, showWarnings = FALSE)
 dir.create(plot_dir, recursive = TRUE, showWarnings = FALSE)
+dir.create(gsea_results_dir, recursive = TRUE, showWarnings = FALSE)
+dir.create(gsea_plot_dir, recursive = TRUE, showWarnings = FALSE)
 
 # Source custom theme
 source(file.path(root_dir, "figures", "theme.R"))
@@ -379,7 +383,7 @@ new_cluster_ids <- c(
   "1"  = "Treg",
   "2"  = "Activated effector CD8 T cells (stress)",
   "3"  = "NK-like cytotoxic lymphocytes",
-  "4"  = "Cycling / proliferating CAR T cells",
+  "4"  = "Cycling / proliferating T cells",
   "5"  = "Activated CD4 effector / helper-like T cells",
   "6"  = "Antigen-presenting myeloid cells",
   "7"  = "Naïve / central-memory T cells",
@@ -481,7 +485,7 @@ hallmark_pathways <- msigdbr(species = "Mus musculus", category = "H") %>%
 length(hallmark_pathways)
 ```
 
-## Pseudobulk GSEA: each tcell_subtype vs rest
+## Pseudobulk GSEA
 
 ```{r}
 make_safe_filename <- function(x) {
@@ -552,8 +556,100 @@ for (subtype in subtype_levels) {
     out_prefix = paste0("pseudobulk_", out_prefix),
     subtype_label = subtype_label,
     subtype_title = "T cell",
-    results_dir = results_dir,
-    plot_dir = plot_dir,
+    results_dir = gsea_results_dir,
+    plot_dir = gsea_plot_dir,
+    minSize = 15,
+    maxSize = 500,
+    volcano_lfc_cutoff = 1,
+    volcano_p_cutoff = 0.05,
+    gsea_p_cutoff = 0.05
+  )
+}
+```
+
+## Treatment-level comparisons
+
+Raw counts are aggregated within each biological sample before DESeq2 and
+Hallmark GSEA. Each treatment is compared with all other treatments, and CAR
+conditions are also compared with the other CAR conditions.
+
+```{r treatment-pseudobulk-gsea, message=FALSE, warning=FALSE}
+cell_metadata <- tcell_obj@meta.data %>%
+  dplyr::transmute(
+    sample = as.character(sample),
+    condition = as.character(condition)
+  )
+
+sample_metadata <- cell_metadata %>%
+  dplyr::distinct(sample, condition)
+if (anyDuplicated(sample_metadata$sample)) {
+  stop("Each sample must map to exactly one condition.")
+}
+
+all_conditions <- condition_levels[
+  condition_levels %in% unique(sample_metadata$condition)
+]
+car_levels <- intersect(
+  c("41BB-L", "B7H3", "CD28-41BB", "CD8-41BB"),
+  all_conditions
+)
+
+treatment_pb_counts <- Matrix::t(
+  rowsum(Matrix::t(counts), group = cell_metadata$sample)
+)
+treatment_coldata <- sample_metadata %>%
+  tibble::as_tibble() %>%
+  dplyr::mutate(condition = factor(condition, levels = all_conditions)) %>%
+  dplyr::arrange(condition, sample) %>%
+  tibble::column_to_rownames("sample")
+treatment_pb_counts <- treatment_pb_counts[, rownames(treatment_coldata), drop = FALSE]
+
+treatment_vs_rest_gsea_results <- list()
+for (condition in all_conditions) {
+  treatment_vs_rest_gsea_results[[condition]] <- run_pseudobulk_contrast(
+    pb_counts = treatment_pb_counts,
+    coldata = treatment_coldata,
+    case_condition = condition,
+    ref_conditions = setdiff(all_conditions, condition),
+    ref_label = "rest",
+    hallmark_pathways = hallmark_pathways,
+    out_prefix = paste0("pseudobulk_", condition, "_vs_rest"),
+    subtype_label = subtype_label,
+    subtype_title = "T cell",
+    results_dir = gsea_results_dir,
+    plot_dir = gsea_plot_dir,
+    minSize = 15,
+    maxSize = 500,
+    volcano_lfc_cutoff = 1,
+    volcano_p_cutoff = 0.05,
+    gsea_p_cutoff = 0.05
+  )
+}
+
+treatment_vs_car_gsea_results <- list()
+for (condition in all_conditions) {
+  if (condition %in% car_levels) {
+    reference_conditions <- setdiff(car_levels, condition)
+    reference_label <- "otherCAR"
+    comparison_label <- paste0(condition, "_vs_otherCAR")
+  } else {
+    reference_conditions <- car_levels
+    reference_label <- "allCAR"
+    comparison_label <- paste0(condition, "_vs_allCAR")
+  }
+
+  treatment_vs_car_gsea_results[[condition]] <- run_pseudobulk_contrast(
+    pb_counts = treatment_pb_counts,
+    coldata = treatment_coldata,
+    case_condition = condition,
+    ref_conditions = reference_conditions,
+    ref_label = reference_label,
+    hallmark_pathways = hallmark_pathways,
+    out_prefix = paste0("pseudobulk_", comparison_label),
+    subtype_label = subtype_label,
+    subtype_title = "T cell",
+    results_dir = gsea_results_dir,
+    plot_dir = gsea_plot_dir,
     minSize = 15,
     maxSize = 500,
     volcano_lfc_cutoff = 1,

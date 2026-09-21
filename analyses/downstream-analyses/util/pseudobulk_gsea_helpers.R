@@ -18,6 +18,7 @@ format_contrast_title <- function(out_prefix) {
   out_prefix %>%
     str_remove("^pseudobulk_") %>%
     str_replace_all("_vs_", " vs ") %>%
+    str_replace_all("_", " ") %>%
     str_replace_all("otherCAR", "other CARs") %>%
     str_replace_all("allCAR", "all CARs")
 }
@@ -68,8 +69,9 @@ plot_volcano <- function(df,
     widthConnectors = 0.4,
     colConnectors = "black",
     max.overlaps = Inf,
-    titleLabSize = 10
-  )
+    titleLabSize = 16
+  ) +
+    theme(plot.title = element_text(size = 16, face = "plain", hjust = 0.5))
 }
 
 # GSEA dotplot (activated vs suppressed)
