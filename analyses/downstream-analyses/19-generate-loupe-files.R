@@ -18,6 +18,13 @@ set.seed(1234)
 output_dir <- file.path(root_dir, "analyses", "downstream-analyses", "results", "loupe")
 dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
 
+# KDM6B cluster assignments are maintained with the canonical remodeling
+# workflow in haydar-ad-hoc rather than in this repository's retired
+# downstream-analysis outputs.
+kdm6b_module_dir <- file.path(
+  root_dir, "external", "haydar-ad-hoc", "analyses", "kdm6b-remodeling"
+)
+
 export_specs <- list(
   list(
     export_name = "all_cells",
@@ -38,7 +45,7 @@ export_specs <- list(
     ),
     identity_column = "myeloid_subtype",
     kdm6b_ranking_path = file.path(
-      root_dir, "analyses", "downstream-analyses", "results", "myeloid",
+      kdm6b_module_dir, "results", "myeloid",
       "kdm6b", "myeloid_kdm6b_subcluster_ranking_and_groups.tsv"
     ),
     output_stem = "cart_myeloid_subtypes"
@@ -52,7 +59,7 @@ export_specs <- list(
     ),
     identity_column = "tcell_subtype",
     kdm6b_ranking_path = file.path(
-      root_dir, "analyses", "downstream-analyses", "results", "tcell",
+      kdm6b_module_dir, "results", "tcell",
       "kdm6b", "tcell_kdm6b_subcluster_ranking_and_groups.tsv"
     ),
     output_stem = "cart_tcell_subtypes"

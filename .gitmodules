@@ -1,0 +1,4 @@
+[submodule "external/haydar-ad-hoc"]
+	path = external/haydar-ad-hoc
+	url = https://github.com/childrens-bti/haydar-ad-hoc.git
+	branch = main
