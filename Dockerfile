@@ -19,17 +19,19 @@ RUN apt-get update -qq && apt-get -y --no-install-recommends install \
     libxml2-dev \
     libmagick++-dev
 
-# libmagick++-dev is needed for coloblindr to install
-RUN apt-get -y --no-install-recommends install \
+# libmagick++-dev is needed for colorblindr to install
+RUN apt-get update && apt-get -y --no-install-recommends install \
     libgdal-dev \
     libudunits2-dev \
-    libmagick++-dev \
     libgsl27 \
-    libgsl-dev
+    libgsl-dev \
+    libmagick++-dev \
+ && rm -rf /var/lib/apt/lists/*
 
 # Required for installing pdftools, which is a dependency of gridGraphics
-RUN apt-get -y --no-install-recommends install \
-    libpoppler-cpp-dev
+RUN apt-get update && apt-get -y --no-install-recommends install \
+    libpoppler-cpp-dev \
+ && rm -rf /var/lib/apt/lists/*
 
 # Install java
 RUN apt-get update && apt-get -y --no-install-recommends install \
@@ -143,6 +145,15 @@ RUN apt-get update && apt-get -y --no-install-recommends install \
 RUN R -e 'remotes::install_version("hdf5r", version = "1.3.10", type = "source", upgrade = "never")'
 # SeuratExtend 1.2.10
 RUN R -e 'remotes::install_github("huayc09/SeuratExtend", ref = "f567d9c22a43ac538aedca0e4630421a23bd568f", dependencies = TRUE, upgrade = "never")'
+# loupeR 1.1.5: exports Seurat objects to 10x Genomics .cloupe files.
+RUN R -e 'remotes::install_github("10XGenomics/loupeR", ref = "d8d4ad6176b07f0486d3266c5fb9ea9ecd5b24c0", dependencies = TRUE, upgrade = "never")'
+
+# loupeR's louper binary and EULA marker default to a per-user R data directory.
+# Use a shared, read-only-at-runtime location so the Rocker rstudio user can use
+# the binary installed during the root-owned image build. AUTO_ACCEPT_EULA=true
+# records the image maintainer's acceptance of the 10x EULA during the build.
+ENV LOUPER_USER_DATA_DIR=/opt/loupeR
+RUN AUTO_ACCEPT_EULA=true R --vanilla -e 'loupeR::setup()'
 
 RUN R -e 'expected_versions <- c( \
             remotes = "2.5.0", BiocManager = "1.30.23", \
@@ -162,7 +173,8 @@ RUN R -e 'expected_versions <- c( \
             colorblindr = "0.1.0", patchwork = "1.3.2.9000", DoubletFinder = "2.0.6", \
             presto = "1.0.0", sccomp = "2.1.30", miloR = "2.9.1", \
             STACAS = "2.4.1", ProjecTILs = "3.7.0", \
-            cmdstanr = "0.9.0", hdf5r = "1.3.10", SeuratExtend = "1.2.10" \
+            cmdstanr = "0.9.0", hdf5r = "1.3.10", SeuratExtend = "1.2.10", \
+            loupeR = "1.1.5" \
           ); \
           expected_sha <- c( \
             colorblindr = "1ac3d4d62dad047b68bb66c06cee927a4517d678", \
@@ -174,7 +186,8 @@ RUN R -e 'expected_versions <- c( \
             STACAS = "ea34e824e17df6316823db0a9b6322af0833e501", \
             ProjecTILs = "1159e1778820180fd0233bbfc0d7f296e35bd25f", \
             cmdstanr = "da99e2ba954658bdad63bffb738c4444c33a4e0e", \
-            SeuratExtend = "f567d9c22a43ac538aedca0e4630421a23bd568f" \
+            SeuratExtend = "f567d9c22a43ac538aedca0e4630421a23bd568f", \
+            loupeR = "d8d4ad6176b07f0486d3266c5fb9ea9ecd5b24c0" \
           ); \
           version_failed <- names(expected_versions)[!vapply(names(expected_versions), function(pkg) requireNamespace(pkg, quietly = TRUE) && identical(packageDescription(pkg)$Version, expected_versions[[pkg]]), logical(1))]; \
           sha_failed <- names(expected_sha)[!vapply(names(expected_sha), function(pkg) identical(packageDescription(pkg)$RemoteSha, expected_sha[[pkg]]), logical(1))]; \
