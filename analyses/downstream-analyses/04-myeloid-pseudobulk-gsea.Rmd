@@ -114,6 +114,10 @@ table(coldata$condition)
 
 ## 1) Each condition vs rest
 
+GSEA dot plots show normalized enrichment scores and total Hallmark gene-set
+size. They use adjusted p-values when at least one pathway passes the adjusted
+threshold; otherwise, they use nominal p-values for an exploratory summary.
+
 ```{r each-condition-vs-rest, message=FALSE, warning=FALSE}
 pb_rest_results <- list()
 

@@ -11,7 +11,7 @@
 
 <meta name="author" content="Bicna Song" />
 
-<meta name="date" content="2026-09-21" />
+<meta name="date" content="2026-09-22" />
 
 <title>06-tcell-reclustering.Rmd</title>
 
@@ -352,7 +352,7 @@ display: none;
 
 <h1 class="title toc-ignore">06-tcell-reclustering.Rmd</h1>
 <h4 class="author">Bicna Song</h4>
-<h4 class="date">2026-09-21</h4>
+<h4 class="date">2026-09-22</h4>
 
 </div>
 
@@ -938,15 +938,26 @@ p_prop</code></pre>
   split(x = .$gene_symbol, f = .$gs_name)</code></pre>
 <pre><code>## Using human MSigDB with ortholog mapping to mouse. Use `db_species = &quot;MM&quot;` for mouse-native gene sets.
 ## This message is displayed once per session.</code></pre>
-<pre><code>## Warning: The `category` argument of `msigdbr()` is deprecated as of msigdbr 10.0.0.
-## ℹ Please use the `collection` argument instead.
-## This warning is displayed once every 8 hours.
-## Call `lifecycle::last_lifecycle_warnings()` to see where this warning was generated.</code></pre>
+<pre><code>## Warning: The `category` argument of
+## `msigdbr()` is deprecated as of
+## msigdbr 10.0.0.
+## ℹ Please use the `collection`
+##   argument instead.
+## This warning is displayed once
+## every 8 hours.
+## Call
+## `lifecycle::last_lifecycle_warnings()`
+## to see where this warning was
+## generated.</code></pre>
 <pre class="r"><code>length(hallmark_pathways)</code></pre>
 <pre><code>## [1] 50</code></pre>
 </div>
 <div id="pseudobulk-gsea" class="section level2">
 <h2>Pseudobulk GSEA</h2>
+<p>GSEA dot plots show normalized enrichment scores and total Hallmark
+gene-set size. They use adjusted p-values when at least one pathway
+passes the adjusted threshold; otherwise, they use nominal p-values for
+an exploratory summary.</p>
 <pre class="r"><code>make_safe_filename &lt;- function(x) {
   x %&gt;%
     stringr::str_replace_all(&quot;γδ&quot;, &quot;gamma_delta&quot;) %&gt;%      # explicit handling
