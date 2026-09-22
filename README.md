@@ -18,12 +18,6 @@ cloning:
 git submodule update --init --recursive
 ```
 
-From this repository root inside the project container, run:
-
-```
-bash analyses/kdm6b-remodeling/run-kdm6b-remodeling.sh
-```
-
 1. Clone the repository
 ```
 git clone git@github.com:childrens-bti/haydar-scrna.git
