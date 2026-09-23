@@ -34,6 +34,7 @@ suppressPackageStartupMessages({
 })
 
 root_dir <- find_root(has_dir(".git"))
+data_dir <- file.path(root_dir, "data", "v5")
 analysis_dir <- file.path(root_dir, "analyses", "downstream-analyses")
 results_dir <- file.path(analysis_dir, "results", "tcell")
 plot_dir <- file.path(analysis_dir, "plots", "tcell")
@@ -76,9 +77,20 @@ cat("Save native miloR neighborhood graphs:", save_neighborhood_graphs, "\n")
 ```
 
 ## Load T Cell Object
-This block loads the refined T cell Seurat object from the downstream results folder and checks that required metadata is present.
+This block prefers the refined T cell Seurat object from the downstream results folder and falls back to `data/v5` if that copy is unavailable. It then checks that required metadata is present.
 ```{r load-data}
-obj <- readRDS(file.path(results_dir, input_rds))
+results_input_path <- file.path(results_dir, input_rds)
+v5_input_path <- file.path(data_dir, input_rds)
+input_path <- if (file.exists(results_input_path)) {
+  results_input_path
+} else if (file.exists(v5_input_path)) {
+  v5_input_path
+} else {
+  stop("Input RDS was not found in results/tcell or data/v5: ", input_rds)
+}
+
+cat("Reading:", input_path, "\n")
+obj <- readRDS(input_path)
 
 stopifnot(cell_group_col %in% colnames(obj@meta.data))
 stopifnot("sample" %in% colnames(obj@meta.data))

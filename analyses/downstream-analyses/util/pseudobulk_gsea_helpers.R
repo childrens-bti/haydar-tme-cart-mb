@@ -18,6 +18,7 @@ format_contrast_title <- function(out_prefix) {
   out_prefix %>%
     str_remove("^pseudobulk_") %>%
     str_replace_all("_vs_", " vs ") %>%
+    str_replace_all("_", " ") %>%
     str_replace_all("otherCAR", "other CARs") %>%
     str_replace_all("allCAR", "all CARs")
 }
@@ -68,25 +69,37 @@ plot_volcano <- function(df,
     widthConnectors = 0.4,
     colConnectors = "black",
     max.overlaps = Inf,
-    titleLabSize = 10
-  )
+    titleLabSize = 16
+  ) +
+    theme(plot.title = element_text(size = 16, face = "plain", hjust = 0))
 }
 
-# GSEA dotplot (activated vs suppressed)
+# GSEA dotplot using normalized enrichment score. Adjusted p-values are used
+# when at least one pathway passes the threshold; otherwise, use nominal
+# p-values to retain an exploratory summary.
 plot_gsea_dot <- function(gsea_df,
                           title = NULL,
+                          case_label,
+                          reference_label,
                           p_cutoff = 0.05,
                           top_n = 10,
-                          use_p = c("pval", "padj")) {
-  use_p <- match.arg(use_p)
-  stopifnot(all(c("pathway", "NES", use_p, "size") %in% colnames(gsea_df)))
+                          use_p = NULL) {
+  stopifnot(all(c("pathway", "NES", "pval", "padj", "size") %in% colnames(gsea_df)))
+
+  if (is.null(use_p)) {
+    use_p <- if (any(gsea_df$padj <= p_cutoff, na.rm = TRUE)) "padj" else "pval"
+  } else {
+    use_p <- match.arg(use_p, c("pval", "padj"))
+  }
+  p_label <- if (identical(use_p, "padj")) "Adjusted p-value" else "Nominal p-value"
   
   df <- gsea_df %>%
     mutate(
       p = .data[[use_p]],
-      direction = ifelse(NES >= 0, "activated", "suppressed"),
-      Count = if ("leadingEdge" %in% colnames(gsea_df)) lengths(leadingEdge) else NA_integer_,
-      GeneRatio = if ("leadingEdge" %in% colnames(gsea_df)) (lengths(leadingEdge) / size) else NA_real_,
+      direction = factor(
+        ifelse(NES >= 0, paste(case_label, "enriched"), paste(reference_label, "enriched")),
+        levels = c(paste(case_label, "enriched"), paste(reference_label, "enriched"))
+      ),
       pathway_clean = str_remove(pathway, "^HALLMARK_")
     ) %>%
     filter(is.finite(NES), is.finite(p))
@@ -108,15 +121,15 @@ plot_gsea_dot <- function(gsea_df,
     mutate(pathway_clean = factor(pathway_clean, levels = rev(unique(pathway_clean)))) %>%
     ungroup()
   
-  ggplot(df2, aes(x = GeneRatio, y = pathway_clean)) +
-    geom_point(aes(size = Count, color = p), alpha = 0.9) +
-    facet_grid(. ~ direction, scales = "free_y", space = "free_y") +
+  ggplot(df2, aes(x = NES, y = pathway_clean)) +
+    geom_vline(xintercept = 0, linetype = "dashed", color = "grey60") +
+    geom_point(aes(size = size, color = p), alpha = 0.9) +
     scale_color_gradient(low = "red", high = "blue", trans = "reverse") +
     labs(
-      x = "GeneRatio",
+      x = "Normalized enrichment score",
       y = NULL,
-      size = "Count",
-      color = use_p,
+      size = "Gene set size",
+      color = p_label,
       title = title
     ) +
     guides(
@@ -125,8 +138,6 @@ plot_gsea_dot <- function(gsea_df,
     ) +
     theme_bw() +
     theme(
-      strip.background = element_rect(fill = "grey90", color = NA),
-      strip.text = element_text(face = "bold"),
       panel.grid.minor = element_blank()
     )
 }
@@ -139,6 +150,8 @@ run_pseudobulk_fgsea <- function(pb_counts,
                                  out_prefix,
                                  subtype_label,
                                  subtype_title,
+                                 case_label,
+                                 reference_label,
                                  results_dir,
                                  plot_dir,
                                  minSize = 15,
@@ -206,15 +219,16 @@ run_pseudobulk_fgsea <- function(pb_counts,
   pgsea <- plot_gsea_dot(
     gsea_df = gsea,
     title = paste0("GSEA: ", plot_title),
+    case_label = case_label,
+    reference_label = reference_label,
     p_cutoff = gsea_p_cutoff,
-    top_n = 10,
-    use_p = "pval"
+    top_n = 10
   )
   
   if (!is.null(pgsea)) {
     ggsave(
       file.path(plot_dir, paste0(subtype_label, "_gsea_dot_", out_prefix, ".pdf")),
-      pgsea, width = 10, height = 6
+      pgsea, width = 8, height = 5
     )
   }
   
@@ -254,6 +268,14 @@ run_pseudobulk_contrast <- function(pb_counts,
     out_prefix = out_prefix,
     subtype_label = subtype_label,
     subtype_title = subtype_title,
+    case_label = case_condition,
+    reference_label = dplyr::recode(
+      ref_label,
+      otherCAR = "Other CARs",
+      allCAR = "All CARs",
+      rest = "Rest",
+      .default = ref_label
+    ),
     results_dir = results_dir,
     plot_dir = plot_dir,
     minSize = minSize,
