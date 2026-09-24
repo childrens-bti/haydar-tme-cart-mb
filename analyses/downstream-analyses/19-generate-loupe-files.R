@@ -18,13 +18,6 @@ set.seed(1234)
 output_dir <- file.path(root_dir, "analyses", "downstream-analyses", "results", "loupe")
 dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
 
-# KDM6B cluster assignments are maintained with the canonical remodeling
-# workflow in haydar-ad-hoc rather than in this repository's retired
-# downstream-analysis outputs.
-kdm6b_module_dir <- file.path(
-  root_dir, "external", "haydar-ad-hoc", "analyses", "kdm6b-remodeling"
-)
-
 export_specs <- list(
   list(
     export_name = "all_cells",
@@ -41,13 +34,9 @@ export_specs <- list(
     object_path = file.path(root_dir, "data", "v5", "cart_myeloid_subtypes.rds"),
     metadata_columns = c(
       "sample", "condition", "cell_type", "general_label", "immgen_label",
-      "seurat_clusters", "myeloid_subtype", "kdm6b_group"
+      "seurat_clusters", "myeloid_subtype"
     ),
     identity_column = "myeloid_subtype",
-    kdm6b_ranking_path = file.path(
-      kdm6b_module_dir, "results", "myeloid",
-      "kdm6b", "myeloid_kdm6b_subcluster_ranking_and_groups.tsv"
-    ),
     output_stem = "cart_myeloid_subtypes"
   ),
   list(
@@ -55,13 +44,9 @@ export_specs <- list(
     object_path = file.path(root_dir, "data", "v5", "cart_tcell_subtypes.rds"),
     metadata_columns = c(
       "sample", "condition", "cell_type", "general_label", "immgen_label",
-      "seurat_clusters", "tcell_subtype", "kdm6b_group"
+      "seurat_clusters", "tcell_subtype"
     ),
     identity_column = "tcell_subtype",
-    kdm6b_ranking_path = file.path(
-      kdm6b_module_dir, "results", "tcell",
-      "kdm6b", "tcell_kdm6b_subcluster_ranking_and_groups.tsv"
-    ),
     output_stem = "cart_tcell_subtypes"
   )
 )
@@ -109,56 +94,6 @@ validate_reduction <- function(object, reduction_name, minimum_dimensions) {
   embeddings
 }
 
-add_kdm6b_group <- function(object, specification) {
-  if (is.null(specification$kdm6b_ranking_path)) {
-    return(object)
-  }
-  if (!file.exists(specification$kdm6b_ranking_path)) {
-    stop("Missing Kdm6b ranking table: ", specification$kdm6b_ranking_path)
-  }
-  if (!"seurat_clusters" %in% colnames(object[[]])) {
-    stop("Missing seurat_clusters metadata required for Kdm6b group assignment")
-  }
-
-  kdm6b_ranking <- read.delim(
-    specification$kdm6b_ranking_path,
-    check.names = FALSE,
-    stringsAsFactors = FALSE
-  )
-  required_columns <- c("subcluster", "kdm6b_group")
-  missing_columns <- setdiff(required_columns, colnames(kdm6b_ranking))
-  if (length(missing_columns) > 0) {
-    stop(
-      "Kdm6b ranking table is missing column(s): ",
-      paste(missing_columns, collapse = ", ")
-    )
-  }
-
-  kdm6b_ranking$subcluster <- as.character(kdm6b_ranking$subcluster)
-  if (anyDuplicated(kdm6b_ranking$subcluster)) {
-    stop("Kdm6b ranking table contains duplicate subcluster assignments")
-  }
-  kdm6b_by_cluster <- setNames(
-    as.character(kdm6b_ranking$kdm6b_group),
-    kdm6b_ranking$subcluster
-  )
-  object_clusters <- as.character(object[["seurat_clusters"]][, 1])
-  kdm6b_group <- unname(kdm6b_by_cluster[object_clusters])
-  if (anyNA(kdm6b_group)) {
-    missing_clusters <- sort(unique(object_clusters[is.na(kdm6b_group)]))
-    stop(
-      "Kdm6b ranking table has no assignment for Seurat cluster(s): ",
-      paste(missing_clusters, collapse = ", ")
-    )
-  }
-
-  object[["kdm6b_group"]] <- factor(
-    kdm6b_group,
-    levels = c("Kdm6b-high", "Intermediate", "Kdm6b-low")
-  )
-  object
-}
-
 export_loupe <- function(specification) {
   if (!file.exists(specification$object_path)) {
     stop("Missing input Seurat object: ", specification$object_path)
@@ -177,7 +112,6 @@ export_loupe <- function(specification) {
   # loupeR exports the active assay's counts layer.  Force the raw RNA assay
   # here so integrated, normalized, and scaled values are never exported.
   DefaultAssay(object) <- "RNA"
-  object <- add_kdm6b_group(object, specification)
   missing_metadata_columns <- setdiff(
     specification$metadata_columns,
     colnames(object[[]])

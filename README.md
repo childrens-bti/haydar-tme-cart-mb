@@ -7,17 +7,6 @@ Serge Yaacoub, Mostafa Seblani, Kaleem Coleman, Zhongzhen Yi, Kyoungtea Kim, Sha
 ## To reproduce the code in this repository:
 This repository contains a docker image and code used to conduct analyses
 
-### KDM6B remodeling workflow
-
-The canonical KDM6B clustering and remodeling workflow is maintained as the
-`external/haydar-ad-hoc` submodule, at
-`external/haydar-ad-hoc/analyses/kdm6b-remodeling`. Initialize submodules after
-cloning:
-
-```
-git submodule update --init --recursive
-```
-
 1. Clone the repository
 ```
 git clone git@github.com:childrens-bti/haydar-scrna.git
