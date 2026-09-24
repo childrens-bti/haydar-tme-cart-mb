@@ -57,7 +57,7 @@ select_export_specs <- function(export_specs) {
     return(export_specs)
   }
   if (length(arguments) != 2 || arguments[[1]] != "--exports") {
-    stop("Usage: 19-generate-loupe-files.R [--exports name1,name2]")
+    stop("Usage: 14-generate-loupe-files.R [--exports name1,name2]")
   }
 
   requested_exports <- trimws(strsplit(arguments[[2]], ",", fixed = TRUE)[[1]])
