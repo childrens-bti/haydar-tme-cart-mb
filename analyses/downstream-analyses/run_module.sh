@@ -44,3 +44,6 @@ Rscript -e "rmarkdown::render('12-tcell-cd4-cd8-annotation.Rmd')"
 
 # Perform CD4-like and CD8-like T cell trajectory analysis using Slingshot
 Rscript -e "rmarkdown::render('13-tcell-cd4-cd8-slingshot.Rmd')"
+
+# Export finalized Seurat objects for interactive review in Loupe Browser
+Rscript --vanilla 14-generate-loupe-files.R
