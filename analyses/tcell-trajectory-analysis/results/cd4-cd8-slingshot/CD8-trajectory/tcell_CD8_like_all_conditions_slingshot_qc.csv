@@ -1,0 +1,8 @@
+"analysis","seurat_clusters","n","retained_for_slingshot","root_cluster","root_cluster_selection","is_root_cluster","root_cluster_projectils_label","skip_reason"
+"CD8-like_all_conditions","0",584,TRUE,"6","ProjecTILs naive/memory label",FALSE,NA,NA
+"CD8-like_all_conditions","1",349,TRUE,"6","ProjecTILs naive/memory label",FALSE,NA,NA
+"CD8-like_all_conditions","2",302,TRUE,"6","ProjecTILs naive/memory label",FALSE,NA,NA
+"CD8-like_all_conditions","3",281,TRUE,"6","ProjecTILs naive/memory label",FALSE,NA,NA
+"CD8-like_all_conditions","4",270,TRUE,"6","ProjecTILs naive/memory label",FALSE,NA,NA
+"CD8-like_all_conditions","5",214,TRUE,"6","ProjecTILs naive/memory label",FALSE,NA,NA
+"CD8-like_all_conditions","6",138,TRUE,"6","ProjecTILs naive/memory label",TRUE,"CD8_NaiveLike",NA
