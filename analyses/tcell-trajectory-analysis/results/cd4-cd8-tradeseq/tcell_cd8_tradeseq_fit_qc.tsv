@@ -1,0 +1,2 @@
+compartment	n_genes_modeled	n_genes_converged	convergence_fraction	selected_k	n_cells_modeled	n_samples_modeled	input_cache_md5	seed	tradeSeq_version
+CD8-like	3001	3001	1	7	2056	10	6cac272562ac3064d8f343a202c01aef	1234	1.20.0
