@@ -59,8 +59,10 @@ plot_slingshot_gene_trends <- function(
         method = "smooth",
         point = FALSE,
         se = FALSE,
-        ncol = min(4, length(trend_genes))
-      ),
+        ncol = min(5, length(trend_genes))
+      ) +
+        patchwork::plot_layout(guides = "collect") &
+        ggplot2::theme(legend.position = "bottom"),
       error = function(e) {
         message("Skipping gene trend curve for ", analysis_label, " ", lineage_name, ": ", e$message)
         NULL

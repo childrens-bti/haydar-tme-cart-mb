@@ -93,7 +93,7 @@ marker_programs <- list(
 )
 
 slingshot_gene_trend_genes <- unique(c(
-  "Pdcd1", "Tox", "Lag3", "Havcr2", "Ctla4",
+  "Pdcd1", "Tox", "Lag3", "Havcr2", "Ctla4", "Tigit", "Foxp3",
   "Tcf7", "Lef1", "Ccr7", "Il7r",
   "Mki67", "Top2a",
   "Gzmb", "Prf1", "Ifng", "Ccl5"
