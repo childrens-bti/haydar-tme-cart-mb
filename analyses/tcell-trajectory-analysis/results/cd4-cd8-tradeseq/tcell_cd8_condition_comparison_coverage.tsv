@@ -1,0 +1,12 @@
+policy_version	comparison_set	comparison_id	condition_set	condition_a	condition_b	priority	planned_use	notes	status	status_note
+1	primary_pairwise	B7H3_vs_41BB-L	B7H3|41BB-L	B7H3	41BB-L	primary	pairwise_test	Prespecified before statistical testing	produced	Lineage-specific pairwise conditionTest result
+1	primary_pairwise	B7H3_vs_CD8-41BB	B7H3|CD8-41BB	B7H3	CD8-41BB	primary	pairwise_test	Prespecified before statistical testing	produced	Lineage-specific pairwise conditionTest result
+1	primary_pairwise	B7H3_vs_CD28-41BB	B7H3|CD28-41BB	B7H3	CD28-41BB	primary	pairwise_test	Prespecified before statistical testing	produced	Lineage-specific pairwise conditionTest result
+1	primary_pairwise	41BB-L_vs_CD8-41BB	41BB-L|CD8-41BB	41BB-L	CD8-41BB	primary	pairwise_test	Prespecified before statistical testing	produced	Lineage-specific pairwise conditionTest result
+1	primary_pairwise	41BB-L_vs_CD28-41BB	41BB-L|CD28-41BB	41BB-L	CD28-41BB	primary	pairwise_test	Prespecified before statistical testing	produced	Lineage-specific pairwise conditionTest result
+1	primary_pairwise	CD8-41BB_vs_CD28-41BB	CD8-41BB|CD28-41BB	CD8-41BB	CD28-41BB	primary	pairwise_test	Prespecified before statistical testing	produced	Lineage-specific pairwise conditionTest result
+1	secondary_control	B7H3_vs_STOP	B7H3|STOP	B7H3	STOP	secondary	control_comparison	Report separately from primary CAR-vs-CAR tests	produced	Lineage-specific pairwise conditionTest result
+1	secondary_control	41BB-L_vs_STOP	41BB-L|STOP	41BB-L	STOP	secondary	control_comparison	Report separately from primary CAR-vs-CAR tests	produced	Lineage-specific pairwise conditionTest result
+1	secondary_control	CD8-41BB_vs_STOP	CD8-41BB|STOP	CD8-41BB	STOP	secondary	control_comparison	Report separately from primary CAR-vs-CAR tests	produced	Lineage-specific pairwise conditionTest result
+1	secondary_control	CD28-41BB_vs_STOP	CD28-41BB|STOP	CD28-41BB	STOP	secondary	control_comparison	Report separately from primary CAR-vs-CAR tests	produced	Lineage-specific pairwise conditionTest result
+1	descriptive_only	tumor_descriptive	tumor	NA	NA	descriptive	plots_only	Do not include in primary CAR-construct inference	not_modeled_by_policy	Tumor is retained for descriptive review only
