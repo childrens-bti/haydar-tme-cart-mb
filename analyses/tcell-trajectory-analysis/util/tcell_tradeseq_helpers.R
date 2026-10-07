@@ -963,8 +963,8 @@ plot_top_dynamic_heatmaps <- function(
       ggplot2::labs(
         title = paste(compartment, lineage_name, "top dynamic genes"),
         subtitle = paste0(
-          "FDR-significant genes ranked by fitted-change magnitude and test strength; ",
-          "condition-averaged on a shared grid"
+          "FDR-significant genes ranked by fitted-change magnitude\n",
+          "and test strength; condition-averaged on a shared grid"
         ),
         x = "Relative pseudotime",
         y = NULL,

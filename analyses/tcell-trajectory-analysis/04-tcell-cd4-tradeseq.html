@@ -11,7 +11,7 @@
 
 <meta name="author" content="Bicna Song" />
 
-<meta name="date" content="2026-10-01" />
+<meta name="date" content="2026-10-07" />
 
 <title>04-tcell-cd4-cd8-tradeseq</title>
 
@@ -1569,7 +1569,7 @@ border-radius: 0px;
 
 <h1 class="title toc-ignore">04-tcell-cd4-cd8-tradeseq</h1>
 <h4 class="author">Bicna Song</h4>
-<h4 class="date">2026-10-01</h4>
+<h4 class="date">2026-10-07</h4>
 
 </div>
 
@@ -1610,6 +1610,7 @@ suppressPackageStartupMessages({
 
 root_dir &lt;- find_root(has_dir(&quot;.git&quot;))
 analysis_dir &lt;- file.path(root_dir, &quot;analyses&quot;, &quot;tcell-trajectory-analysis&quot;)
+data_dir &lt;- file.path(root_dir, &quot;data&quot;, &quot;v5&quot;)
 slingshot_results_dir &lt;- file.path(analysis_dir, &quot;results&quot;, &quot;cd4-cd8-slingshot&quot;)
 results_dir &lt;- file.path(analysis_dir, &quot;results&quot;, &quot;cd4-cd8-tradeseq&quot;)
 plot_dir &lt;- file.path(analysis_dir, &quot;plots&quot;, &quot;cd4-cd8-tradeseq&quot;)
@@ -1949,16 +1950,16 @@ knitr::kable(input_manifest)</code></pre>
 <pre class="r"><code>knitr::kable(lineage_annotations)</code></pre>
 <table>
 <colgroup>
-<col width="4%" />
+<col width="2%" />
+<col width="1%" />
+<col width="2%" />
 <col width="3%" />
-<col width="4%" />
-<col width="7%" />
-<col width="5%" />
-<col width="7%" />
-<col width="8%" />
-<col width="28%" />
-<col width="20%" />
-<col width="9%" />
+<col width="2%" />
+<col width="3%" />
+<col width="3%" />
+<col width="44%" />
+<col width="19%" />
+<col width="16%" />
 </colgroup>
 <thead>
 <tr class="header">
@@ -1976,7 +1977,7 @@ knitr::kable(input_manifest)</code></pre>
 </thead>
 <tbody>
 <tr class="odd">
-<td align="right">2</td>
+<td align="right">3</td>
 <td align="left">CD4-like</td>
 <td align="left">slingPseudotime_1</td>
 <td align="left">regulatory/Treg-associated</td>
@@ -1984,10 +1985,16 @@ knitr::kable(input_manifest)</code></pre>
 <td align="left">quiescent Th1-like cluster 3</td>
 <td align="left">Treg-associated cluster 2</td>
 <td align="left">Endpoint is 81.9% ProjecTILs Treg and 91.9% previously
-annotated Treg; SingleR also supports Treg identity</td>
-<td align="left">Core regulatory markers were not included in the
-original stage 03 trend panel</td>
-<td align="left">docs/tcell-trajectory-cd4-review.md</td>
+annotated Treg; SingleR also supports Treg identity; in the updated
+stage 03 trend panel, Foxp3 rises sharply in the second half of the
+lineage and stays high, together with Ctla4 and Tigit; tradeSeq
+start-to-end fitted change: Lrrc32 (+3.6 log2), Il2ra (+2.6), Ctla4
+(+1.7), Foxp3 (+1.5), Ikzf2 (+1.3)</td>
+<td align="left">Il2ra and Ikzf2 are supported by tradeSeq but are not
+in the stage 03 trend panel; the path passes through cluster 0, which
+mixes Th1-like and Treg-like cells</td>
+<td align="left">analyses/tcell-trajectory-analysis/docs/tcell-trajectory-cd4-review.md;
+results/cd4-cd8-tradeseq/tcell_cd4_tradeseq_lineage_rankings.tsv</td>
 </tr>
 <tr class="even">
 <td align="right">2</td>
@@ -2000,7 +2007,7 @@ original stage 03 trend panel</td>
 <td align="left">Endpoint is 75.9% cycling/proliferating with strong
 Mki67, Top2a, and proliferation AUCell increases</td>
 <td align="left">Cell cycle may drive much of the branch geometry</td>
-<td align="left">docs/tcell-trajectory-cd4-review.md</td>
+<td align="left">analyses/tcell-trajectory-analysis/docs/tcell-trajectory-cd4-review.md</td>
 </tr>
 <tr class="odd">
 <td align="right">2</td>
@@ -2014,7 +2021,7 @@ Mki67, Top2a, and proliferation AUCell increases</td>
 activated helper-like; Ifng and Pdcd1 rise late</td>
 <td align="left">Productive activation and chronic dysfunction are not
 cleanly separated</td>
-<td align="left">docs/tcell-trajectory-cd4-review.md</td>
+<td align="left">analyses/tcell-trajectory-analysis/docs/tcell-trajectory-cd4-review.md</td>
 </tr>
 </tbody>
 </table>
@@ -2463,28 +2470,32 @@ knitr::kable(selected_knots)</code></pre>
 <h2>Fit condition-aware GAMs</h2>
 <p>This chunk fits one negative-binomial GAM per compartment for the
 balanced gene set using raw counts, shared pseudotime, shared curve
-weights, and the five modeled conditions. Valid fitted-model caches are
-reused so re-rendering plots and tables does not refit thousands of
-genes.</p>
+weights, and the five modeled conditions. It first looks for a valid
+fitted-model cache in the module results directory and then in
+<code>data/v5</code>. If neither location contains a compatible cache,
+it fits the model and saves the new cache in the results directory.</p>
 <pre class="r"><code>tradeseq_models &lt;- imap(
   trajectory_inputs,
   function(input, compartment) {
     stem &lt;- compartment_stems[[compartment]]
+    model_filename &lt;- paste0(&quot;tcell_&quot;, stem, &quot;_tradeseq_model.rds&quot;)
+    result_model_file &lt;- file.path(results_dir, model_filename)
+    release_model_file &lt;- file.path(data_dir, model_filename)
+
     get_or_fit_tradeseq_model(
       input = input,
       model_genes = balanced_gene_sets[[compartment]]$genes,
       nknots = evaluate_k_results[[compartment]]$selected_k,
       seed = analysis_seed,
       bpparam = bpparam,
-      output_file = file.path(
-        results_dir,
-        paste0(&quot;tcell_&quot;, stem, &quot;_tradeseq_model.rds&quot;)
-      ),
+      output_file = result_model_file,
+      cache_files = c(result_model_file, release_model_file),
       force = force_refit
     )
   }
 )</code></pre>
-<pre><code>## Reusing cached tradeSeq model: /home/rstudio/haydar-scrna/analyses/tcell-trajectory-analysis/results/cd4-cd8-tradeseq/tcell_cd4_tradeseq_model.rds</code></pre>
+<pre><code>## No fitted tradeSeq model cache found: /home/rstudio/haydar-scrna/analyses/tcell-trajectory-analysis/results/cd4-cd8-tradeseq/tcell_cd4_tradeseq_model.rds</code></pre>
+<pre><code>## Reusing cached tradeSeq model: /home/rstudio/haydar-scrna/data/v5/tcell_cd4_tradeseq_model.rds</code></pre>
 </div>
 <div id="check-model-convergence" class="section level2">
 <h2>Check model convergence</h2>
@@ -4072,16 +4083,16 @@ knitr::kable(result_counts)</code></pre>
 <table>
 <colgroup>
 <col width="5%" />
-<col width="6%" />
+<col width="7%" />
 <col width="8%" />
-<col width="16%" />
+<col width="9%" />
 <col width="4%" />
 <col width="4%" />
 <col width="4%" />
-<col width="6%" />
+<col width="7%" />
+<col width="19%" />
+<col width="8%" />
 <col width="18%" />
-<col width="8%" />
-<col width="17%" />
 </colgroup>
 <thead>
 <tr class="header">
@@ -4099,7 +4110,7 @@ knitr::kable(result_counts)</code></pre>
 </tr>
 </thead>
 <tbody>
-<tr class="even">
+<tr class="odd">
 <td align="right">1</td>
 <td align="left">primary_pairwise</td>
 <td align="left">B7H3_vs_41BB-L</td>
@@ -4112,7 +4123,7 @@ knitr::kable(result_counts)</code></pre>
 <td align="left">produced</td>
 <td align="left">Lineage-specific pairwise conditionTest result</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td align="right">1</td>
 <td align="left">primary_pairwise</td>
 <td align="left">B7H3_vs_CD8-41BB</td>
@@ -4125,7 +4136,7 @@ knitr::kable(result_counts)</code></pre>
 <td align="left">produced</td>
 <td align="left">Lineage-specific pairwise conditionTest result</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td align="right">1</td>
 <td align="left">primary_pairwise</td>
 <td align="left">B7H3_vs_CD28-41BB</td>
@@ -4138,7 +4149,7 @@ knitr::kable(result_counts)</code></pre>
 <td align="left">produced</td>
 <td align="left">Lineage-specific pairwise conditionTest result</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td align="right">1</td>
 <td align="left">primary_pairwise</td>
 <td align="left">41BB-L_vs_CD8-41BB</td>
@@ -4151,7 +4162,7 @@ knitr::kable(result_counts)</code></pre>
 <td align="left">produced</td>
 <td align="left">Lineage-specific pairwise conditionTest result</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td align="right">1</td>
 <td align="left">primary_pairwise</td>
 <td align="left">41BB-L_vs_CD28-41BB</td>
@@ -4164,7 +4175,7 @@ knitr::kable(result_counts)</code></pre>
 <td align="left">produced</td>
 <td align="left">Lineage-specific pairwise conditionTest result</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td align="right">1</td>
 <td align="left">primary_pairwise</td>
 <td align="left">CD8-41BB_vs_CD28-41BB</td>
@@ -4177,7 +4188,7 @@ knitr::kable(result_counts)</code></pre>
 <td align="left">produced</td>
 <td align="left">Lineage-specific pairwise conditionTest result</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td align="right">1</td>
 <td align="left">secondary_control</td>
 <td align="left">B7H3_vs_STOP</td>
@@ -4190,7 +4201,7 @@ knitr::kable(result_counts)</code></pre>
 <td align="left">produced</td>
 <td align="left">Lineage-specific pairwise conditionTest result</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td align="right">1</td>
 <td align="left">secondary_control</td>
 <td align="left">41BB-L_vs_STOP</td>
@@ -4203,7 +4214,7 @@ knitr::kable(result_counts)</code></pre>
 <td align="left">produced</td>
 <td align="left">Lineage-specific pairwise conditionTest result</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td align="right">1</td>
 <td align="left">secondary_control</td>
 <td align="left">CD8-41BB_vs_STOP</td>
@@ -4216,7 +4227,7 @@ knitr::kable(result_counts)</code></pre>
 <td align="left">produced</td>
 <td align="left">Lineage-specific pairwise conditionTest result</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td align="right">1</td>
 <td align="left">secondary_control</td>
 <td align="left">CD28-41BB_vs_STOP</td>
@@ -4229,7 +4240,7 @@ knitr::kable(result_counts)</code></pre>
 <td align="left">produced</td>
 <td align="left">Lineage-specific pairwise conditionTest result</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td align="right">1</td>
 <td align="left">descriptive_only</td>
 <td align="left">tumor_descriptive</td>

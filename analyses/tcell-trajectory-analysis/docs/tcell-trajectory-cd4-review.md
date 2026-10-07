@@ -4,7 +4,9 @@ Review date: 2026-09-29
 
 Consistency check: 2026-10-01
 
-Scope: descriptive review of the existing shared `all_conditions` CD4-like results from `03-tcell-cd4-cd8-slingshot.Rmd`. No analysis was rerun.
+Evidence update: 2026-10-06
+
+Scope: descriptive review of the existing shared `all_conditions` CD4-like results from `03-tcell-cd4-cd8-slingshot.Rmd`. No analysis was rerun. The lineage 1 evidence was updated on 2026-10-06 using the updated stage 03 gene-trend panel, which now includes `Foxp3` and `Tigit`, and the existing stage 04 tradeSeq lineage rankings (`results/cd4-cd8-tradeseq/tcell_cd4_tradeseq_lineage_rankings.tsv`); fitted changes below are mean condition-specific log2 fitted end/start values.
 
 ## Purpose
 
@@ -25,7 +27,7 @@ Cluster 3 is therefore the **least-differentiated available CD4 state** and is a
 
 | Lineage | Main result | Supporting evidence | Main caution |
 |---|---|---|---|
-| 1: regulatory/Treg-associated | Cluster 3 to cluster 2 | Cluster 2 is 81.9% ProjecTILs `Treg`, 91.9% previously annotated Treg, and Treg-like by SingleR; median pseudotime increases from 20.4 to 38.7 | Core markers such as `Foxp3`, `Il2ra`, `Ikzf2`, and `Tigit` were not plotted, so the endpoint is better supported than the full path |
+| 1: regulatory/Treg-associated | Cluster 3 to cluster 2 | Cluster 2 is 81.9% ProjecTILs `Treg`, 91.9% previously annotated Treg, and Treg-like by SingleR; `Foxp3` rises sharply in the second half of the lineage and stays high, together with `Ctla4` and `Tigit`; tradeSeq increases include `Lrrc32` (+3.6 log2), `Il2ra` (+2.6), `Ctla4` (+1.7), `Foxp3` (+1.5), and `Ikzf2` (+1.3); median pseudotime increases from 20.4 to 38.7 | `Il2ra` and `Ikzf2` are supported by tradeSeq but are not in the stage 03 trend panel; the path passes through cluster 0, which mixes Th1-like and Treg-like cells |
 | 2: proliferating CD4 | Cluster 3 to cluster 1 | Cluster 1 is 75.9% cycling/proliferating; `Mki67`, `Top2a`, and proliferation AUCell activity rise strongly; median pseudotime increases from 19.4 to 53.0 | Cell cycle may drive much of the branch geometry; the helper identity of the cycling cells is unresolved |
 | 3: activated helper-like | Cluster 3 to cluster 5 | Cluster 5 is 81.9% ProjecTILs `Th1` and 90.6% previously activated helper-like; `Ifng` and `Pdcd1` rise late; median pseudotime increases from 20.5 to 41.2 | Current markers do not clearly distinguish productive helper activation from chronic activation or dysfunction |
 
@@ -36,7 +38,6 @@ All six conditions have cells with non-missing pseudotime on all three lineages,
 ## Main limitations
 
 - No canonical naïve/memory CD4 cluster is present, so progression is relative to the least-differentiated available quiescent Th1-like state.
-- The plotted gene panel lacks important CD4-specific regulatory and helper markers.
 - The proliferating branch may be dominated by cell cycle.
 - Unequal cell recovery and only two samples per condition limit condition-level interpretation.
 - Pseudotime does not demonstrate developmental ancestry.
