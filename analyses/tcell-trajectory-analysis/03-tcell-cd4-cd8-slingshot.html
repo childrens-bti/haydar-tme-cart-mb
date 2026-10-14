@@ -11,7 +11,7 @@
 
 <meta name="author" content="Bicna Song" />
 
-<meta name="date" content="2026-10-06" />
+<meta name="date" content="2026-10-14" />
 
 <title>03-tcell-cd4-cd8-slingshot</title>
 
@@ -1481,14 +1481,14 @@ border-radius: 0px;
 
 <h1 class="title toc-ignore">03-tcell-cd4-cd8-slingshot</h1>
 <h4 class="author">Bicna Song</h4>
-<h4 class="date">2026-10-06</h4>
+<h4 class="date">2026-10-14</h4>
 
 </div>
 
 
 <p>This module loads the prepared CD4-like and CD8-like trajectory input
-objects and runs Slingshot on condition-specific subsets and all
-conditions together. PDFs are written under
+objects and runs Slingshot on all conditions together by default.
+Condition-specific trajectories are optional. PDFs are written under
 <code>plots/cd4-cd8-slingshot/{CD4,CD8}-trajectory</code>; CSV and RDS
 files are written under
 <code>results/cd4-cd8-slingshot/{CD4,CD8}-trajectory</code>.</p>
@@ -1533,8 +1533,10 @@ set.seed(1234)</code></pre>
 <h2>Parameters</h2>
 <p>This chunk records the Slingshot thresholds, cache controls, input
 RDS files, marker genes for gene trends, and AUCell programs used for
-trajectory summaries. Set <code>force_rerun_slingshot</code> to
-<code>TRUE</code> to ignore valid caches and recompute trajectories.</p>
+trajectory summaries. Set <code>run_condition_specific_slingshot</code>
+to <code>TRUE</code> for optional per-condition trajectories. Set
+<code>force_rerun_slingshot</code> to <code>TRUE</code> to ignore valid
+caches and recompute trajectories.</p>
 <pre class="r"><code>cd4_input_rds &lt;- file.path(
   annotation_results_dir,
   &quot;tcell_cd4_like_trajectory_input.rds&quot;
@@ -1560,6 +1562,7 @@ min_cells_for_slingshot &lt;- 100
 min_clusters_for_slingshot &lt;- 3
 min_cells_per_cluster &lt;- 10
 force_rerun_slingshot &lt;- FALSE
+run_condition_specific_slingshot &lt;- FALSE
 slingshot_cache_version &lt;- 2L
 
 marker_programs &lt;- list(
@@ -1609,14 +1612,16 @@ cat(&quot;CD4 input RDS:&quot;, cd4_input_rds, &quot;\n&quot;)</code></pre>
 <pre><code>## Minimum cells per Slingshot cluster: 10</code></pre>
 <pre class="r"><code>cat(&quot;Force Slingshot rerun:&quot;, force_rerun_slingshot, &quot;\n&quot;)</code></pre>
 <pre><code>## Force Slingshot rerun: FALSE</code></pre>
+<pre class="r"><code>cat(&quot;Run condition-specific Slingshot:&quot;, run_condition_specific_slingshot, &quot;\n&quot;)</code></pre>
+<pre><code>## Run condition-specific Slingshot: FALSE</code></pre>
 <pre class="r"><code>cat(&quot;Slingshot cache version:&quot;, slingshot_cache_version, &quot;\n&quot;)</code></pre>
 <pre><code>## Slingshot cache version: 2</code></pre>
 </div>
 <div id="load-trajectory-input-objects" class="section level2">
 <h2>Load trajectory input objects</h2>
-<p>This chunk loads the prepared CD4-like and CD8-like objects from
-script 02 and records checksums used to invalidate stale Slingshot
-caches.</p>
+<p>This chunk loads the prepared CD4-like and CD8-like objects from the
+annotation results directory. Existing compatible Slingshot results are
+reused; otherwise, Slingshot runs on these loaded objects.</p>
 <pre class="r"><code>if (!file.exists(cd4_input_rds)) {
   stop(&quot;CD4 trajectory input RDS was not found: &quot;, cd4_input_rds)
 }
@@ -1624,11 +1629,6 @@ caches.</p>
 if (!file.exists(cd8_input_rds)) {
   stop(&quot;CD8 trajectory input RDS was not found: &quot;, cd8_input_rds)
 }
-
-trajectory_input_md5 &lt;- c(
-  `CD4-like` = unname(tools::md5sum(cd4_input_rds)),
-  `CD8-like` = unname(tools::md5sum(cd8_input_rds))
-)
 
 compartment_objects &lt;- list(
   `CD4-like` = readRDS(cd4_input_rds),
@@ -1660,115 +1660,15 @@ from the loaded or newly computed result.</p>
   compartment,
   compartment_obj,
   output_plot_dir,
-  output_results_dir,
-  input_rds_md5
+  output_results_dir
 ) {
   compartment_label &lt;- safe_label(compartment)
   subtype_colors &lt;- make_tcell_subtype_palette(
     compartment_obj$seurat_cluster_projectils_label
   )
   cache_context &lt;- list(
-    analysis_cache_version = slingshot_cache_version,
-    input_rds_md5 = input_rds_md5
+    analysis_cache_version = slingshot_cache_version
   )
-  slingshot_results &lt;- list()
-
-  for (condition in condition_levels) {
-    subset_cells &lt;- colnames(compartment_obj)[compartment_obj$condition == condition]
-
-    if (length(subset_cells) == 0) {
-      next
-    }
-
-    result_name &lt;- paste(compartment, condition, sep = &quot;_&quot;)
-    condition_cache_file &lt;- file.path(
-      output_results_dir,
-      paste0(&quot;tcell_&quot;, safe_label(result_name), &quot;_slingshot_result.rds&quot;)
-    )
-    slingshot_results[[result_name]] &lt;- run_condition_slingshot(
-      subset(compartment_obj, cells = subset_cells),
-      compartment = compartment,
-      condition = condition,
-      gene_trend_genes = slingshot_gene_trend_genes,
-      aucell_programs = aucell_programs,
-      plot_aucell_pseudotime = TRUE,
-      subtype_colors = subtype_colors,
-      cache_file = condition_cache_file,
-      cache_context = cache_context,
-      force_rerun_slingshot = force_rerun_slingshot,
-      output_plot_dir = output_plot_dir,
-      output_results_dir = output_results_dir
-    )
-  }
-
-  slingshot_qc &lt;- purrr::imap_dfr(
-    slingshot_results,
-    function(x, analysis_name) {
-      x$cluster_counts %&gt;%
-        dplyr::mutate(analysis = analysis_name) %&gt;%
-        dplyr::left_join(
-          x$eligibility,
-          by = c(&quot;compartment&quot;, &quot;condition&quot;)
-        )
-    }
-  ) %&gt;%
-    dplyr::select(
-      dplyr::any_of(c(
-        &quot;analysis&quot;,
-        &quot;seurat_clusters&quot;,
-        &quot;n&quot;,
-        &quot;retained_for_slingshot&quot;,
-        &quot;root_cluster&quot;,
-        &quot;root_cluster_selection&quot;,
-        &quot;is_root_cluster&quot;,
-        &quot;root_cluster_projectils_label&quot;,
-        &quot;skip_reason&quot;
-      ))
-    )
-
-  write.csv(
-    slingshot_qc,
-    file.path(output_results_dir, paste0(&quot;tcell_&quot;, compartment_label, &quot;_condition_slingshot_qc.csv&quot;)),
-    row.names = FALSE
-  )
-
-  slingshot_summaries &lt;- purrr::map_dfr(
-    slingshot_results,
-    function(x) {
-      if (is.null(x$sling_summary)) {
-        return(NULL)
-      }
-      x$sling_summary
-    },
-    .id = &quot;analysis&quot;
-  )
-
-  slingshot_summaries &lt;- slingshot_summaries %&gt;%
-    dplyr::select(
-      dplyr::any_of(c(
-        &quot;analysis&quot;,
-        &quot;seurat_clusters&quot;,
-        &quot;n&quot;,
-        &quot;lineage&quot;,
-        &quot;median_pseudotime&quot;,
-        &quot;mean_pseudotime&quot;,
-        &quot;functional_state_label&quot;,
-        &quot;projectils_label&quot;,
-        &quot;projectils_label_prop&quot;,
-        &quot;singler_immgen_label&quot;,
-        &quot;singler_mousernaseq_label&quot;,
-        &quot;top_previous_tcell_subtype&quot;,
-        &quot;seurat_cluster_top_previous_tcell_subtype&quot;,
-        &quot;seurat_cluster_projectils_label&quot;
-      ))
-    )
-
-  write.csv(
-    slingshot_summaries,
-    file.path(output_results_dir, paste0(&quot;tcell_&quot;, compartment_label, &quot;_condition_slingshot_pseudotime_summary.csv&quot;)),
-    row.names = FALSE
-  )
-
   all_conditions_name &lt;- paste(compartment, &quot;all_conditions&quot;, sep = &quot;_&quot;)
   all_conditions_cache_file &lt;- file.path(
     output_results_dir,
@@ -1858,6 +1758,76 @@ from the loaded or newly computed result.</p>
     row.names = FALSE
   )
 
+  slingshot_results &lt;- list()
+  if (run_condition_specific_slingshot) {
+    for (condition in condition_levels) {
+      subset_cells &lt;- colnames(compartment_obj)[compartment_obj$condition == condition]
+
+      if (length(subset_cells) == 0) {
+        next
+      }
+
+      result_name &lt;- paste(compartment, condition, sep = &quot;_&quot;)
+      condition_cache_file &lt;- file.path(
+        output_results_dir,
+        paste0(&quot;tcell_&quot;, safe_label(result_name), &quot;_slingshot_result.rds&quot;)
+      )
+      slingshot_results[[result_name]] &lt;- run_condition_slingshot(
+        subset(compartment_obj, cells = subset_cells),
+        compartment = compartment,
+        condition = condition,
+        gene_trend_genes = slingshot_gene_trend_genes,
+        aucell_programs = aucell_programs,
+        plot_aucell_pseudotime = TRUE,
+        subtype_colors = subtype_colors,
+        cache_file = condition_cache_file,
+        cache_context = cache_context,
+        force_rerun_slingshot = force_rerun_slingshot,
+        output_plot_dir = output_plot_dir,
+        output_results_dir = output_results_dir
+      )
+    }
+
+    slingshot_qc &lt;- purrr::imap_dfr(
+      slingshot_results,
+      function(x, analysis_name) {
+        x$cluster_counts %&gt;%
+          dplyr::mutate(analysis = analysis_name) %&gt;%
+          dplyr::left_join(x$eligibility, by = c(&quot;compartment&quot;, &quot;condition&quot;))
+      }
+    ) %&gt;%
+      dplyr::select(dplyr::any_of(c(
+        &quot;analysis&quot;, &quot;seurat_clusters&quot;, &quot;n&quot;, &quot;retained_for_slingshot&quot;,
+        &quot;root_cluster&quot;, &quot;root_cluster_selection&quot;, &quot;is_root_cluster&quot;,
+        &quot;root_cluster_projectils_label&quot;, &quot;skip_reason&quot;
+      )))
+
+    write.csv(
+      slingshot_qc,
+      file.path(output_results_dir, paste0(&quot;tcell_&quot;, compartment_label, &quot;_condition_slingshot_qc.csv&quot;)),
+      row.names = FALSE
+    )
+
+    slingshot_summaries &lt;- purrr::map_dfr(
+      slingshot_results,
+      function(x) x$sling_summary,
+      .id = &quot;analysis&quot;
+    ) %&gt;%
+      dplyr::select(dplyr::any_of(c(
+        &quot;analysis&quot;, &quot;seurat_clusters&quot;, &quot;n&quot;, &quot;lineage&quot;, &quot;median_pseudotime&quot;,
+        &quot;mean_pseudotime&quot;, &quot;functional_state_label&quot;, &quot;projectils_label&quot;,
+        &quot;projectils_label_prop&quot;, &quot;singler_immgen_label&quot;, &quot;singler_mousernaseq_label&quot;,
+        &quot;top_previous_tcell_subtype&quot;, &quot;seurat_cluster_top_previous_tcell_subtype&quot;,
+        &quot;seurat_cluster_projectils_label&quot;
+      )))
+
+    write.csv(
+      slingshot_summaries,
+      file.path(output_results_dir, paste0(&quot;tcell_&quot;, compartment_label, &quot;_condition_slingshot_pseudotime_summary.csv&quot;)),
+      row.names = FALSE
+    )
+  }
+
   list(
     condition_specific = slingshot_results,
     all_conditions = slingshot_combined_results
@@ -1866,9 +1836,10 @@ from the loaded or newly computed result.</p>
 </div>
 <div id="run-slingshot-trajectories" class="section level2">
 <h2>Run Slingshot trajectories</h2>
-<p>This chunk runs the cache-aware compartment-specific trajectory
-workflow, writing PDFs to the compartment plot directory and CSV/RDS
-files to the matching results directory.</p>
+<p>This chunk runs the shared trajectory for each compartment, reusing
+compatible caches. Condition-specific trajectories run only when enabled
+above. PDFs, CSVs, and RDS caches are written to the matching
+compartment directories.</p>
 <pre class="r"><code>trajectory_results &lt;- purrr::imap(
   compartment_objects,
   function(compartment_obj, compartment) {
@@ -1876,8 +1847,7 @@ files to the matching results directory.</p>
       compartment = compartment,
       compartment_obj = compartment_obj,
       output_plot_dir = trajectory_plot_dirs[[compartment]],
-      output_results_dir = trajectory_results_dirs[[compartment]],
-      input_rds_md5 = trajectory_input_md5[[compartment]]
+      output_results_dir = trajectory_results_dirs[[compartment]]
     )
   }
 )</code></pre>
@@ -1911,78 +1881,57 @@ files to the matching results directory.</p>
 ## other attached packages:
 ##  [1] reshape2_1.4.5              ggthemes_5.2.0             
 ##  [3] cowplot_1.2.0               viridis_0.6.5              
-##  [5] viridisLite_0.4.2           slingshot_2.14.0           
-##  [7] TrajectoryUtils_1.14.0      princurve_2.1.6            
-##  [9] patchwork_1.3.2.9000        ggplot2_4.0.3              
-## [11] SeuratExtend_1.2.10         SeuratExtendData_0.3.0     
-## [13] SingleCellExperiment_1.28.1 SummarizedExperiment_1.36.0
-## [15] Biobase_2.66.0              GenomicRanges_1.58.0       
-## [17] GenomeInfoDb_1.42.3         IRanges_2.40.1             
-## [19] S4Vectors_0.44.0            BiocGenerics_0.52.0        
-## [21] MatrixGenerics_1.18.1       matrixStats_1.5.0          
-## [23] Seurat_5.4.0                SeuratObject_5.3.0         
-## [25] sp_2.2-3                    purrr_1.0.2                
-## [27] dplyr_1.1.4                 rprojroot_2.1.1            
+##  [5] viridisLite_0.4.2           patchwork_1.3.2.9000       
+##  [7] ggplot2_4.0.3               SeuratExtend_1.2.10        
+##  [9] SeuratExtendData_0.3.0      SingleCellExperiment_1.28.1
+## [11] SummarizedExperiment_1.36.0 Biobase_2.66.0             
+## [13] GenomicRanges_1.58.0        GenomeInfoDb_1.42.3        
+## [15] IRanges_2.40.1              S4Vectors_0.44.0           
+## [17] BiocGenerics_0.52.0         MatrixGenerics_1.18.1      
+## [19] matrixStats_1.5.0           Seurat_5.4.0               
+## [21] SeuratObject_5.3.0          sp_2.2-3                   
+## [23] purrr_1.0.2                 dplyr_1.1.4                
+## [25] rprojroot_2.1.1            
 ## 
 ## loaded via a namespace (and not attached):
-##   [1] RColorBrewer_1.1-3        jsonlite_1.8.8           
-##   [3] magrittr_2.0.3            spatstat.utils_3.2-5     
-##   [5] farver_2.1.2              rmarkdown_2.27           
-##   [7] zlibbioc_1.52.0           vctrs_0.6.5              
-##   [9] ROCR_1.0-12               DelayedMatrixStats_1.28.1
-##  [11] spatstat.explore_3.8-2    S4Arrays_1.6.0           
-##  [13] htmltools_0.5.8.1         SparseArray_1.6.2        
-##  [15] sass_0.4.9                sctransform_0.4.3        
-##  [17] parallelly_1.48.0         KernSmooth_2.23-24       
-##  [19] bslib_0.7.0               htmlwidgets_1.6.4        
-##  [21] ica_1.0-3                 plyr_1.8.9               
-##  [23] plotly_4.12.1             zoo_1.9-0                
-##  [25] cachem_1.1.0              igraph_2.2.2             
-##  [27] mime_0.12                 lifecycle_1.0.4          
-##  [29] pkgconfig_2.0.3           Matrix_1.7-4             
-##  [31] R6_2.5.1                  fastmap_1.2.0            
-##  [33] GenomeInfoDbData_1.2.13   fitdistrplus_1.2-6       
-##  [35] future_1.69.0             shiny_1.8.1.1            
-##  [37] digest_0.6.35             tensor_1.5.1             
-##  [39] RSpectra_0.16-2           irlba_2.3.7              
-##  [41] labeling_0.4.3            progressr_1.0.0          
-##  [43] fansi_1.0.6               spatstat.sparse_3.2-0    
-##  [45] mgcv_1.9-1                httr_1.4.7               
-##  [47] polyclip_1.10-7           abind_1.4-8              
-##  [49] compiler_4.4.0            withr_3.0.3              
-##  [51] S7_0.2.2                  fastDummies_1.7.6        
-##  [53] MASS_7.3-60.2             DelayedArray_0.32.0      
-##  [55] tools_4.4.0               lmtest_0.9-40            
-##  [57] httpuv_1.6.15             future.apply_1.20.2      
-##  [59] goftest_1.2-3             glue_1.7.0               
-##  [61] nlme_3.1-165              promises_1.3.0           
-##  [63] Rtsne_0.17                cluster_2.1.6            
-##  [65] generics_0.1.3            gtable_0.3.6             
-##  [67] spatstat.data_3.1-9       tidyr_1.3.1              
-##  [69] data.table_1.15.4         utf8_1.2.4               
-##  [71] XVector_0.46.0            spatstat.geom_3.8-2      
-##  [73] RcppAnnoy_0.0.23          ggrepel_0.9.8            
-##  [75] RANN_2.6.3                pillar_1.9.0             
-##  [77] stringr_1.5.1             spam_2.11-4              
-##  [79] RcppHNSW_0.7.0            later_1.3.2              
-##  [81] splines_4.4.0             lattice_0.22-6           
-##  [83] survival_3.7-0            deldir_2.0-4             
-##  [85] tidyselect_1.2.1          miniUI_0.1.1.1           
-##  [87] pbapply_1.7-5             knitr_1.47               
-##  [89] gridExtra_2.3.1           scattermore_1.2          
-##  [91] xfun_0.44                 stringi_1.8.4            
-##  [93] UCSC.utils_1.2.0          yaml_2.3.8               
-##  [95] evaluate_0.24.0           codetools_0.2-20         
-##  [97] tibble_3.2.1              cli_3.6.2                
-##  [99] uwot_0.2.4                xtable_1.8-4             
-## [101] reticulate_1.47.0         jquerylib_0.1.4          
-## [103] Rcpp_1.1.2                globals_0.19.1           
-## [105] spatstat.random_3.5-1     png_0.1-9                
-## [107] spatstat.univar_3.2-0     parallel_4.4.0           
-## [109] dotCall64_1.2             sparseMatrixStats_1.18.0 
-## [111] listenv_1.0.0             scales_1.4.0             
-## [113] ggridges_0.5.7            crayon_1.5.2             
-## [115] rlang_1.3.0</code></pre>
+##   [1] RColorBrewer_1.1-3      jsonlite_1.8.8          magrittr_2.0.3         
+##   [4] spatstat.utils_3.2-5    farver_2.1.2            rmarkdown_2.27         
+##   [7] zlibbioc_1.52.0         vctrs_0.6.5             ROCR_1.0-12            
+##  [10] spatstat.explore_3.8-2  S4Arrays_1.6.0          htmltools_0.5.8.1      
+##  [13] SparseArray_1.6.2       sass_0.4.9              sctransform_0.4.3      
+##  [16] parallelly_1.48.0       KernSmooth_2.23-24      bslib_0.7.0            
+##  [19] htmlwidgets_1.6.4       ica_1.0-3               plyr_1.8.9             
+##  [22] plotly_4.12.1           zoo_1.9-0               cachem_1.1.0           
+##  [25] igraph_2.2.2            mime_0.12               lifecycle_1.0.4        
+##  [28] pkgconfig_2.0.3         Matrix_1.7-4            R6_2.5.1               
+##  [31] fastmap_1.2.0           GenomeInfoDbData_1.2.13 fitdistrplus_1.2-6     
+##  [34] future_1.69.0           shiny_1.8.1.1           digest_0.6.35          
+##  [37] tensor_1.5.1            RSpectra_0.16-2         irlba_2.3.7            
+##  [40] labeling_0.4.3          progressr_1.0.0         fansi_1.0.6            
+##  [43] spatstat.sparse_3.2-0   mgcv_1.9-1              httr_1.4.7             
+##  [46] polyclip_1.10-7         abind_1.4-8             compiler_4.4.0         
+##  [49] withr_3.0.3             S7_0.2.2                fastDummies_1.7.6      
+##  [52] MASS_7.3-60.2           DelayedArray_0.32.0     tools_4.4.0            
+##  [55] lmtest_0.9-40           httpuv_1.6.15           future.apply_1.20.2    
+##  [58] goftest_1.2-3           glue_1.7.0              nlme_3.1-165           
+##  [61] promises_1.3.0          Rtsne_0.17              cluster_2.1.6          
+##  [64] generics_0.1.3          gtable_0.3.6            spatstat.data_3.1-9    
+##  [67] tidyr_1.3.1             data.table_1.15.4       utf8_1.2.4             
+##  [70] XVector_0.46.0          spatstat.geom_3.8-2     RcppAnnoy_0.0.23       
+##  [73] ggrepel_0.9.8           RANN_2.6.3              pillar_1.9.0           
+##  [76] stringr_1.5.1           spam_2.11-4             RcppHNSW_0.7.0         
+##  [79] later_1.3.2             splines_4.4.0           lattice_0.22-6         
+##  [82] survival_3.7-0          deldir_2.0-4            tidyselect_1.2.1       
+##  [85] miniUI_0.1.1.1          pbapply_1.7-5           knitr_1.47             
+##  [88] gridExtra_2.3.1         scattermore_1.2         xfun_0.44              
+##  [91] stringi_1.8.4           UCSC.utils_1.2.0        yaml_2.3.8             
+##  [94] evaluate_0.24.0         codetools_0.2-20        tibble_3.2.1           
+##  [97] cli_3.6.2               uwot_0.2.4              xtable_1.8-4           
+## [100] reticulate_1.47.0       jquerylib_0.1.4         Rcpp_1.1.2             
+## [103] globals_0.19.1          spatstat.random_3.5-1   png_0.1-9              
+## [106] spatstat.univar_3.2-0   parallel_4.4.0          dotCall64_1.2          
+## [109] listenv_1.0.0           scales_1.4.0            ggridges_0.5.7         
+## [112] crayon_1.5.2            rlang_1.3.0</code></pre>
 </div>
 
 
