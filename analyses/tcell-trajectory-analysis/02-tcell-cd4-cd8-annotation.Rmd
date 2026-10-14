@@ -339,6 +339,7 @@ for (compartment in c("CD4-like", "CD8-like")) {
     reduction = "umap",
     group.by = "condition"
   ) +
+    scale_color_discrete(labels = condition_plot_label) +
     ggtitle(paste(compartment, "UMAP by condition"))
 
   p_projectils <- DimPlot(

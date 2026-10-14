@@ -194,8 +194,14 @@ plot_aucell_pseudotime_tracks <- function(
             span = 0.75
           ) +
           ggplot2::facet_wrap(~ lineage, scales = "free_x", nrow = 1) +
+          ggplot2::scale_color_discrete(labels = condition_plot_label) +
           theme_Publication() +
           ggplot2::theme(
+            panel.background = ggplot2::element_rect(fill = "white", colour = NA),
+            plot.background = ggplot2::element_rect(fill = "white", colour = NA),
+            strip.background = ggplot2::element_rect(fill = "white", colour = NA),
+            legend.background = ggplot2::element_rect(fill = "white", colour = NA),
+            legend.key = ggplot2::element_rect(fill = "white", colour = NA),
             axis.text.x = ggplot2::element_text(size = 8),
             axis.text.y = ggplot2::element_text(size = 8),
             strip.text = ggplot2::element_text(size = 9),
@@ -218,6 +224,66 @@ plot_aucell_pseudotime_tracks <- function(
     aucell_pseudotime_table_file = score_table_file,
     aucell_pseudotime_plot_file = plot_file
   )
+}
+
+# Plot cluster-level pseudotime summaries for each lineage.
+plot_slingshot_pseudotime_summary <- function(
+  sling_df,
+  lineage_cols,
+  plot_label,
+  plot_file
+) {
+  lineage_display_names <- stats::setNames(
+    paste0("lineage ", seq_along(lineage_cols)),
+    lineage_cols
+  )
+  plot_height <- max(3.5, 0.28 * max(table(sling_df$lineage)))
+
+  summary_plots <- lapply(lineage_cols, function(lineage_name) {
+    sling_df %>%
+      dplyr::filter(lineage == lineage_name) %>%
+      dplyr::mutate(cluster_label = seurat_cluster_projectils_label) %>%
+      ggplot2::ggplot(
+        ggplot2::aes(
+          x = median_pseudotime,
+          y = reorder(cluster_label, median_pseudotime)
+        )
+      ) +
+      ggplot2::geom_point(ggplot2::aes(size = n), color = "#2166AC") +
+      theme_Publication() +
+      ggplot2::theme(
+        panel.background = ggplot2::element_rect(fill = "white", colour = NA),
+        plot.background = ggplot2::element_rect(fill = "white", colour = NA),
+        strip.background = ggplot2::element_rect(fill = "white", colour = NA),
+        legend.background = ggplot2::element_rect(fill = "white", colour = NA),
+        legend.key = ggplot2::element_rect(fill = "white", colour = NA),
+        plot.title = ggplot2::element_text(size = 12),
+        axis.title = ggplot2::element_text(size = 10),
+        axis.text.x = ggplot2::element_text(size = 8),
+        axis.text.y = ggplot2::element_text(size = 8),
+        legend.title = ggplot2::element_text(size = 9),
+        legend.text = ggplot2::element_text(size = 8)
+      ) +
+      ggplot2::labs(
+        x = "Median Slingshot pseudotime",
+        y = "Cluster",
+        size = "Cells",
+        title = paste0(plot_label, ": ", lineage_display_names[[lineage_name]])
+      )
+  })
+
+  grDevices::cairo_pdf(
+    filename = plot_file,
+    width = 7,
+    height = plot_height,
+    onefile = TRUE,
+    family = "sans"
+  )
+  tryCatch(
+    for (p in summary_plots) print(p),
+    finally = grDevices::dev.off()
+  )
+  invisible(plot_file)
 }
 
 # Return marker-program names used for functional-state annotation.
@@ -1051,9 +1117,16 @@ run_condition_slingshot <- function(
       }
     )
 
+    cached_metadata <- if (is.list(cached_inference)) cached_inference$cache_metadata else NULL
+    # Older caches recorded an RDS checksum, which changes when Seurat updates
+    # command timestamps even if the trajectory input is otherwise unchanged.
+    if (is.list(cached_metadata)) {
+      cached_metadata$input_rds_md5 <- NULL
+    }
+
     cache_is_valid <- !is.null(cached_inference) &&
       is.list(cached_inference) &&
-      identical(cached_inference$cache_metadata, expected_cache_metadata) &&
+      identical(cached_metadata, expected_cache_metadata) &&
       all(c("obj", "cluster_counts", "eligibility", "sling", "curve_weights", "trade_seq_pseudotime") %in% names(cached_inference))
 
     if (!cache_is_valid) {
@@ -1334,57 +1407,15 @@ run_condition_slingshot <- function(
 
   grDevices::dev.off()
 
-  summary_plot_height <- max(
-    3.5,
-    0.28 * max(table(sling_df$lineage))
+  plot_slingshot_pseudotime_summary(
+    sling_df = sling_df,
+    lineage_cols = lineage_cols,
+    plot_label = plot_label,
+    plot_file = file.path(
+      output_plot_dir,
+      paste0("tcell_", label, "_slingshot_pseudotime_all_lineages_summary.pdf")
+    )
   )
-
-  summary_plots <- lapply(
-    lineage_cols,
-    function(lineage_name) {
-      sling_df %>%
-        dplyr::filter(lineage == lineage_name) %>%
-        dplyr::mutate(
-          cluster_label = seurat_cluster_projectils_label
-        ) %>%
-        ggplot2::ggplot(
-          ggplot2::aes(
-            x = median_pseudotime,
-            y = reorder(cluster_label, median_pseudotime)
-          )
-        ) +
-        ggplot2::geom_point(ggplot2::aes(size = n), color = "#2166AC") +
-        theme_Publication() +
-        ggplot2::theme(
-          plot.title = ggplot2::element_text(size = 12),
-          axis.title = ggplot2::element_text(size = 10),
-          axis.text.x = ggplot2::element_text(size = 8),
-          axis.text.y = ggplot2::element_text(size = 8),
-          legend.title = ggplot2::element_text(size = 9),
-          legend.text = ggplot2::element_text(size = 8)
-        ) +
-        ggplot2::labs(
-          x = "Median Slingshot pseudotime",
-          y = "Cluster",
-          size = "Cells",
-          title = paste0(plot_label, ": ", lineage_display_names[[lineage_name]])
-        )
-    }
-  )
-
-  grDevices::cairo_pdf(
-    filename = file.path(output_plot_dir, paste0("tcell_", label, "_slingshot_pseudotime_all_lineages_summary.pdf")),
-    width = 7,
-    height = summary_plot_height,
-    onefile = TRUE,
-    family = "sans"
-  )
-
-  for (p in summary_plots) {
-    print(p)
-  }
-
-  grDevices::dev.off()
 
   umap_df <- Embeddings(obj, "umap") %>%
     as.data.frame() %>%

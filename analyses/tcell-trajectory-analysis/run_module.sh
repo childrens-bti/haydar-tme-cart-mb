@@ -3,85 +3,20 @@
 set -e
 set -o pipefail
 
-module_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-cd "$module_dir"
+# NOTE:
+# Downloading the v5 data release is required prior to running this module.
 
-# The refined T-cell object is produced by downstream-analyses script 06.
-# Downloading the v5 data release is an alternative when that output is absent.
+# Analyze the combined T-cell trajectory and plot lineage and pseudotime trends.
+Rscript -e "rmarkdown::render('01-tcell-trajectory.Rmd')"
 
-default_scripts=(
-  "01-tcell-trajectory.Rmd"
-  "02-tcell-cd4-cd8-annotation.Rmd"
-  "03-tcell-cd4-cd8-slingshot.Rmd"
-)
+# Annotate CD4-like and CD8-like cells and save their trajectory inputs.
+Rscript -e "rmarkdown::render('02-tcell-cd4-cd8-annotation.Rmd')"
 
-compartment="both"
-scripts=()
+# Infer shared, all-condition Slingshot trajectories for CD4-like and CD8-like cells.
+Rscript -e "rmarkdown::render('03-tcell-cd4-cd8-slingshot.Rmd')"
 
-while [ "$#" -gt 0 ]; do
-  case "$1" in
-    --compartment)
-      if [ "$#" -lt 2 ]; then
-        echo "--compartment requires CD4, CD8, or both" >&2
-        exit 1
-      fi
-      compartment="$2"
-      shift 2
-      ;;
-    --compartment=*)
-      compartment="${1#*=}"
-      shift
-      ;;
-    *)
-      scripts+=("$1")
-      shift
-      ;;
-  esac
-done
+# Fit or reuse the CD4-like tradeSeq model and generate its tests and plots.
+TRADESEQ_WORKERS=6 Rscript -e "rmarkdown::render('04-tcell-cd4-cd8-tradeseq.Rmd', params = list(compartment = 'CD4-like'), output_file = '04-tcell-cd4-tradeseq.html')"
 
-case "$compartment" in
-  CD4|cd4|CD4-like|cd4-like)
-    compartment="CD4-like"
-    ;;
-  CD8|cd8|CD8-like|cd8-like)
-    compartment="CD8-like"
-    ;;
-  both|Both|BOTH)
-    compartment="both"
-    ;;
-  *)
-    echo "Invalid compartment: $compartment. Use CD4, CD8, or both." >&2
-    exit 1
-    ;;
-esac
-
-if [ "${#scripts[@]}" -eq 0 ]; then
-  scripts=("${default_scripts[@]}")
-fi
-
-for script in "${scripts[@]}"; do
-  if [ ! -f "$script" ]; then
-    echo "Trajectory script not found: $script" >&2
-    exit 1
-  fi
-
-  echo "Rendering $script"
-  script_name="$(basename "$script")"
-  if [ "$script_name" = "04-tcell-cd4-cd8-tradeseq.Rmd" ]; then
-    if [ "$compartment" = "CD4-like" ]; then
-      report_file="${script_name%%-*}-tcell-cd4-tradeseq.html"
-    elif [ "$compartment" = "CD8-like" ]; then
-      report_file="${script_name%%-*}-tcell-cd8-tradeseq.html"
-    else
-      report_file="${script_name%.Rmd}.html"
-    fi
-
-    Rscript -e "rmarkdown::render('$script', params = list(compartment = '$compartment'), output_file = '$report_file')"
-  else
-    if [ "$compartment" != "both" ]; then
-      echo "--compartment is supported only for analysis 04" >&2
-      exit 1
-    fi
-    Rscript -e "rmarkdown::render('$script')"
-  fi
-done
+# Fit or reuse the CD8-like tradeSeq model and generate its tests and plots.
+TRADESEQ_WORKERS=6 Rscript -e "rmarkdown::render('04-tcell-cd4-cd8-tradeseq.Rmd', params = list(compartment = 'CD8-like'), output_file = '04-tcell-cd8-tradeseq.html')"

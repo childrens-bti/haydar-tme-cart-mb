@@ -839,6 +839,10 @@ plot_priority_gene_program <- function(
     ggplot2::aes(x = time, y = log1p(yhat), color = condition)
   ) +
     ggplot2::geom_line(linewidth = 0.7) +
+    ggplot2::scale_color_discrete(
+      breaks = condition_levels,
+      labels = condition_plot_label
+    ) +
     ggplot2::facet_grid(gene ~ lineage, scales = "free") +
     ggplot2::labs(
       title = paste(compartment, program, "fitted expression"),
@@ -848,13 +852,15 @@ plot_priority_gene_program <- function(
       color = "Condition"
     ) +
     ggplot2::theme_bw() +
-    ggplot2::theme(legend.position = "bottom")
+    ggplot2::theme(legend.position = "bottom") +
+    ggplot2::guides(color = ggplot2::guide_legend(nrow = 2, byrow = TRUE))
 
   ggplot2::ggsave(
     output_file,
     plot,
     width = 11,
-    height = max(4, 1.25 * length(genes) + 2)
+    height = max(4, 1.25 * length(genes) + 2),
+    device = grDevices::cairo_pdf
   )
   invisible(TRUE)
 }
@@ -869,6 +875,11 @@ plot_top_dynamic_heatmaps <- function(
   n_genes = 40L,
   n_points = 100L
 ) {
+  highlighted_genes <- c(
+    "Gzmb", "Prf1", "Mki67", "Top2a", "Pdcd1", "Lag3", "Tox",
+    "Xcl1", "Dusp4", "Havcr2", "S1pr1", "Klf2", "Sell", "Lef1",
+    "Il2ra", "Ctla4", "Foxp3", "Lrrc32", "Tigit"
+  )
   top_genes <- rankings %>%
     dplyr::filter(
       ranking_status == "ranked",
@@ -943,22 +954,46 @@ plot_top_dynamic_heatmaps <- function(
     stop("Condition averaging did not retain every modeled condition")
   }
 
+  # Include the full raster tiles centered on pseudotime 0 and 1.
+  half_bin <- 0.5 / (n_points - 1)
   purrr::walk(unique(prediction$lineage), function(lineage_name) {
     plot_data <- prediction %>%
       dplyr::filter(lineage == lineage_name) %>%
       dplyr::mutate(gene = stats::reorder(gene, peak_time, FUN = mean))
+    gene_labels <- plot_data %>%
+      dplyr::distinct(gene) %>%
+      dplyr::mutate(
+        label = as.character(gene),
+        label_color = dplyr::if_else(
+          label %in% highlighted_genes |
+            grepl("^(Hist[1-4]|H1f|H2[ab]|H3[cf]|H4c)", label),
+          "red", "black"
+        )
+      )
     plot <- ggplot2::ggplot(
       plot_data,
       ggplot2::aes(x = relative_pseudotime, y = gene, fill = z_score)
     ) +
       ggplot2::geom_raster(interpolate = FALSE) +
+      ggplot2::geom_text(
+        data = gene_labels,
+        mapping = ggplot2::aes(
+          x = -half_bin - 0.02, y = gene, label = label, color = label_color
+        ),
+        inherit.aes = FALSE,
+        hjust = 1,
+        size = 3
+      ) +
+      ggplot2::scale_color_identity() +
       ggplot2::scale_fill_gradient2(
         low = "#2166AC", mid = "white", high = "#B2182B", midpoint = 0
       ) +
       ggplot2::scale_x_continuous(
-        limits = c(0, 1),
         breaks = seq(0, 1, by = 0.25),
         expand = c(0, 0)
+      ) +
+      ggplot2::coord_cartesian(
+        xlim = c(-half_bin, 1 + half_bin), clip = "off"
       ) +
       ggplot2::labs(
         title = paste(compartment, lineage_name, "top dynamic genes"),
@@ -970,7 +1005,13 @@ plot_top_dynamic_heatmaps <- function(
         y = NULL,
         fill = "Row z-score"
       ) +
-      ggplot2::theme_bw()
+      ggplot2::theme_bw() +
+      ggplot2::theme(
+        axis.text.y = ggplot2::element_blank(),
+        axis.ticks.y = ggplot2::element_line(color = "grey30", linewidth = 0.4),
+        axis.ticks.length.y = grid::unit(3, "pt"),
+        plot.margin = ggplot2::margin(5.5, 5.5, 5.5, 85)
+      )
 
     ggplot2::ggsave(
       file.path(

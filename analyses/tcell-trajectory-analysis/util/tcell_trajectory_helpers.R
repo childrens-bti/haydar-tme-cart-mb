@@ -15,6 +15,25 @@ safe_label <- function(x, lowercase = FALSE) {
   label
 }
 
+condition_plot_labels <- list(
+  `41BB-L` = quote("41BBL-" * ""^"CD28TM" * "CD28.mut" * zeta),
+  B7H3 = quote(""^"CD28TM" * ".CD28.mut" * zeta),
+  `CD28-41BB` = quote(""^"CD28TM" * ".41BB.mut" * zeta),
+  `CD8-41BB` = quote(""^"CD8TM" * ".41BB.mut" * zeta),
+  STOP = "Control CAR",
+  tumor = "Tumor only",
+  all_conditions = "All conditions"
+)
+
+# Plotmath renders superscripts reliably in PDF without requiring special font glyphs.
+condition_plot_label <- function(condition) {
+  condition <- as.character(condition)
+  as.expression(lapply(condition, function(value) {
+    label <- condition_plot_labels[[value]]
+    if (is.null(label)) value else label
+  }))
+}
+
 # Return a log-normalized expression matrix from a Seurat object.
 # Supports both Seurat v5 `layer` and older `slot` access patterns.
 get_log_data <- function(seu, assay = SeuratObject::DefaultAssay(seu)) {

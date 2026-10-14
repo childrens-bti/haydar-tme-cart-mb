@@ -2,22 +2,13 @@
 
 ## Usage
 
-Render the existing reports for analyses 01–03:
-
-`bash run_module.sh`
-
-Render the CD4-like and CD8-like tradeSeq reports independently:
+Use the current project Docker image and download the v5 data release before running the module. From this directory, run:
 
 ```bash
-TRADESEQ_WORKERS=6 bash run_module.sh 04-tcell-cd4-cd8-tradeseq.Rmd --compartment CD4
-TRADESEQ_WORKERS=6 bash run_module.sh 04-tcell-cd4-cd8-tradeseq.Rmd --compartment CD8
+bash run_module.sh
 ```
 
-These commands write separate HTML reports and compartment-specific summary
-tables. Valid cached `evaluateK` results are reused from the module results
-directory. Fitted-model caches are checked first in the module results directory
-and then in `data/v5`; a model is fitted only when neither location contains a
-compatible cache.
+This renders analyses 01–03, then separate CD4-like and CD8-like tradeSeq reports. Stage 04 reuses compatible model caches from the results directory or `data/v5`; otherwise, fitting can take a long time.
 
 ## Reviews
 
@@ -28,8 +19,8 @@ compatible cache.
 
 1. `01-tcell-trajectory.Rmd`: performs the legacy combined-T-cell Slingshot analysis and generates pseudotime, lineage, marker-trend, and pseudotime-associated-gene outputs.
 2. `02-tcell-cd4-cd8-annotation.Rmd`: identifies clean CD4-like and CD8-like T cells using marker expression and ScGate support, adds ProjecTILs and cluster-level annotations, calculates AUCell program scores, and saves the prepared compartment objects.
-3. `03-tcell-cd4-cd8-slingshot.Rmd`: runs condition-specific and shared Slingshot analyses for the CD4-like and CD8-like compartments, caches successful trajectory inference, and generates pseudotime, lineage, gene-trend, and AUCell program outputs.
-4. `04-tcell-cd4-cd8-tradeseq.Rmd`: validates the shared CD4-like and CD8-like trajectories, fits condition-aware tradeSeq models to a balanced gene set, tests lineage-associated and condition-dependent expression, validates the manually reviewed lineage labels, and generates fitted gene-trend and heatmap outputs. The compartment-specific reports are saved as `04-tcell-cd4-tradeseq.html` and `04-tcell-cd8-tradeseq.html`.
+3. `03-tcell-cd4-cd8-slingshot.Rmd`: runs shared all-condition Slingshot analyses for the CD4-like and CD8-like compartments by default, caches successful trajectory inference, and generates pseudotime, lineage, gene-trend, and AUCell program outputs.
+4. `04-tcell-cd4-cd8-tradeseq.Rmd`: validates the shared CD4-like and CD8-like trajectories, fits condition-aware tradeSeq models to a balanced gene set, tests lineage-associated and condition-dependent expression, validates the manually reviewed lineage labels, and generates fitted gene-trend and heatmap outputs.
 
 ## Analysis module directory structure
 
