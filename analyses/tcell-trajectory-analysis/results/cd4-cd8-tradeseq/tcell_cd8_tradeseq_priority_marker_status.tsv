@@ -1,0 +1,17 @@
+compartment	program	gene	present_in_counts	n_cells_detected	passed_filter	filter_reason	selected_for_model	selection_reason	model_converged	in_model
+CD8-like	memory_naive	Tcf7	TRUE	207	TRUE	passed	TRUE	variable_and_priority	TRUE	TRUE
+CD8-like	memory_naive	Lef1	TRUE	364	TRUE	passed	TRUE	variable_and_priority	TRUE	TRUE
+CD8-like	memory_naive	Ccr7	TRUE	179	TRUE	passed	TRUE	variable_and_priority	TRUE	TRUE
+CD8-like	memory_naive	Il7r	TRUE	396	TRUE	passed	TRUE	variable_and_priority	TRUE	TRUE
+CD8-like	proliferation	Mki67	TRUE	159	TRUE	passed	TRUE	variable_and_priority	TRUE	TRUE
+CD8-like	proliferation	Top2a	TRUE	250	TRUE	passed	TRUE	variable_and_priority	TRUE	TRUE
+CD8-like	effector_cytotoxic	Nkg7	TRUE	1710	TRUE	passed	TRUE	priority_marker	TRUE	TRUE
+CD8-like	effector_cytotoxic	Gzmb	TRUE	769	TRUE	passed	TRUE	variable_and_priority	TRUE	TRUE
+CD8-like	effector_cytotoxic	Prf1	TRUE	376	TRUE	passed	TRUE	variable_and_priority	TRUE	TRUE
+CD8-like	effector_cytotoxic	Ifng	TRUE	817	TRUE	passed	TRUE	variable_and_priority	TRUE	TRUE
+CD8-like	effector_cytotoxic	Ccl5	TRUE	1126	TRUE	passed	TRUE	variable_and_priority	TRUE	TRUE
+CD8-like	exhaustion_dysfunction	Tox	TRUE	279	TRUE	passed	TRUE	variable_and_priority	TRUE	TRUE
+CD8-like	exhaustion_dysfunction	Pdcd1	TRUE	717	TRUE	passed	TRUE	variable_and_priority	TRUE	TRUE
+CD8-like	exhaustion_dysfunction	Lag3	TRUE	528	TRUE	passed	TRUE	variable_and_priority	TRUE	TRUE
+CD8-like	exhaustion_dysfunction	Havcr2	TRUE	330	TRUE	passed	TRUE	variable_and_priority	TRUE	TRUE
+CD8-like	exhaustion_dysfunction	Ctla4	TRUE	843	TRUE	passed	TRUE	variable_and_priority	TRUE	TRUE

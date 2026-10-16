@@ -1,0 +1,791 @@
+---
+title: "04-tcell-cd4-cd8-tradeseq"
+author: "Bicna Song"
+date: "`r Sys.Date()`"
+params:
+  compartment: "both"
+output:
+  html_document:
+    toc: TRUE
+    toc_float: TRUE
+    code_folding: hide
+---
+
+This module fits condition-aware tradeSeq models to a balanced, predefined gene set on the shared CD4-like and CD8-like Slingshot trajectories. CD4-like and CD8-like cells are modeled separately. All statistical results are exploratory cell-level results; cells from the same mouse are not treated as independent biological replicates by tradeSeq.
+
+## Setup
+This chunk loads the packages used by the analysis, defines the stage-specific directories, loads the helper functions, and verifies the pinned tradeSeq version.
+
+```{r setup, message=FALSE, warning=FALSE}
+# Keep each BiocParallel worker single-threaded so numerical libraries do not
+# create additional threads inside the worker processes.
+Sys.setenv(
+  OMP_NUM_THREADS = "1",
+  OPENBLAS_NUM_THREADS = "1",
+  MKL_NUM_THREADS = "1"
+)
+
+suppressPackageStartupMessages({
+  library(rprojroot)
+  library(dplyr)
+  library(tibble)
+  library(purrr)
+  library(stringr)
+  library(ggplot2)
+  library(Matrix)
+  library(SeuratObject)
+  library(SingleCellExperiment)
+  library(SummarizedExperiment)
+  library(BiocParallel)
+  library(tradeSeq)
+})
+
+root_dir <- find_root(has_dir(".git"))
+analysis_dir <- file.path(root_dir, "analyses", "tcell-trajectory-analysis")
+data_dir <- file.path(root_dir, "data", "v5")
+slingshot_results_dir <- file.path(analysis_dir, "results", "cd4-cd8-slingshot")
+results_dir <- file.path(analysis_dir, "results", "cd4-cd8-tradeseq")
+plot_dir <- file.path(analysis_dir, "plots", "cd4-cd8-tradeseq")
+
+walk(
+  c(results_dir, plot_dir),
+  dir.create,
+  recursive = TRUE,
+  showWarnings = FALSE
+)
+
+source(file.path(analysis_dir, "util", "tcell_trajectory_helpers.R"))
+source(file.path(analysis_dir, "util", "tcell_tradeseq_helpers.R"))
+
+installed_tradeseq_version <- as.character(
+  utils::packageVersion("tradeSeq")
+)
+```
+
+## Parameters
+This chunk records the frozen conditions, gene filter, knot candidates, convergence gate, cache controls, and priority marker programs. Set `force_refit` to `TRUE` only when valid cached AIC matrices and fitted models must be replaced.
+
+```{r parameters}
+analysis_seed <- 1234L
+model_conditions <- c("B7H3", "41BB-L", "CD8-41BB", "CD28-41BB", "STOP")
+candidate_knots <- 4:8
+evaluate_k_n_genes <- 500L
+balanced_model_n_genes <- 3000L
+min_cells_expressed <- 10L
+min_convergence_fraction <- 0.80
+max_priority_failure_fraction <- 0.50
+top_heatmap_genes <- 40L
+prediction_points <- 100L
+force_refit <- FALSE
+
+# Six workers leave sufficient memory headroom for condition-aware GAM fitting
+# on an AWS m6i.4xlarge instance. Override this default with TRADESEQ_WORKERS.
+workers <- suppressWarnings(as.integer(Sys.getenv("TRADESEQ_WORKERS", "6")))
+if (is.na(workers) || workers < 1) {
+  stop("TRADESEQ_WORKERS must be a positive integer")
+}
+bpparam <- make_tradeseq_bpparam(workers, analysis_seed)
+
+requested_compartment <- as.character(params$compartment)
+valid_compartment_parameters <- c("both", "CD4-like", "CD8-like")
+if (length(requested_compartment) != 1 ||
+    !requested_compartment %in% valid_compartment_parameters) {
+  stop(
+    "compartment must be one of: ",
+    paste(valid_compartment_parameters, collapse = ", ")
+  )
+}
+
+selected_compartments <- if (requested_compartment == "both") {
+  c("CD4-like", "CD8-like")
+} else {
+  requested_compartment
+}
+
+all_compartment_stems <- c(`CD4-like` = "cd4", `CD8-like` = "cd8")
+all_cache_files <- c(
+  `CD4-like` = file.path(
+    slingshot_results_dir,
+    "CD4-trajectory",
+    "tcell_CD4_like_all_conditions_slingshot_result.rds"
+  ),
+  `CD8-like` = file.path(
+    slingshot_results_dir,
+    "CD8-trajectory",
+    "tcell_CD8_like_all_conditions_slingshot_result.rds"
+  )
+)
+compartment_stems <- all_compartment_stems[selected_compartments]
+cache_files <- all_cache_files[selected_compartments]
+output_prefix <- if (requested_compartment == "both") {
+  "tcell_cd4_cd8"
+} else {
+  paste0("tcell_", unname(compartment_stems[[requested_compartment]]))
+}
+input_manifest_filename <- if (requested_compartment == "both") {
+  "tcell_trajectory_input_manifest.tsv"
+} else {
+  paste0(output_prefix, "_trajectory_input_manifest.tsv")
+}
+comparison_manifest_file <- file.path(
+  analysis_dir,
+  "config",
+  "condition-comparison-manifest.tsv"
+)
+lineage_annotation_file <- file.path(
+  analysis_dir,
+  "config",
+  "tcell-lineage-annotation-manifest.tsv"
+)
+
+priority_programs <- list(
+  memory_naive = c("Tcf7", "Lef1", "Ccr7", "Il7r"),
+  proliferation = c("Mki67", "Top2a"),
+  effector_cytotoxic = c("Nkg7", "Gzmb", "Prf1", "Ifng", "Ccl5"),
+  exhaustion_dysfunction = c("Tox", "Pdcd1", "Lag3", "Havcr2", "Ctla4")
+)
+# Use one representative gene per priority program in the compact
+# sample-stratified descriptive plot.
+sample_sensitivity_genes <- c("Tcf7", "Mki67", "Gzmb", "Pdcd1")
+sample_sensitivity_min_cells <- 30L
+sample_sensitivity_bins <- 10L
+
+cat("Modeled conditions:", paste(model_conditions, collapse = ", "), "\n")
+cat("Modeled compartments:", paste(selected_compartments, collapse = ", "), "\n")
+cat("Candidate knots:", paste(candidate_knots, collapse = ", "), "\n")
+cat("Variable genes per compartment:", balanced_model_n_genes, "\n")
+cat("tradeSeq workers:", workers, "\n")
+cat("Force refit:", force_refit, "\n")
+```
+
+## Load and validate shared trajectories
+This chunk reads the two all-condition Slingshot caches, validates cell and lineage alignment, extracts raw RNA counts, and excludes tumor cells from statistical modeling. Tumor remains descriptive-only according to the frozen comparison policy.
+
+```{r load-and-validate-inputs}
+if (!file.exists(comparison_manifest_file)) {
+  stop("Condition-comparison manifest was not found: ", comparison_manifest_file)
+}
+if (!file.exists(lineage_annotation_file)) {
+  stop("Lineage-annotation manifest was not found: ", lineage_annotation_file)
+}
+
+comparison_manifest <- read.delim(
+  comparison_manifest_file,
+  stringsAsFactors = FALSE,
+  check.names = FALSE,
+  na.strings = c("", "NA")
+)
+
+trajectory_inputs <- imap(
+  cache_files,
+  ~ prepare_tradeseq_input(.x, .y, model_conditions)
+)
+
+lineage_annotations <- read.delim(
+  lineage_annotation_file,
+  stringsAsFactors = FALSE,
+  check.names = FALSE,
+  na.strings = c("", "NA")
+) %>%
+  filter(compartment %in% selected_compartments)
+required_annotation_columns <- c(
+  "compartment", "lineage", "assigned_program", "annotation_confidence",
+  "supporting_evidence", "main_caution"
+)
+missing_annotation_columns <- setdiff(
+  required_annotation_columns,
+  colnames(lineage_annotations)
+)
+if (length(missing_annotation_columns) > 0) {
+  stop(
+    "Lineage-annotation manifest is missing columns: ",
+    paste(missing_annotation_columns, collapse = ", ")
+  )
+}
+
+expected_lineages <- imap_dfr(trajectory_inputs, function(input, compartment) {
+  tibble(compartment = compartment, lineage = input$lineage_names)
+})
+annotation_keys <- lineage_annotations %>%
+  dplyr::select(compartment, lineage)
+if (anyDuplicated(annotation_keys) ||
+    !setequal(
+      paste(expected_lineages$compartment, expected_lineages$lineage),
+      paste(annotation_keys$compartment, annotation_keys$lineage)
+    )) {
+  stop("Lineage-annotation manifest must contain one row for every shared lineage")
+}
+
+input_manifest <- imap_dfr(trajectory_inputs, function(input, compartment) {
+  tibble(
+    compartment = compartment,
+    cache_file = input$cache_file,
+    cache_md5 = input$cache_md5,
+    n_cells_all_conditions = input$n_cells_all_conditions,
+    n_cells_modeled = length(input$cells),
+    n_samples_modeled = n_distinct(input$sample),
+    n_genes_input = nrow(input$counts),
+    n_lineages = length(input$lineage_names),
+    lineage_names = paste(input$lineage_names, collapse = "|"),
+    modeled_conditions = paste(levels(input$condition), collapse = "|"),
+    excluded_conditions = paste(input$excluded_conditions, collapse = "|")
+  )
+})
+
+condition_sample_counts <- imap_dfr(
+  trajectory_inputs,
+  function(input, compartment) {
+    tibble(condition = input$condition, sample = input$sample) %>%
+      dplyr::count(condition, sample, name = "n_cells") %>%
+      mutate(compartment = compartment, .before = 1)
+  }
+)
+
+write.table(
+  input_manifest,
+  file.path(results_dir, input_manifest_filename),
+  sep = "\t", quote = FALSE, row.names = FALSE, na = "NA"
+)
+write.table(
+  condition_sample_counts,
+  file.path(results_dir, paste0(output_prefix, "_condition_sample_counts.tsv")),
+  sep = "\t", quote = FALSE, row.names = FALSE, na = "NA"
+)
+
+knitr::kable(input_manifest)
+knitr::kable(condition_sample_counts)
+knitr::kable(lineage_annotations)
+```
+
+## Select genes for the balanced model
+This chunk first keeps genes detected in at least 10 modeled cells with non-zero variance. It then selects the 3,000 highest upstream standardized variable-feature scores per compartment and adds every priority marker that passes the expression filter. This outcome-independent selection reduces computation while retaining broad discovery and the predefined biological programs. Markers that fail the expression filter are reported rather than forced into the model.
+
+```{r filter-genes}
+gene_filters <- map(
+  trajectory_inputs,
+  ~ filter_tradeseq_genes(.x$counts, min_cells = min_cells_expressed)
+)
+
+gene_filter_summary <- imap_dfr(gene_filters, function(filter_result, compartment) {
+  filter_result$summary %>% mutate(compartment = compartment, .before = 1)
+})
+gene_filter_qc <- imap_dfr(gene_filters, function(filter_result, compartment) {
+  filter_result$gene_qc %>% mutate(compartment = compartment, .before = 1)
+})
+
+priority_marker_table <- imap_dfr(
+  priority_programs,
+  ~ tibble(program = .y, gene = .x)
+)
+balanced_gene_sets <- imap(
+  trajectory_inputs,
+  function(input, compartment) {
+    select_balanced_model_genes(
+      gene_qc = gene_filters[[compartment]]$gene_qc,
+      variable_feature_score = input$variable_feature_score,
+      priority_programs = priority_programs,
+      n_variable_genes = balanced_model_n_genes
+    )
+  }
+)
+gene_selection <- imap_dfr(balanced_gene_sets, function(selection, compartment) {
+  selection$selection %>% mutate(compartment = compartment, .before = 1)
+})
+gene_selection_summary <- imap_dfr(
+  balanced_gene_sets,
+  function(selection, compartment) {
+    selection$summary %>% mutate(compartment = compartment, .before = 1)
+  }
+)
+priority_marker_status <- imap_dfr(gene_filters, function(filter_result, compartment) {
+  priority_marker_table %>%
+    left_join(filter_result$gene_qc, by = "gene") %>%
+    left_join(
+      balanced_gene_sets[[compartment]]$selection %>%
+        dplyr::select(gene, selected_for_model, selection_reason),
+      by = "gene"
+    ) %>%
+    transmute(
+      compartment = compartment,
+      program,
+      gene,
+      present_in_counts = !is.na(n_cells_detected),
+      n_cells_detected,
+      passed_filter = dplyr::coalesce(passed_filter, FALSE),
+      filter_reason = dplyr::coalesce(filter_reason, "not_present_in_counts"),
+      selected_for_model = dplyr::coalesce(selected_for_model, FALSE),
+      selection_reason = dplyr::coalesce(
+        selection_reason,
+        "not_present_in_counts"
+      )
+    )
+})
+
+write.table(
+  gene_filter_summary,
+  file.path(
+    results_dir,
+    paste0(output_prefix, "_tradeseq_gene_filter_summary.tsv")
+  ),
+  sep = "\t", quote = FALSE, row.names = FALSE, na = "NA"
+)
+write.table(
+  gene_filter_qc,
+  file.path(results_dir, paste0(output_prefix, "_tradeseq_gene_filter_qc.tsv")),
+  sep = "\t", quote = FALSE, row.names = FALSE, na = "NA"
+)
+write.table(
+  gene_selection_summary,
+  file.path(
+    results_dir,
+    paste0(output_prefix, "_tradeseq_gene_selection_summary.tsv")
+  ),
+  sep = "\t", quote = FALSE, row.names = FALSE, na = "NA"
+)
+write.table(
+  gene_selection,
+  file.path(results_dir, paste0(output_prefix, "_tradeseq_gene_selection.tsv")),
+  sep = "\t", quote = FALSE, row.names = FALSE, na = "NA"
+)
+
+knitr::kable(gene_filter_summary)
+knitr::kable(gene_selection_summary)
+knitr::kable(priority_marker_status)
+```
+
+## Select the number of knots
+For each compartment, this chunk evaluates 4–8 knots using the same condition factor as the main model and a deterministic set of up to 500 broadly detected genes. It chooses the smallest knot count whose mean AIC is within two units of the minimum and saves both the native AIC matrix and a compact selection plot.
+
+```{r evaluate-knots}
+evaluate_k_results <- imap(
+  trajectory_inputs,
+  function(input, compartment) {
+    stem <- compartment_stems[[compartment]]
+    evaluation_genes <- select_evaluate_k_genes(
+      gene_filters[[compartment]]$gene_qc,
+      n_genes = evaluate_k_n_genes
+    )
+    aic_file <- file.path(
+      results_dir,
+      paste0("tcell_", stem, "_tradeseq_evaluateK.rds")
+    )
+    aic_matrix <- get_or_run_evaluate_k(
+      input = input,
+      evaluation_genes = evaluation_genes,
+      candidate_knots = candidate_knots,
+      seed = analysis_seed,
+      bpparam = bpparam,
+      output_file = aic_file,
+      force = force_refit
+    )
+    aic_summary <- summarize_evaluate_k(aic_matrix)
+    selected_k <- choose_trade_seq_k(aic_summary, aic_tolerance = 2)
+
+    write.table(
+      aic_summary,
+      file.path(
+        results_dir,
+        paste0("tcell_", stem, "_tradeseq_evaluateK_summary.tsv")
+      ),
+      sep = "\t", quote = FALSE, row.names = FALSE, na = "NA"
+    )
+    ggsave(
+      file.path(
+        plot_dir,
+        paste0("tcell_", stem, "_tradeseq_evaluateK.pdf")
+      ),
+      plot_evaluate_k_summary(aic_summary, selected_k, compartment),
+      width = 7,
+      height = 5
+    )
+
+    list(
+      aic = aic_matrix,
+      summary = aic_summary,
+      selected_k = selected_k,
+      evaluation_genes = evaluation_genes
+    )
+  }
+)
+
+selected_knots <- imap_dfr(evaluate_k_results, function(x, compartment) {
+  tibble(compartment = compartment, selected_k = x$selected_k)
+})
+knitr::kable(selected_knots)
+```
+
+## Fit condition-aware GAMs
+This chunk fits one negative-binomial GAM per compartment for the balanced gene set using raw counts, shared pseudotime, shared curve weights, and the five modeled conditions. It first looks for a valid fitted-model cache in the module results directory and then in `data/v5`. If neither location contains a compatible cache, it fits the model and saves the new cache in the results directory.
+
+```{r fit-gams}
+tradeseq_models <- imap(
+  trajectory_inputs,
+  function(input, compartment) {
+    stem <- compartment_stems[[compartment]]
+    model_filename <- paste0("tcell_", stem, "_tradeseq_model.rds")
+    result_model_file <- file.path(results_dir, model_filename)
+    release_model_file <- file.path(data_dir, model_filename)
+
+    get_or_fit_tradeseq_model(
+      input = input,
+      model_genes = balanced_gene_sets[[compartment]]$genes,
+      nknots = evaluate_k_results[[compartment]]$selected_k,
+      seed = analysis_seed,
+      bpparam = bpparam,
+      output_file = result_model_file,
+      cache_files = c(result_model_file, release_model_file),
+      force = force_refit
+    )
+  }
+)
+```
+
+## Check model convergence
+This chunk records per-gene convergence, reports the fitted fraction and priority-marker failures, and stops before hypothesis testing if fewer than 80% of genes converge or more than half of modeled priority markers fail.
+
+```{r fit-qc}
+convergence_tables <- imap(
+  tradeseq_models,
+  ~ get_tradeseq_convergence(.x, .y)
+)
+gene_fit_qc <- bind_rows(convergence_tables)
+
+priority_marker_status <- priority_marker_status %>%
+  left_join(gene_fit_qc, by = c("compartment", "gene")) %>%
+  mutate(
+    in_model = selected_for_model & !is.na(model_converged),
+    model_converged = if_else(in_model, model_converged, NA)
+  )
+
+fit_qc <- imap_dfr(tradeseq_models, function(model, compartment) {
+  convergence <- convergence_tables[[compartment]]
+  input <- trajectory_inputs[[compartment]]
+  tibble(
+    compartment = compartment,
+    n_genes_modeled = nrow(model),
+    n_genes_converged = sum(convergence$model_converged, na.rm = TRUE),
+    convergence_fraction = mean(convergence$model_converged, na.rm = TRUE),
+    selected_k = evaluate_k_results[[compartment]]$selected_k,
+    n_cells_modeled = length(input$cells),
+    n_samples_modeled = n_distinct(input$sample),
+    input_cache_md5 = input$cache_md5,
+    seed = analysis_seed,
+    tradeSeq_version = installed_tradeseq_version
+  )
+})
+
+write.table(
+  gene_fit_qc,
+  file.path(results_dir, paste0(output_prefix, "_tradeseq_gene_fit_qc.tsv")),
+  sep = "\t", quote = FALSE, row.names = FALSE, na = "NA"
+)
+write.table(
+  fit_qc,
+  file.path(results_dir, paste0(output_prefix, "_tradeseq_fit_qc.tsv")),
+  sep = "\t", quote = FALSE, row.names = FALSE, na = "NA"
+)
+write.table(
+  priority_marker_status,
+  file.path(
+    results_dir,
+    paste0(output_prefix, "_tradeseq_priority_marker_status.tsv")
+  ),
+  sep = "\t", quote = FALSE, row.names = FALSE, na = "NA"
+)
+
+walk(names(tradeseq_models), function(compartment) {
+  assert_tradeseq_fit_quality(
+    convergence = convergence_tables[[compartment]],
+    priority_status = priority_marker_status %>%
+      filter(compartment == .env$compartment),
+    min_convergence_fraction = min_convergence_fraction,
+    max_priority_failure_fraction = max_priority_failure_fraction
+  )
+})
+
+knitr::kable(fit_qc)
+knitr::kable(priority_marker_status)
+```
+
+## Run lineage association and condition tests
+This chunk runs lineage-by-condition `associationTest()` and lineage-specific pairwise `conditionTest()` on the balanced gene set. Native package output is preserved before results are normalized and Benjamini–Hochberg adjusted within each compartment, test, lineage, and comparison family. Every normalized row records whether the test returned finite statistics so untestable results are distinguishable from nonsignificant results.
+
+The single joint model yields all six prespecified CAR-vs-CAR comparisons and four CAR-vs-STOP comparisons.
+
+The package-native `meanLogFC` from `associationTest()` is stored as `mean_log_fc_global` because it is not specific to one lineage-condition test. The shared `effect_size` field remains `NA`. Pairwise `conditionTest()` does not return an effect estimate; signed fitted start-to-end changes are reported separately in the lineage-ranking table.
+
+```{r gene-level-tests}
+test_results <- imap(tradeseq_models, function(model, compartment) {
+  stem <- compartment_stems[[compartment]]
+  lineage_map <- make_lineage_map(
+    trajectory_inputs[[compartment]]$lineage_names
+  )
+
+  association_native <- tradeSeq::associationTest(
+    model,
+    global = FALSE,
+    lineages = TRUE
+  )
+  condition_native <- tradeSeq::conditionTest(
+    model,
+    global = FALSE,
+    pairwise = TRUE,
+    lineages = TRUE
+  )
+
+  saveRDS(
+    association_native,
+    file.path(results_dir, paste0("tcell_", stem, "_association_test.rds"))
+  )
+  saveRDS(
+    condition_native,
+    file.path(results_dir, paste0("tcell_", stem, "_condition_test.rds"))
+  )
+  write.csv(
+    data.frame(
+      gene = rownames(association_native),
+      association_native,
+      check.names = FALSE
+    ),
+    file.path(results_dir, paste0("tcell_", stem, "_association_test.csv")),
+    row.names = FALSE
+  )
+  write.csv(
+    data.frame(
+      gene = rownames(condition_native),
+      condition_native,
+      check.names = FALSE
+    ),
+    file.path(results_dir, paste0("tcell_", stem, "_condition_test.csv")),
+    row.names = FALSE
+  )
+
+  association <- normalize_association_test(
+    association_native,
+    compartment,
+    lineage_map,
+    levels(trajectory_inputs[[compartment]]$condition),
+    convergence_tables[[compartment]]
+  )
+  condition <- normalize_condition_test(
+    condition_native,
+    compartment,
+    lineage_map,
+    levels(trajectory_inputs[[compartment]]$condition),
+    comparison_manifest,
+    convergence_tables[[compartment]]
+  )
+
+  list(
+    association_native = association_native,
+    condition_native = condition_native,
+    association = association,
+    condition = condition
+  )
+})
+
+normalized_results <- bind_rows(
+  map_dfr(test_results, "association"),
+  map_dfr(test_results, "condition")
+)
+
+required_result_columns <- c(
+  "compartment", "test_type", "lineage", "comparison", "gene",
+  "p_value", "p_adj", "test_status"
+)
+missing_result_columns <- setdiff(
+  required_result_columns,
+  colnames(normalized_results)
+)
+if (nrow(normalized_results) == 0 || length(missing_result_columns) > 0) {
+  stop(
+    "Normalized tradeSeq results are empty or missing columns: ",
+    paste(missing_result_columns, collapse = ", ")
+  )
+}
+
+write.table(
+  normalized_results,
+  file.path(results_dir, paste0(output_prefix, "_tradeseq_results.tsv")),
+  sep = "\t", quote = FALSE, row.names = FALSE, na = "NA"
+)
+
+produced_comparisons <- unique(
+  normalized_results$comparison[normalized_results$test_type == "condition"]
+)
+comparison_coverage <- comparison_manifest %>%
+  mutate(
+    status = case_when(
+      comparison_id %in% produced_comparisons ~ "produced",
+      comparison_set == "descriptive_only" ~ "not_modeled_by_policy",
+      TRUE ~ "not_produced"
+    ),
+    status_note = case_when(
+      status == "produced" ~ "Lineage-specific pairwise conditionTest result",
+      status == "not_modeled_by_policy" ~
+        "Tumor is retained for descriptive review only",
+      TRUE ~ "Review model and comparison mapping"
+    )
+  )
+
+write.table(
+  comparison_coverage,
+  file.path(
+    results_dir,
+    paste0(output_prefix, "_condition_comparison_coverage.tsv")
+  ),
+  sep = "\t", quote = FALSE, row.names = FALSE, na = "NA"
+)
+
+testability_summary <- normalized_results %>%
+  dplyr::count(
+    compartment, test_type, lineage, comparison, test_status,
+    name = "n_genes"
+  )
+write.table(
+  testability_summary,
+  file.path(results_dir, paste0(output_prefix, "_tradeseq_testability.tsv")),
+  sep = "\t", quote = FALSE, row.names = FALSE, na = "NA"
+)
+
+result_counts <- normalized_results %>%
+  dplyr::count(compartment, test_type, lineage, comparison, name = "n_genes")
+knitr::kable(result_counts)
+knitr::kable(testability_summary)
+knitr::kable(comparison_coverage)
+```
+
+## Build signed lineage rankings
+This chunk predicts fitted expression at the start and end of every lineage. The signed ranking score multiplies the mean condition-specific log2 fitted end/start change by the square root of the largest testable association Wald statistic for that gene and lineage. This retains both direction and fitted-change magnitude. All genes in the balanced model are retained; the ranking is not described as genome-wide.
+
+```{r lineage-rankings}
+lineage_rankings <- imap_dfr(tradeseq_models, function(model, compartment) {
+  build_tradeseq_rankings(
+    model = model,
+    association = test_results[[compartment]]$association,
+    compartment = compartment,
+    lineage_map = make_lineage_map(
+      trajectory_inputs[[compartment]]$lineage_names
+    )
+  )
+})
+
+write.table(
+  lineage_rankings,
+  file.path(
+    results_dir,
+    paste0(output_prefix, "_tradeseq_lineage_rankings.tsv")
+  ),
+  sep = "\t", quote = FALSE, row.names = FALSE, na = "NA"
+)
+
+ranking_counts <- lineage_rankings %>%
+  dplyr::count(compartment, lineage, name = "n_ranked_genes")
+knitr::kable(ranking_counts)
+```
+
+## Plot priority marker trends
+This chunk plots condition-aware fitted curves for the memory/naive-like, proliferation, effector/cytotoxic, and exhaustion/dysfunction marker programs. Missing or filtered markers remain documented in the marker-status table rather than being silently dropped.
+
+```{r priority-marker-trends, fig.show='hide'}
+walk(names(tradeseq_models), function(compartment) {
+  stem <- compartment_stems[[compartment]]
+  lineage_map <- make_lineage_map(
+    trajectory_inputs[[compartment]]$lineage_names
+  )
+
+  iwalk(priority_programs, function(genes, program) {
+    plot_priority_gene_program(
+      model = tradeseq_models[[compartment]],
+      genes = genes,
+      program = program,
+      compartment = compartment,
+      lineage_map = lineage_map,
+      condition_levels = levels(trajectory_inputs[[compartment]]$condition),
+      output_file = file.path(
+        plot_dir,
+        paste0("tcell_", stem, "_", program, "_tradeseq_trends.pdf")
+      ),
+      n_points = prediction_points
+    )
+  })
+})
+```
+
+## Plot top dynamic-gene heatmaps
+This chunk selects FDR-significant lineage-associated genes using the magnitude-aware lineage ranking. It aligns each condition to the same 0–1 relative-pseudotime grid before averaging fitted values, orders genes by peak position, and writes one heatmap per compartment and lineage.
+
+```{r dynamic-gene-heatmaps, fig.show='hide'}
+walk(names(tradeseq_models), function(compartment) {
+  plot_top_dynamic_heatmaps(
+    model = tradeseq_models[[compartment]],
+    rankings = lineage_rankings %>%
+      filter(.data$compartment == .env$compartment),
+    compartment = compartment,
+    lineage_map = make_lineage_map(
+      trajectory_inputs[[compartment]]$lineage_names
+    ),
+    output_dir = plot_dir,
+    n_genes = top_heatmap_genes,
+    n_points = prediction_points
+  )
+})
+```
+
+## Plot sample-stratified sensitivity views
+This chunk shows equal-cell pseudotime-bin means separately for each sample for one representative marker per priority program. Groups with fewer than 30 cells are omitted to avoid unstable curves. These plots can reveal sample-specific patterns, but they are descriptive and do not make the tradeSeq condition tests sample-aware.
+
+```{r sample-sensitivity, fig.show='hide'}
+walk(names(trajectory_inputs), function(compartment) {
+  stem <- compartment_stems[[compartment]]
+  plot_sample_marker_sensitivity(
+    input = trajectory_inputs[[compartment]],
+    genes = sample_sensitivity_genes,
+    compartment = compartment,
+    lineage_map = make_lineage_map(
+      trajectory_inputs[[compartment]]$lineage_names
+    ),
+    output_file = file.path(
+      plot_dir,
+      paste0("tcell_", stem, "_sample_stratified_marker_sensitivity.pdf")
+    ),
+    min_group_cells = sample_sensitivity_min_cells,
+    n_bins = sample_sensitivity_bins
+  )
+})
+```
+
+## Reproducibility record
+This chunk saves the package versions used for the fit and the complete R session information.
+
+```{r reproducibility}
+package_names <- c(
+  "tradeSeq", "slingshot", "SingleCellExperiment", "BiocParallel",
+  "SeuratObject", "Matrix", "dplyr", "ggplot2"
+)
+package_versions <- tibble(
+  package = c("R", package_names),
+  version = c(
+    as.character(getRversion()),
+    map_chr(package_names, ~ as.character(packageVersion(.x)))
+  )
+)
+
+write.table(
+  package_versions,
+  file.path(
+    results_dir,
+    paste0(output_prefix, "_tradeseq_package_versions.tsv")
+  ),
+  sep = "\t", quote = FALSE, row.names = FALSE, na = "NA"
+)
+writeLines(
+  capture.output(sessionInfo()),
+  file.path(
+    results_dir,
+    paste0(output_prefix, "_tradeseq_session_info.txt")
+  )
+)
+
+knitr::kable(package_versions)
+```

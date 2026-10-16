@@ -1,0 +1,10 @@
+package	version
+R	4.4.0
+tradeSeq	1.20.0
+slingshot	2.14.0
+SingleCellExperiment	1.28.1
+BiocParallel	1.40.2
+SeuratObject	5.3.0
+Matrix	1.7.4
+dplyr	1.1.4
+ggplot2	4.0.3

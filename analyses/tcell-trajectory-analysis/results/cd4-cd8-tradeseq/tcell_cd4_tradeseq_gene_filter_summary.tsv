@@ -1,0 +1,2 @@
+compartment	n_genes_input	n_genes_passed_filter	filter_rule
+CD4-like	19055	9783	raw RNA count > 0 in at least 10 cells and non-zero count variance

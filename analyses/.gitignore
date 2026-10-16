@@ -7,6 +7,18 @@
 .RDataTmp
 *.rds
 
+# Reproducible T-cell trajectory handoffs and compact statistical caches
+!tcell-trajectory-analysis/results/cd4-cd8-annotation/tcell_cd4_like_trajectory_input.rds
+!tcell-trajectory-analysis/results/cd4-cd8-annotation/tcell_cd8_like_trajectory_input.rds
+!tcell-trajectory-analysis/results/cd4-cd8-slingshot/CD4-trajectory/tcell_CD4_like_all_conditions_slingshot_result.rds
+!tcell-trajectory-analysis/results/cd4-cd8-slingshot/CD8-trajectory/tcell_CD8_like_all_conditions_slingshot_result.rds
+!tcell-trajectory-analysis/results/cd4-cd8-tradeseq/tcell_cd4_tradeseq_evaluateK.rds
+!tcell-trajectory-analysis/results/cd4-cd8-tradeseq/tcell_cd8_tradeseq_evaluateK.rds
+!tcell-trajectory-analysis/results/cd4-cd8-tradeseq/tcell_cd4_association_test.rds
+!tcell-trajectory-analysis/results/cd4-cd8-tradeseq/tcell_cd4_condition_test.rds
+!tcell-trajectory-analysis/results/cd4-cd8-tradeseq/tcell_cd8_association_test.rds
+!tcell-trajectory-analysis/results/cd4-cd8-tradeseq/tcell_cd8_condition_test.rds
+
 # User-specific files
 .Ruserdata
 
@@ -42,6 +54,10 @@ vignettes/*.pdf
 
 # pkgdown site
 docs/
+!tcell-trajectory-analysis/docs/
+tcell-trajectory-analysis/docs/*
+!tcell-trajectory-analysis/docs/tcell-trajectory-cd4-review.md
+!tcell-trajectory-analysis/docs/tcell-trajectory-cd8-review.md
 
 # translation temp files
 po/*~

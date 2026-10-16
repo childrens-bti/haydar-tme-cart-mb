@@ -1,0 +1,2 @@
+compartment	n_genes_input	n_genes_passed_filter	filter_rule
+CD8-like	19055	9408	raw RNA count > 0 in at least 10 cells and non-zero count variance

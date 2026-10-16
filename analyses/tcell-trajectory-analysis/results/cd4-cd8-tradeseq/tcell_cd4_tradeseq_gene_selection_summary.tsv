@@ -1,0 +1,2 @@
+compartment	n_genes_passed_filter	n_variable_genes_requested	n_variable_genes_selected	n_priority_genes_added	n_genes_modeled	selection_rule
+CD4-like	9783	3000	3000	0	3000	top 3000 upstream standardized variable-feature scores plus all priority markers passing the expression filter

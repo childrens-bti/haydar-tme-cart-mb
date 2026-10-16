@@ -1,0 +1,17 @@
+compartment	program	gene	present_in_counts	n_cells_detected	passed_filter	filter_reason	selected_for_model	selection_reason	model_converged	in_model
+CD4-like	memory_naive	Tcf7	TRUE	300	TRUE	passed	TRUE	variable_and_priority	TRUE	TRUE
+CD4-like	memory_naive	Lef1	TRUE	548	TRUE	passed	TRUE	variable_and_priority	TRUE	TRUE
+CD4-like	memory_naive	Ccr7	TRUE	298	TRUE	passed	TRUE	variable_and_priority	TRUE	TRUE
+CD4-like	memory_naive	Il7r	TRUE	768	TRUE	passed	TRUE	variable_and_priority	TRUE	TRUE
+CD4-like	proliferation	Mki67	TRUE	462	TRUE	passed	TRUE	variable_and_priority	TRUE	TRUE
+CD4-like	proliferation	Top2a	TRUE	525	TRUE	passed	TRUE	variable_and_priority	TRUE	TRUE
+CD4-like	effector_cytotoxic	Nkg7	TRUE	856	TRUE	passed	TRUE	variable_and_priority	TRUE	TRUE
+CD4-like	effector_cytotoxic	Gzmb	TRUE	441	TRUE	passed	TRUE	variable_and_priority	TRUE	TRUE
+CD4-like	effector_cytotoxic	Prf1	TRUE	49	TRUE	passed	TRUE	variable_and_priority	TRUE	TRUE
+CD4-like	effector_cytotoxic	Ifng	TRUE	398	TRUE	passed	TRUE	variable_and_priority	TRUE	TRUE
+CD4-like	effector_cytotoxic	Ccl5	TRUE	485	TRUE	passed	TRUE	variable_and_priority	TRUE	TRUE
+CD4-like	exhaustion_dysfunction	Tox	TRUE	472	TRUE	passed	TRUE	variable_and_priority	TRUE	TRUE
+CD4-like	exhaustion_dysfunction	Pdcd1	TRUE	902	TRUE	passed	TRUE	variable_and_priority	TRUE	TRUE
+CD4-like	exhaustion_dysfunction	Lag3	TRUE	380	TRUE	passed	TRUE	variable_and_priority	TRUE	TRUE
+CD4-like	exhaustion_dysfunction	Havcr2	TRUE	299	TRUE	passed	TRUE	variable_and_priority	TRUE	TRUE
+CD4-like	exhaustion_dysfunction	Ctla4	TRUE	1781	TRUE	passed	TRUE	variable_and_priority	TRUE	TRUE
