@@ -1,0 +1,433 @@
+---
+title: "05-tcell-cd4-cd8-condiments"
+author: "Bicna Song"
+date: "`r Sys.Date()`"
+params:
+  compartment: "CD4-like"
+  plot_comparison: "B7H3_vs_41BB-L"
+output:
+  html_document:
+    toc: TRUE
+    toc_float: TRUE
+    code_folding: hide
+---
+
+This analysis compares CAR constructs along the shared Slingshot trajectory of one compartment (`params$compartment`: CD4-like or CD8-like). It asks three questions: whether all constructs can share one trajectory structure (topology, one global test), whether cells of each prespecified construct pair sit at different positions along the same lineage (progression), and whether their cells are split differently among lineages (fate selection). Progression and fate selection use the saved shared pseudotime and lineage weights. Tumor-only cells are excluded. Each mouse belongs to only one construct, so the condiments multiple-sample tests cannot be used: all p-values are cell-level, and per-mouse summaries are shown as descriptive checks.
+
+## Setup
+
+This chunk loads packages, defines directories, and loads the shared condition labels and Condiments helpers.
+
+```{r setup, message=FALSE, warning=FALSE}
+Sys.setenv(
+  OMP_NUM_THREADS = "1",
+  OPENBLAS_NUM_THREADS = "1",
+  MKL_NUM_THREADS = "1"
+)
+
+suppressPackageStartupMessages({
+  library(rprojroot)
+  library(dplyr)
+  library(tibble)
+  library(purrr)
+  library(stringr)
+  library(ggplot2)
+  library(SeuratObject)
+  library(BiocParallel)
+  library(condiments)
+})
+
+root_dir <- find_root(has_dir(".git"))
+analysis_dir <- file.path(root_dir, "analyses", "tcell-trajectory-analysis")
+slingshot_results_dir <- file.path(analysis_dir, "results", "cd4-cd8-slingshot")
+results_dir <- file.path(analysis_dir, "results", "cd4-cd8-condiments")
+plot_dir <- file.path(analysis_dir, "plots", "cd4-cd8-condiments")
+
+walk(
+  c(results_dir, plot_dir),
+  dir.create,
+  recursive = TRUE,
+  showWarnings = FALSE
+)
+
+source(file.path(analysis_dir, "util", "tcell_trajectory_helpers.R"))
+source(file.path(analysis_dir, "util", "tcell_condiments_helpers.R"))
+
+installed_condiments_version <- as.character(
+  utils::packageVersion("condiments")
+)
+if (!identical(installed_condiments_version, "1.14.0")) {
+  stop(
+    "This analysis requires condiments 1.14.0; installed version is ",
+    installed_condiments_version
+  )
+}
+```
+
+## Parameters
+
+This chunk sets the compartment, random seed, topology settings and topology workers (`CONDIMENTS_WORKERS`, default 6). `plot_comparison` selects the pair shown on the focused figure pages; it does not change the tests.
+
+```{r parameters}
+analysis_seed <- 1234L
+force_rerun_condiments <- FALSE
+workers <- suppressWarnings(as.integer(Sys.getenv("CONDIMENTS_WORKERS", "6")))
+if (is.na(workers) || workers < 1L) {
+  stop("CONDIMENTS_WORKERS must be a positive integer")
+}
+bpparam <- make_condiments_bpparam(workers, analysis_seed)
+
+# Conditions left out of every test and figure.
+excluded_conditions <- "tumor"
+
+# Global topologyTest settings (condiments defaults for more than two
+# conditions: classifier method, 100 permutations, threshold 0.01).
+topology_method <- "Classifier"
+topology_rep <- 100L
+topology_thresh <- 0.01
+
+compartment_stems <- c(`CD4-like` = "cd4", `CD8-like` = "cd8")
+compartment <- as.character(params$compartment)
+if (length(compartment) != 1 || !compartment %in% names(compartment_stems)) {
+  stop("compartment must be one of: ", paste(names(compartment_stems), collapse = ", "))
+}
+stem <- compartment_stems[[compartment]]
+plot_comparison <- as.character(params$plot_comparison)
+
+cache_file <- file.path(
+  slingshot_results_dir,
+  paste0(toupper(stem), "-trajectory"),
+  paste0("tcell_", toupper(stem), "_like_all_conditions_slingshot_result.rds")
+)
+output_prefix <- paste0("tcell_", stem)
+object_prefix <- paste0(output_prefix, "_condiments")
+
+comparison_manifest_file <- file.path(
+  analysis_dir, "config", "condition-comparison-manifest.tsv"
+)
+lineage_annotation_file <- file.path(
+  analysis_dir, "config", "tcell-lineage-annotation-manifest.tsv"
+)
+```
+
+## Load and validate inputs
+
+This chunk loads the prespecified comparisons, the reviewed lineage labels and the shared Slingshot result, and checks that every shared lineage has one label.
+
+```{r load-and-validate-inputs}
+comparison_manifest <- read.delim(
+  comparison_manifest_file,
+  stringsAsFactors = FALSE,
+  check.names = FALSE,
+  na.strings = c("", "NA")
+)
+required_comparison_columns <- c(
+  "comparison_set", "comparison_id", "condition_a", "condition_b"
+)
+missing_comparison_columns <- setdiff(
+  required_comparison_columns,
+  colnames(comparison_manifest)
+)
+if (length(missing_comparison_columns) > 0) {
+  stop(
+    "Condition-comparison manifest is missing columns: ",
+    paste(missing_comparison_columns, collapse = ", ")
+  )
+}
+comparisons <- comparison_manifest %>%
+  filter(
+    !is.na(condition_a), !is.na(condition_b),
+    !condition_a %in% excluded_conditions,
+    !condition_b %in% excluded_conditions
+  )
+if (nrow(comparisons) == 0 || anyDuplicated(comparisons$comparison_id)) {
+  stop("Condition-comparison manifest must contain unique pairwise comparisons")
+}
+if (length(plot_comparison) != 1L || is.na(plot_comparison) ||
+    !plot_comparison %in% comparisons$comparison_id) {
+  stop("plot_comparison must match one prespecified comparison_id")
+}
+focus_comparison <- comparisons %>%
+  filter(comparison_id == plot_comparison)
+
+lineage_annotations <- read.delim(
+  lineage_annotation_file,
+  stringsAsFactors = FALSE,
+  check.names = FALSE,
+  na.strings = c("", "NA")
+)
+missing_annotation_columns <- setdiff(
+  c("compartment", "lineage", "assigned_program"),
+  colnames(lineage_annotations)
+)
+if (length(missing_annotation_columns) > 0) {
+  stop(
+    "Lineage-annotation manifest is missing columns: ",
+    paste(missing_annotation_columns, collapse = ", ")
+  )
+}
+lineage_annotations <- lineage_annotations %>%
+  filter(compartment == .env$compartment)
+
+input <- prepare_condiments_input(cache_file, compartment)
+
+if (anyDuplicated(lineage_annotations$lineage) ||
+    !setequal(input$lineage_names, lineage_annotations$lineage)) {
+  stop("Lineage-annotation manifest must contain one row per shared lineage")
+}
+
+knitr::kable(lineage_annotations[, c("lineage", "assigned_program")])
+```
+
+## Build sample-level descriptive summaries
+
+This chunk calculates each mouse's weighted mean pseudotime and mean lineage membership on every lineage. These summaries check direction and consistency between mice; they are not tests.
+
+```{r sample-level-summaries}
+sample_pseudotime <- summarize_sample_pseudotime(input, lineage_annotations)
+sample_lineage_probabilities <- summarize_sample_lineage_probabilities(
+  input, lineage_annotations
+)
+
+write.table(
+  sample_pseudotime,
+  file.path(results_dir, paste0(output_prefix, "_sample_pseudotime_summary.tsv")),
+  sep = "\t", quote = FALSE, row.names = FALSE, na = "NA"
+)
+write.table(
+  sample_lineage_probabilities,
+  file.path(results_dir, paste0(output_prefix, "_sample_lineage_probabilities.tsv")),
+  sep = "\t", quote = FALSE, row.names = FALSE, na = "NA"
+)
+```
+
+## Initialize resumable test caches
+
+This chunk loads completed results so they are reused on later renders. A cache is used only when its inputs and settings match; the worker count is not part of that check.
+
+```{r initialize-test-caches}
+base_cache_context <- list(
+  analysis_version = 2L,
+  compartments = compartment,
+  input_cache_md5 = stats::setNames(input$cache_md5, compartment),
+  comparison_manifest_md5 = unname(tools::md5sum(comparison_manifest_file)),
+  lineage_annotation_md5 = unname(tools::md5sum(lineage_annotation_file)),
+  seed = analysis_seed,
+  condiments_version = installed_condiments_version
+)
+
+progression_cache_file <- file.path(
+  results_dir, paste0(object_prefix, "_progression_objects.rds")
+)
+fate_cache_file <- file.path(
+  results_dir, paste0(object_prefix, "_fate_objects.rds")
+)
+topology_cache_file <- file.path(
+  results_dir, paste0(object_prefix, "_topology_global_objects.rds")
+)
+
+progression_cache <- load_condiments_result_cache(
+  progression_cache_file,
+  c(base_cache_context, list(method = "KS")),
+  force = force_rerun_condiments
+)
+fate_cache <- load_condiments_result_cache(
+  fate_cache_file,
+  c(base_cache_context, list(method = "mmd")),
+  force = force_rerun_condiments
+)
+topology_cache <- load_condiments_result_cache(
+  topology_cache_file,
+  c(base_cache_context, list(method = topology_method, rep = topology_rep,
+                             thresh = topology_thresh,
+                             excluded_conditions = excluded_conditions)),
+  force = force_rerun_condiments
+)
+```
+
+## Run topology, progression, and fate-selection tests
+
+This chunk first runs one global topology test: it refits Slingshot on all tested cells, fits each construct's curves, and compares them with permuted construct labels. Then, for every prespecified pair, it tests pseudotime distributions (progression, KS) and lineage membership (fate selection, MMD) on the shared trajectory, globally and per lineage or lineage pair.
+
+```{r run-condiments-tests}
+topology_conditions <- setdiff(sort(unique(input$condition)), excluded_conditions)
+topology_cells <- input$condition %in% topology_conditions
+set.seed(analysis_seed + match(compartment, names(compartment_stems)))
+topology_run <- get_or_run_condiments_comparison(
+  topology_cache,
+  paste(compartment, "all_conditions", sep = "|"),
+  function() run_condiments_topology(
+    input, topology_conditions, method = topology_method,
+    rep = topology_rep, threshs = topology_thresh, bpparam = bpparam
+  ),
+  topology_cache_file
+)
+topology_row <- normalize_condiments_topology(
+  topology_run$value,
+  compartment,
+  n_distinct(input$sample[topology_cells]),
+  sum(topology_cells)
+)
+
+progression_rows <- list()
+fate_rows <- list()
+for (comparison_index in seq_len(nrow(comparisons))) {
+  comparison <- comparisons[comparison_index, , drop = FALSE]
+  key <- paste(compartment, comparison$comparison_id, sep = "|")
+  pair_data <- subset_condiments_comparison(
+    input,
+    comparison$condition_a,
+    comparison$condition_b
+  )
+
+  set.seed(analysis_seed + comparison_index)
+  progression_run <- get_or_run_condiments_comparison(
+    progression_cache,
+    key,
+    function() run_condiments_progression(pair_data),
+    progression_cache_file
+  )
+  progression_cache <- progression_run$cache
+  progression_rows[[key]] <- normalize_condiments_test(
+    progression_run$value, "progression", compartment, comparison$comparison_id,
+    pair_data$n_samples, pair_data$n_cells, input$lineage_names,
+    lineage_annotations
+  )
+
+  set.seed(analysis_seed + comparison_index)
+  fate_run <- get_or_run_condiments_comparison(
+    fate_cache,
+    key,
+    function() run_condiments_fate(pair_data),
+    fate_cache_file
+  )
+  fate_cache <- fate_run$cache
+  fate_rows[[key]] <- normalize_condiments_test(
+    fate_run$value, "fate", compartment, comparison$comparison_id,
+    pair_data$n_samples, pair_data$n_cells, input$lineage_names,
+    lineage_annotations
+  )
+}
+```
+
+## Combine results
+
+This chunk combines all results and applies Benjamini–Hochberg correction within each comparison across its global and lineage-specific tests. The topology test is a single test, so its adjusted p-value equals its p-value.
+
+```{r combine-results}
+condiments_results <- bind_rows(
+  topology_row,
+  bind_rows(progression_rows),
+  bind_rows(fate_rows)
+) %>%
+  left_join(
+    comparisons %>%
+      select(comparison = comparison_id, comparison_set, condition_a, condition_b),
+    by = "comparison"
+  ) %>%
+  mutate(
+    comparison_set = if_else(test == "topology", "global_all_conditions",
+                             comparison_set),
+    # Keep error notes on one line so TSV rows and HTML tables stay intact.
+    status_note = str_squish(status_note)
+  ) %>%
+  group_by(test, comparison) %>%
+  mutate(p_adj = p.adjust(p_value, method = "BH")) %>%
+  ungroup() %>%
+  select(
+    compartment, test, lineage, lineage_program, comparison,
+    comparison_set, condition_a, condition_b, method, statistic,
+    p_value, p_adj, n_samples, n_cells, status, status_note
+  ) %>%
+  arrange(test, comparison, lineage)
+
+write.table(
+  condiments_results,
+  file.path(results_dir, paste0(output_prefix, "_condiments_results.tsv")),
+  sep = "\t", quote = FALSE, row.names = FALSE, na = "NA"
+)
+
+knitr::kable(condiments_results)
+```
+
+## Global topology result
+
+A small p-value means that at least one construct's fitted curves differ from the others; it does not identify which construct. The lineage structure is held fixed, so the test detects where curves run, not gained or lost branches. `status_note` gives the number of lineages in the all-condition refit (the shared trajectory has three).
+
+```{r global-topology}
+condiments_results %>%
+  filter(test == "topology") %>%
+  select(method, statistic, p_value, n_samples, n_cells, status, status_note) %>%
+  knitr::kable()
+```
+
+## Plot topology curves, progression, and fate
+
+Three PDFs are written for the compartment:
+
+- **Topology curves** (four pages): the curves that the global topology test compares, drawn in the SLING space where Slingshot fitted them. Pages 1 and 3 compare constructs within each lineage; pages 2 and 4 show each construct's own curves. Pages 1–2 use SLING dimensions 1–2 and pages 3–4 use dimensions 3–4. Refit lineages are matched to the shared L1–L3 by their end clusters.
+- **Progression** (three pages): pseudotime distributions for one pair with KS FDRs; FDRs for all comparisons; and each mouse's lineage-weighted mean pseudotime.
+- **Fate** (three pages): relative lineage-weight distributions for one pair with MMD FDRs; FDRs for all comparisons; and each mouse's mean lineage membership.
+
+Page 1 of the progression and fate PDFs shows one pair (`plot_comparison`, default B7H3 vs 41BB-L); page 2 shows all pairs. Dashed lines are means over pooled cells.
+
+```{r condiments-figures, results='asis', fig.show='hide'}
+plot_file <- function(topic) {
+  file.path(plot_dir, paste0(output_prefix, "_condiments_", topic, ".pdf"))
+}
+
+# Recompute the real-label condition curves behind the global topology test.
+# A failure here leaves the topology result and other figures unaffected.
+topology_curve_pages <- tryCatch({
+  curve_fit <- fit_condiments_condition_curves(input, topology_conditions)
+  cat(sprintf("\nRefit lineages matched to shared lineages (by end cluster): %s\n\n",
+              paste(sprintf("%s (cluster %s) -> %s", names(curve_fit$lineage_map),
+                            curve_fit$refit_end_clusters, curve_fit$lineage_map),
+                    collapse = "; ")))
+  c(
+    plot_condiments_topology_curves(input, curve_fit, lineage_annotations,
+                                    topology_conditions, dims = c(1L, 2L)),
+    if (ncol(input$sling_embeddings) >= 4L) {
+      plot_condiments_topology_curves(input, curve_fit, lineage_annotations,
+                                      topology_conditions, dims = c(3L, 4L))
+    }
+  )
+}, error = function(e) {
+  cat(sprintf("\nTopology curves could not be drawn: %s\n\n", conditionMessage(e)))
+  NULL
+})
+progression_pages <- list(
+  plot_condiments_progression_distribution(input, lineage_annotations,
+                                            focus_comparison, condiments_results),
+  plot_condiments_test_results(condiments_results, compartment, "progression",
+                               lineage_annotations),
+  plot_condiments_progression_mice(sample_pseudotime, lineage_annotations,
+                                   compartment, excluded_conditions)
+)
+fate_pages <- list(
+  plot_condiments_fate_distribution(input, lineage_annotations,
+                                     focus_comparison, condiments_results),
+  plot_condiments_test_results(condiments_results, compartment, "fate",
+                               lineage_annotations),
+  plot_condiments_fate_mice(sample_lineage_probabilities, lineage_annotations,
+                            compartment, excluded_conditions)
+)
+
+topics <- c("progression", "fate")
+if (!is.null(topology_curve_pages)) {
+  save_condiments_pages(plot_file("topology_curves"), topology_curve_pages)
+  topics <- c("topology_curves", topics)
+}
+save_condiments_pages(plot_file("progression"), progression_pages)
+save_condiments_pages(plot_file("fate"), fate_pages)
+for (topic in topics) {
+  cat(sprintf("- [%s PDF](plots/cd4-cd8-condiments/%s)\n",
+              topic, basename(plot_file(topic))))
+}
+```
+
+## Session info
+
+```{r session-info}
+sessionInfo()
+```
