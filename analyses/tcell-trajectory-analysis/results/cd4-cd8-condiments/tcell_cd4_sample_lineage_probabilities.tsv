@@ -1,0 +1,37 @@
+compartment	condition	sample	lineage	lineage_program	n_cells	weight_sum	mean_lineage_probability
+CD4-like	tumor	Tumor_only_D1	slingPseudotime_1	regulatory/Treg-associated	47	22.3542954625633	0.475623307714114
+CD4-like	tumor	Tumor_only_D1	slingPseudotime_2	proliferating CD4	47	4.2203967477717	0.0897956754845043
+CD4-like	tumor	Tumor_only_D1	slingPseudotime_3	activated helper/Th1-like	47	20.425307789665	0.434581016801382
+CD4-like	tumor	Tumor_only_D2	slingPseudotime_1	regulatory/Treg-associated	38	18.2129239113881	0.479287471352318
+CD4-like	tumor	Tumor_only_D2	slingPseudotime_2	proliferating CD4	38	5.54211202848588	0.145845053381207
+CD4-like	tumor	Tumor_only_D2	slingPseudotime_3	activated helper/Th1-like	38	14.244964060126	0.374867475266474
+CD4-like	STOP	STOP_pos_T_D1	slingPseudotime_1	regulatory/Treg-associated	91	34.470625522695	0.378798082666977
+CD4-like	STOP	STOP_pos_T_D1	slingPseudotime_2	proliferating CD4	91	28.7471820739123	0.315903099713322
+CD4-like	STOP	STOP_pos_T_D1	slingPseudotime_3	activated helper/Th1-like	91	27.7821924033927	0.3052988176197
+CD4-like	STOP	STOP_pos_T_D2	slingPseudotime_1	regulatory/Treg-associated	311	97.5520355507227	0.313672140034478
+CD4-like	STOP	STOP_pos_T_D2	slingPseudotime_2	proliferating CD4	311	158.226509800234	0.508766912540946
+CD4-like	STOP	STOP_pos_T_D2	slingPseudotime_3	activated helper/Th1-like	311	55.2214546490432	0.177560947424576
+CD4-like	B7H3	B7H3_pos_T_D1	slingPseudotime_1	regulatory/Treg-associated	191	62.4269703715391	0.326842776814341
+CD4-like	B7H3	B7H3_pos_T_D1	slingPseudotime_2	proliferating CD4	191	67.3412287068944	0.352571878046568
+CD4-like	B7H3	B7H3_pos_T_D1	slingPseudotime_3	activated helper/Th1-like	191	61.2318009215665	0.320585345139091
+CD4-like	B7H3	B7H3_pos_T_D2	slingPseudotime_1	regulatory/Treg-associated	365	144.411006177267	0.395646592266485
+CD4-like	B7H3	B7H3_pos_T_D2	slingPseudotime_2	proliferating CD4	365	137.103200785627	0.375625207631854
+CD4-like	B7H3	B7H3_pos_T_D2	slingPseudotime_3	activated helper/Th1-like	365	83.4857930371063	0.228728200101661
+CD4-like	41BB-L	41BB-L_pos_T_D1	slingPseudotime_1	regulatory/Treg-associated	125	52.811300988283	0.422490407906264
+CD4-like	41BB-L	41BB-L_pos_T_D1	slingPseudotime_2	proliferating CD4	125	34.6439219960674	0.277151375968539
+CD4-like	41BB-L	41BB-L_pos_T_D1	slingPseudotime_3	activated helper/Th1-like	125	37.5447770156496	0.300358216125197
+CD4-like	41BB-L	41BB-L_pos_T_D2	slingPseudotime_1	regulatory/Treg-associated	213	116.577574003162	0.547312554005456
+CD4-like	41BB-L	41BB-L_pos_T_D2	slingPseudotime_2	proliferating CD4	213	50.4872841273726	0.237029502945411
+CD4-like	41BB-L	41BB-L_pos_T_D2	slingPseudotime_3	activated helper/Th1-like	213	45.9351418694653	0.215657943049133
+CD4-like	CD8-41BB	CD8-41BB_pos_T_D1	slingPseudotime_1	regulatory/Treg-associated	651	158.754036919998	0.243861807864821
+CD4-like	CD8-41BB	CD8-41BB_pos_T_D1	slingPseudotime_2	proliferating CD4	651	261.400189106826	0.401536388796968
+CD4-like	CD8-41BB	CD8-41BB_pos_T_D1	slingPseudotime_3	activated helper/Th1-like	651	230.845773973176	0.354601803338211
+CD4-like	CD8-41BB	CD8-41BB_pos_T_D2	slingPseudotime_1	regulatory/Treg-associated	201	113.925318939475	0.566792631539674
+CD4-like	CD8-41BB	CD8-41BB_pos_T_D2	slingPseudotime_2	proliferating CD4	201	52.8409104255904	0.262890101619852
+CD4-like	CD8-41BB	CD8-41BB_pos_T_D2	slingPseudotime_3	activated helper/Th1-like	201	34.2337706349351	0.170317266840473
+CD4-like	CD28-41BB	CD28-41BB_pos_T_D1	slingPseudotime_1	regulatory/Treg-associated	49	20.0451729431256	0.409085162104604
+CD4-like	CD28-41BB	CD28-41BB_pos_T_D1	slingPseudotime_2	proliferating CD4	49	11.1565584587581	0.227684866505267
+CD4-like	CD28-41BB	CD28-41BB_pos_T_D1	slingPseudotime_3	activated helper/Th1-like	49	17.7982685981163	0.363229971390129
+CD4-like	CD28-41BB	CD28-41BB_pos_T_D2	slingPseudotime_1	regulatory/Treg-associated	223	111.158896258854	0.498470386811006
+CD4-like	CD28-41BB	CD28-41BB_pos_T_D2	slingPseudotime_2	proliferating CD4	223	53.0983780799541	0.238109318744189
+CD4-like	CD28-41BB	CD28-41BB_pos_T_D2	slingPseudotime_3	activated helper/Th1-like	223	58.7427256611915	0.263420294444805

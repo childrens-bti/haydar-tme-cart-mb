@@ -58,6 +58,7 @@ docs/
 tcell-trajectory-analysis/docs/*
 !tcell-trajectory-analysis/docs/tcell-trajectory-cd4-review.md
 !tcell-trajectory-analysis/docs/tcell-trajectory-cd8-review.md
+!tcell-trajectory-analysis/docs/tcell-trajectory-condiments-review.md
 
 # translation temp files
 po/*~

@@ -25,6 +25,29 @@ condition_plot_labels <- list(
   all_conditions = "All conditions"
 )
 
+# Fixed condition colors. These match the ggplot2 default hues used in the
+# tradeSeq trend plots (five conditions in alphabetical order), so the same
+# CAR construct has the same color in every figure of this module.
+condition_colors <- c(
+  `41BB-L` = "#F8766D",
+  B7H3 = "#A3A500",
+  `CD28-41BB` = "#00BF7D",
+  `CD8-41BB` = "#00B0F6",
+  STOP = "#E76BF3"
+)
+
+# Display order for CAR constructs, with the control CAR last.
+condition_display_order <- c("B7H3", "41BB-L", "CD8-41BB", "CD28-41BB", "STOP")
+
+# Return condition labels as plotmath strings for facet labellers.
+condition_label_string <- function(condition) {
+  vapply(as.character(condition), function(value) {
+    label <- condition_plot_labels[[value]]
+    if (is.null(label)) label <- value
+    paste(deparse(label, width.cutoff = 500L), collapse = "")
+  }, character(1), USE.NAMES = FALSE)
+}
+
 # Plotmath renders superscripts reliably in PDF without requiring special font glyphs.
 condition_plot_label <- function(condition) {
   condition <- as.character(condition)
