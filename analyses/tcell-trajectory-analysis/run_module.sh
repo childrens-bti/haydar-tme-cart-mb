@@ -29,3 +29,11 @@ CONDIMENTS_WORKERS="${CONDIMENTS_WORKERS:-6}" Rscript -e "rmarkdown::render('05-
 
 # Run the same tests separately for the shared CD8-like trajectory.
 CONDIMENTS_WORKERS="${CONDIMENTS_WORKERS:-6}" Rscript -e "rmarkdown::render('05-tcell-cd4-cd8-condiments.Rmd', params = list(compartment = 'CD8-like'), output_file = '05-tcell-cd8-condiments.html')"
+
+# Enrich CD4-like lineage programs using saved fitted-change tables and mouse
+# Hallmark/GO BP sets, reusing compatible enrichment caches without model fitting.
+# FGSEA_WORKERS defaults to 1; the first run may download the pinned gene sets.
+FGSEA_WORKERS="${FGSEA_WORKERS:-1}" Rscript -e "rmarkdown::render('06-tcell-cd4-cd8-pathway-enrichment.Rmd', params = list(compartment = 'CD4-like'), output_file = '06-tcell-cd4-pathway-enrichment.html')"
+
+# Run the same pathway analysis separately for CD8-like lineages.
+FGSEA_WORKERS="${FGSEA_WORKERS:-1}" Rscript -e "rmarkdown::render('06-tcell-cd4-cd8-pathway-enrichment.Rmd', params = list(compartment = 'CD8-like'), output_file = '06-tcell-cd8-pathway-enrichment.html')"

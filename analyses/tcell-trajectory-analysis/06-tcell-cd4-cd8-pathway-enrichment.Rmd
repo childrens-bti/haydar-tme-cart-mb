@@ -1,0 +1,269 @@
+---
+title: "`r c(both = '06-tcell-cd4-cd8-pathway-enrichment', 'CD4-like' = '06-tcell-cd4-pathway-enrichment', 'CD8-like' = '06-tcell-cd8-pathway-enrichment')[[params$compartment]]`"
+author: "Bicna Song"
+date: "`r Sys.Date()`"
+params:
+  compartment: "both"
+output:
+  html_document:
+    toc: TRUE
+    toc_float: TRUE
+    code_folding: hide
+---
+
+## Purpose
+
+This analysis asks which biological programs go up or down along each shared CD4-like and CD8-like lineage, from its start to its endpoint. The results are one line of evidence for the reviewed lineage labels in `config/tcell-lineage-annotation-manifest.tsv`, alongside the stage 04 tradeSeq gene trends and the ProjecTILs labels. The main outputs are a per-lineage table of each lineage's top pathways and a pathway-by-lineage figure.
+
+**How genes are ranked.** Within each lineage, genes are ranked by their fitted change from start to endpoint: the log2 ratio `(end + 0.1) / (start + 0.1)` from the stage 04 tradeSeq model, averaged across conditions. No significance cutoff is applied. Genes that tradeSeq could not test in any condition of that lineage are left out, because their fitted endpoints have no data behind them and can be extreme (for example +173 log2).
+
+**How to interpret the results.**
+
+- Enrichment is measured against the ~3,000 variable genes modeled in stage 04, not the whole transcriptome. Each lineage uses only its testable subset of those genes, so compare lineages by direction and FDR rather than small NES differences.
+- Results are cell-level and describe start-to-endpoint change only, so programs that peak mid-lineage are not captured.
+- CD8 lineage 3 has sparse support in some conditions; interpret it with caution.
+- Pathway enrichment alone cannot confirm exhaustion or separate it from cytotoxic activation.
+
+## Setup
+
+This chunk loads the enrichment packages, defines output directories and loads the independent pathway helpers. Use the project Docker image; no upstream analysis helpers are sourced.
+
+```{r setup, message=FALSE, warning=FALSE}
+Sys.setenv(OMP_NUM_THREADS = "1", OPENBLAS_NUM_THREADS = "1", MKL_NUM_THREADS = "1")
+suppressPackageStartupMessages({
+  library(rprojroot)
+  library(dplyr)
+  library(tibble)
+  library(purrr)
+  library(ggplot2)
+  library(stringr)
+  library(BiocParallel)
+  library(msigdbr)
+  library(fgsea)
+})
+root_dir <- find_root(has_dir(".git"))
+analysis_dir <- file.path(root_dir, "analyses", "tcell-trajectory-analysis")
+tradeseq_dir <- file.path(analysis_dir, "results", "cd4-cd8-tradeseq")
+results_dir <- file.path(analysis_dir, "results", "cd4-cd8-pathway-enrichment")
+plot_dir <- file.path(analysis_dir, "plots", "cd4-cd8-pathway-enrichment")
+walk(c(results_dir, plot_dir), dir.create, recursive = TRUE, showWarnings = FALSE)
+helper_file <- file.path(analysis_dir, "util", "tcell_pathway_enrichment_helpers.R")
+source(helper_file)
+if (as.character(packageVersion("msigdbr")) != "25.1.1" ||
+    as.character(packageVersion("fgsea")) != "1.32.4") {
+  stop("Use the project Docker image with msigdbr 25.1.1 and fgsea 1.32.4")
+}
+```
+
+## Parameters
+
+This chunk selects compartments and records the pathway size, FDR, random seed and cache settings. Both compartments use the same 100,000 initial permutations and enrichment settings. Hallmark (`MH`) is the primary collection; GO Biological Process (`M5/GO:BP`) is supporting detail. Both come from the mouse database release pinned by the installed msigdbr version. A single worker is adequate to start; `FGSEA_WORKERS` can increase parallelism without loading large fitted models. For repeat runs, use the same project Docker image, saved input tables, frozen gene-set snapshot and worker count. Each job fixes its RNG algorithm and seed independently of earlier R commands; seeds are unchanged when compartments run separately or together.
+
+```{r parameters}
+requested_compartment <- as.character(params$compartment)
+compartment_stems <- c(`CD4-like` = "cd4", `CD8-like` = "cd8")
+if (length(requested_compartment) != 1L || is.na(requested_compartment) ||
+    !requested_compartment %in% c("both", names(compartment_stems))) {
+  stop("compartment must be both, CD4-like or CD8-like")
+}
+selected_compartments <- if (requested_compartment == "both") names(compartment_stems) else requested_compartment
+collections <- c("Hallmark", "GO_BP")
+msigdb_version <- "2025.1.Mm"
+min_pathway_size <- 15L
+max_pathway_size <- 500L
+review_fdr <- 0.05
+top_pathways_per_direction <- 4L
+max_review_jaccard <- 0.5
+analysis_seed <- 1234L
+fgsea_eps <- 1e-10
+# Increase the initial permutations to reduce unavailable pathway estimates.
+fgsea_n_perm_simple <- 100000L
+force_enrichment <- FALSE
+workers <- suppressWarnings(as.integer(Sys.getenv("FGSEA_WORKERS", "1")))
+if (is.na(workers) || workers < 1L) stop("FGSEA_WORKERS must be a positive integer")
+gene_set_file <- file.path(results_dir, paste0("mouse_msigdb_", msigdb_version, "_gene_sets.tsv.gz"))
+```
+
+## Load and validate fitted changes
+
+This chunk verifies unique modeled genes, convergence and all three reviewed lineages. It prints the number of genes ranked and excluded per lineage, by reason. Input checksums are printed here and embedded in enrichment caches; no separate input-manifest file is written.
+
+```{r load-inputs}
+annotation_file <- file.path(analysis_dir, "config", "tcell-lineage-annotation-manifest.tsv")
+annotations <- read.delim(annotation_file, stringsAsFactors = FALSE, check.names = FALSE)
+if (!all(c("compartment", "lineage", "assigned_program") %in% names(annotations)) ||
+    anyNA(annotations[c("compartment", "lineage", "assigned_program")]) ||
+    anyDuplicated(annotations[c("compartment", "lineage")])) {
+  stop("The lineage annotation manifest is incomplete or duplicated")
+}
+ranking_files <- setNames(file.path(tradeseq_dir, paste0("tcell_",
+  compartment_stems[selected_compartments], "_tradeseq_lineage_rankings.tsv")), selected_compartments)
+qc_files <- setNames(file.path(tradeseq_dir, paste0("tcell_",
+  compartment_stems[selected_compartments], "_tradeseq_gene_fit_qc.tsv")), selected_compartments)
+ranking_inputs <- imap(ranking_files, function(file, compartment) {
+  expected <- annotations$lineage[annotations$compartment == compartment]
+  if (!setequal(expected, paste0("slingPseudotime_", 1:3))) {
+    stop("Expected three reviewed shared lineages for ", compartment)
+  }
+  read_pathway_rankings(file, qc_files[[compartment]], compartment, annotations)
+})
+knitr::kable(bind_rows(map(ranking_inputs, "summary")))
+knitr::kable(bind_rows(map(ranking_inputs, "excluded")) %>%
+  count(compartment, lineage, analysis_status, name = "n_genes_excluded"))
+input_checksums <- tools::md5sum(c(ranking_files, qc_files, annotation_file))
+knitr::kable(tibble(file = names(input_checksums), md5 = unname(input_checksums)))
+```
+
+## Load the frozen mouse gene sets
+
+This chunk saves the exact Hallmark and GO BP gene memberships on first use. The first run may download the mouse MSigDB release; later renders reuse this compressed TSV offline. Hallmarks are orthology-mapped within the mouse database. No capitalization-based gene conversion is performed. Coverage is measured against the modeled genes, not all expressed genes.
+
+```{r load-gene-sets}
+gene_sets <- load_mouse_pathways(gene_set_file, msigdb_version)
+knitr::kable(gene_sets %>% distinct(collection, pathway, db_version) %>%
+  count(collection, db_version, name = "n_pathways"))
+```
+
+## Run or reuse lineage enrichment
+
+This chunk runs preranked `fgseaMultilevel()` for each lineage and collection, or reuses a matching compartment cache. The initial estimation uses 100,000 simple permutations to reduce unavailable estimates from unbalanced ranking statistics; this setting is included in the cache context. Size limits apply after intersection with the ranking. All sets remain in the full result table, with explicit `excluded_size` or `not_estimated` status where appropriate. BH correction spans all eligible attempted tests across the three lineages within each compartment and collection; excluded-size sets are not additional tests. Hallmark and GO BP are separate FDR families.
+
+```{r enrich-lineages}
+enrichment_results <- imap_dfr(ranking_inputs, function(input, compartment) {
+  stem <- compartment_stems[[compartment]]
+  cache_file <- file.path(results_dir, paste0("tcell_", stem, "_pathway_enrichment.rds"))
+  context <- list(
+    analysis_version = 3L, compartment = compartment,
+    gene_universe = "converged_finite_testable_association",
+    ranking_md5 = unname(tools::md5sum(ranking_files[[compartment]])),
+    gene_fit_qc_md5 = unname(tools::md5sum(qc_files[[compartment]])),
+    annotation_md5 = unname(tools::md5sum(annotation_file)),
+    gene_sets_md5 = unname(tools::md5sum(gene_set_file)),
+    ranking_metric = "end_minus_start", db_version = msigdb_version,
+    min_size = min_pathway_size, max_size = max_pathway_size,
+    eps = fgsea_eps, nPermSimple = fgsea_n_perm_simple, seed = analysis_seed,
+    scoreType = "std", gseaParam = 1, sampleSize = 101L,
+    rng_kind = c("Mersenne-Twister", "Inversion", "Rejection"),
+    workers = workers,
+    parallel_backend = if (workers == 1L) "SerialParam" else "SnowParam",
+    fdr_rule = "BH_across_lineages_within_compartment_collection",
+    R_version = as.character(getRversion()),
+    platform = R.version$platform,
+    BiocParallel_version = as.character(packageVersion("BiocParallel")),
+    fgsea_version = as.character(packageVersion("fgsea")),
+    msigdbr_version = as.character(packageVersion("msigdbr"))
+  )
+  cached <- if (file.exists(cache_file) && !force_enrichment)
+    readRDS(cache_file) else NULL
+  if (is.list(cached) && identical(cached$context, context) && is.data.frame(cached$results)) {
+    message("Reusing pathway enrichment cache: ", cache_file)
+    result <- cached$results
+  } else {
+    message("Running pathway enrichment for ", compartment,
+      " (nPermSimple = ", fgsea_n_perm_simple, ", workers = ", workers,
+      if (is.null(cached)) ")" else "; cache context changed)")
+    rows <- list()
+    lineages <- sort(unique(input$ranks$lineage))
+    for (i in seq_along(lineages)) {
+      for (j in seq_along(collections)) {
+        # Seeds do not depend on whether the other compartment is requested.
+        seed <- analysis_seed + 100L * match(compartment, names(compartment_stems)) + 10L * i + j
+        rows[[paste(i, j)]] <- enrich_lineage_pathways(
+          input$ranks, gene_sets, compartment, lineages[[i]], collections[[j]],
+          min_pathway_size, max_pathway_size, seed, workers, fgsea_eps,
+          n_perm_simple = fgsea_n_perm_simple
+        )
+      }
+    }
+    result <- adjust_pathway_fdr(bind_rows(rows)) %>%
+      left_join(select(annotations, compartment, lineage, assigned_program),
+                  by = c("compartment", "lineage")) %>%
+      arrange(lineage, collection, p_adj, pathway)
+    saveRDS(list(context = context, results = result), cache_file)
+  }
+  write.table(result, file.path(results_dir, paste0("tcell_", stem, "_pathway_enrichment.tsv")),
+    sep = "\t", quote = FALSE, row.names = FALSE, na = "NA")
+  result
+})
+knitr::kable(enrichment_results %>%
+  count(compartment, lineage, collection, test_status, name = "n_pathways"))
+```
+
+## Select top pathways per lineage
+
+This chunk selects each lineage's own FDR-supported pathways, with no prespecified or expected sets, so the results can be compared with the lineage labels without bias. The Hallmark selection keeps every FDR-supported set. The GO BP selection keeps up to four terms per lineage and direction, in FDR order, skipping a term whose modeled genes overlap an already selected one at Jaccard >= 0.5. Selection uses each compartment's own genes, so separate and combined renders select the same pathways.
+
+```{r select-pathways}
+review_pathways <- map(set_names(selected_compartments), function(compartment) {
+  ranked_genes <- unique(ranking_inputs[[compartment]]$ranks$gene)
+  results <- filter(enrichment_results, compartment == !!compartment)
+  bind_rows(
+    select_pathway_review(filter(results, collection == "Hallmark"), gene_sets,
+      ranked_genes, review_fdr, Inf, max_review_jaccard),
+    select_pathway_review(filter(results, collection == "GO_BP"), gene_sets,
+      ranked_genes, review_fdr, top_pathways_per_direction, max_review_jaccard))
+})
+```
+
+## Lineage pathway summary
+
+This chunk lists, for each lineage, how many pathways are FDR-supported in each direction and the selected Hallmark and GO BP pathways that are higher or lower at the endpoint, next to the reviewed label. Use the table to judge whether each lineage's top pathways fit its label; it does not assign or change labels. Hallmark and GO BP have no specific exhaustion or memory sets, so those programs rely on the stage 04 gene trends.
+
+```{r lineage-summary}
+lineage_summary <- imap_dfr(review_pathways, function(review, compartment) {
+  summarise_lineage_pathways(filter(enrichment_results, compartment == !!compartment),
+    review, review_fdr)
+})
+knitr::kable(lineage_summary)
+```
+
+## Pathway figures
+
+This chunk writes one two-page PDF per compartment, Hallmark (primary) and GO BP (supporting detail), and shows the same figures below. `tcell_<compartment>_pathway_enrichment_plot_data.tsv` holds exactly the rows drawn in the matching PDF; `tcell_<compartment>_pathway_enrichment.tsv` holds every pathway tested.
+
+How to read the figures:
+
+- **Columns** are the three shared lineages, labeled with the reviewed annotations from `config/tcell-lineage-annotation-manifest.tsv`. Enrichment supports or questions these labels but does not assign them.
+- **Rows** are the selected pathways, grouped by the lineage that selected them ("Top in L1", "Top in L2", "Top in L3"). Each row shows all three lineages, so a pathway selected by more than one lineage is drawn once, under the first of them (L1, then L2, then L3); its dots in the other columns show its results there. A pathway that largely repeats an earlier row (Jaccard >= 0.5) is shown once.
+- **Filled dots** have FDR < 0.05. Color is NES (red: higher at the lineage endpoint than at its start; blue: lower), clamped to ±2.5 so colors are comparable across pages; size is FDR. **Open grey dots** were tested but not supported; **blank cells** were outside the 15–500 gene size limits for that lineage.
+- **Ranking:** mean condition-specific log2 fitted end/start change per lineage, using testable tradeSeq model genes only. BH FDR spans all three lineages within each compartment and collection.
+- These are not CAR-construct or mouse-level tests, and broad Hallmark sets are not specific exhaustion or Treg signatures.
+
+```{r pathway-figures, results='asis', fig.width=10, fig.height=9}
+for (compartment in selected_compartments) {
+  stem <- compartment_stems[[compartment]]
+  ranked_genes <- unique(ranking_inputs[[compartment]]$ranks$gene)
+  pages <- map(c(Hallmark = "Hallmark", GO_BP = "GO_BP"), function(collection) {
+    rows <- pathway_matrix_rows(enrichment_results, review_pathways[[compartment]], compartment,
+      collection, gene_sets, ranked_genes, max_review_jaccard)
+    list(rows = rows, n_rows = length(unique(rows$pathway)), plot = plot_pathway_matrix(rows,
+      paste0(compartment, ": ", sub("_", " ", collection), " enrichment by lineage"), review_fdr))
+  })
+  plot_file <- file.path(plot_dir, paste0("tcell_", stem, "_pathway_enrichment.pdf"))
+  # The exact rows drawn in the PDF, one per pathway and lineage, in page and row order.
+  plot_data <- map_dfr(pages, "rows") %>%
+    arrange(match(collection, names(pages)), row_order, lineage) %>%
+    select(collection, row_group = program_category, pathway, lineage, assigned_program,
+      test_status, NES, p_value, p_adj, n_genes_in_ranking, n_genes_in_set, leading_edge)
+  write.table(plot_data, file.path(results_dir, paste0("tcell_", stem, "_pathway_enrichment_plot_data.tsv")),
+    sep = "\t", quote = FALSE, row.names = FALSE, na = "NA")
+  # A local function ensures the graphics device closes if a page fails.
+  save_pages <- function() {
+    height <- min(max(6, 2.5 + 0.24 * max(map_int(pages, "n_rows"))), 14)
+    # cairo_pdf renders the >= and <= symbols in the legends.
+    grDevices::cairo_pdf(plot_file, width = 10, height = height, onefile = TRUE)
+    on.exit(grDevices::dev.off(), add = TRUE)
+    walk(pages, ~ print(.x$plot))
+  }
+  save_pages()
+  cat(sprintf("\n\n### %s\n\n- [%s pathway PDF](plots/cd4-cd8-pathway-enrichment/%s)\n\n",
+    compartment, compartment, basename(plot_file)))
+  walk(pages, ~ print(.x$plot))
+}
+```
+
+## Session info
+
+```{r session-info}
+sessionInfo()
+```

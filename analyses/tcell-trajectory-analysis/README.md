@@ -8,7 +8,7 @@ Use the current project Docker image and download the v5 data release before run
 bash run_module.sh
 ```
 
-This renders analyses 01–03, then separate CD4-like and CD8-like tradeSeq (04) and Condiments (05) reports. Stages 04 and 05 reuse cached results when available; otherwise, they can take a long time.
+This renders analyses 01–03, then separate CD4-like and CD8-like tradeSeq (04), Condiments (05) and pathway-enrichment (06) reports. Stages 04–06 reuse compatible cached results; uncached stages 04 and 05 can take a long time.
 
 ## Reviews
 
@@ -23,6 +23,7 @@ This renders analyses 01–03, then separate CD4-like and CD8-like tradeSeq (04)
 3. `03-tcell-cd4-cd8-slingshot.Rmd`: runs shared all-condition Slingshot analyses for the CD4-like and CD8-like compartments by default, caches successful trajectory inference, and generates pseudotime, lineage, gene-trend, and AUCell program outputs.
 4. `04-tcell-cd4-cd8-tradeseq.Rmd`: validates the shared CD4-like and CD8-like trajectories, fits condition-aware tradeSeq models to a balanced gene set, tests lineage-associated and condition-dependent expression, validates the manually reviewed lineage labels, and generates fitted gene-trend and heatmap outputs.
 5. `05-tcell-cd4-cd8-condiments.Rmd`: compares CAR constructs using topology, progression, and fate-selection tests. A global topology test refits trajectories on all tested constructs, then fits each construct's curves and compares them with permuted labels; pairwise progression and fate selection use the fixed shared trajectories for each prespecified condition pair. Separate PDFs distinguish cell-level test evidence from weighted cell distributions and mouse-level descriptive summaries.
+6. `06-tcell-cd4-cd8-pathway-enrichment.Rmd`: performs mouse Hallmark and GO BP enrichment of saved endpoint-versus-start fitted changes, separately by compartment and lineage, as one line of evidence for the reviewed lineage labels. Reports each lineage's top pathways and writes a pathway-by-lineage dot matrix PDF (Hallmark and GO BP pages) without changing lineage annotations or testing CAR-versus-CAR pathways.
 
 ## Analysis module directory structure
 
@@ -40,6 +41,9 @@ This renders analyses 01–03, then separate CD4-like and CD8-like tradeSeq (04)
 ├── 05-tcell-cd4-cd8-condiments.Rmd
 ├── 05-tcell-cd4-condiments.html
 ├── 05-tcell-cd8-condiments.html
+├── 06-tcell-cd4-cd8-pathway-enrichment.Rmd
+├── 06-tcell-cd4-pathway-enrichment.html
+├── 06-tcell-cd8-pathway-enrichment.html
 ├── README.md
 ├── config
 │   ├── condition-comparison-manifest.tsv
@@ -55,7 +59,8 @@ This renders analyses 01–03, then separate CD4-like and CD8-like tradeSeq (04)
 │   │   ├── CD4-trajectory
 │   │   └── CD8-trajectory
 │   ├── cd4-cd8-tradeseq
-│   └── cd4-cd8-condiments
+│   ├── cd4-cd8-condiments
+│   └── cd4-cd8-pathway-enrichment
 ├── results
 │   ├── combined-tcell-trajectory
 │   ├── cd4-cd8-annotation
@@ -63,11 +68,13 @@ This renders analyses 01–03, then separate CD4-like and CD8-like tradeSeq (04)
 │   │   ├── CD4-trajectory
 │   │   └── CD8-trajectory
 │   ├── cd4-cd8-tradeseq
-│   └── cd4-cd8-condiments
+│   ├── cd4-cd8-condiments
+│   └── cd4-cd8-pathway-enrichment
 ├── run_module.sh
 └── util
     ├── tcell_cd4_cd8_trajectory_helpers.R
     ├── tcell_condiments_helpers.R
+    ├── tcell_pathway_enrichment_helpers.R
     ├── tcell_tradeseq_helpers.R
     └── tcell_trajectory_helpers.R
 ```
