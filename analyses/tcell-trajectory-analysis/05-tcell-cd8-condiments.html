@@ -11,7 +11,7 @@
 
 <meta name="author" content="Bicna Song" />
 
-<meta name="date" content="2026-10-21" />
+<meta name="date" content="2026-11-03" />
 
 <title>05-tcell-cd4-cd8-condiments</title>
 
@@ -1569,7 +1569,7 @@ border-radius: 0px;
 
 <h1 class="title toc-ignore">05-tcell-cd4-cd8-condiments</h1>
 <h4 class="author">Bicna Song</h4>
-<h4 class="date">2026-10-21</h4>
+<h4 class="date">2026-11-03</h4>
 
 </div>
 
@@ -3552,16 +3552,21 @@ fitted them. Pages 1 and 3 compare constructs within each lineage; pages
 2 and 4 show each construct’s own curves. Pages 1–2 use SLING dimensions
 1–2 and pages 3–4 use dimensions 3–4. Refit lineages are matched to the
 shared L1–L3 by their end clusters.</li>
-<li><strong>Progression</strong> (three pages): pseudotime distributions
-for one pair with KS FDRs; FDRs for all comparisons; and each mouse’s
-lineage-weighted mean pseudotime.</li>
-<li><strong>Fate</strong> (three pages): relative lineage-weight
-distributions for one pair with MMD FDRs; FDRs for all comparisons; and
-each mouse’s mean lineage membership.</li>
+<li><strong>Progression</strong> (five pages): pseudotime distributions
+for one pair with KS FDRs; the same cumulative curves for all five
+constructs overlaid; pseudotime densities by construct; FDRs for all
+comparisons; and each mouse’s lineage-weighted mean pseudotime.</li>
+<li><strong>Fate</strong> (four pages): for one pair with MMD FDRs, then
+for all five constructs, the share of cells on the first lineage only,
+on both lineages (shared), or on the second lineage only, for each
+lineage pair; FDRs for all comparisons; and each mouse’s mean lineage
+membership.</li>
 </ul>
 <p>Page 1 of the progression and fate PDFs shows one pair
 (<code>plot_comparison</code>, default B7H3 vs 41BB-L); page 2 shows all
-pairs. Dashed lines are means over pooled cells.</p>
+constructs, and the FDR overview shows all pairs. Dashed lines are means
+over pooled cells. FDRs are adjusted within each comparison across its
+four tests, not across the 10 comparisons.</p>
 <pre class="r"><code>plot_file &lt;- function(topic) {
   file.path(plot_dir, paste0(output_prefix, &quot;_condiments_&quot;, topic, &quot;.pdf&quot;))
 }
@@ -3592,14 +3597,20 @@ slingPseudotime_3; Lineage3 (cluster 5) -&gt; slingPseudotime_2</p>
 <pre class="r"><code>progression_pages &lt;- list(
   plot_condiments_progression_distribution(input, lineage_annotations,
                                             focus_comparison, condiments_results),
+  plot_condiments_progression_overlay(input, lineage_annotations,
+                                      excluded_conditions),
+  plot_condiments_progression_density(input, lineage_annotations,
+                                      excluded_conditions),
   plot_condiments_test_results(condiments_results, compartment, &quot;progression&quot;,
                                lineage_annotations),
   plot_condiments_progression_mice(sample_pseudotime, lineage_annotations,
                                    compartment, excluded_conditions)
 )
 fate_pages &lt;- list(
-  plot_condiments_fate_distribution(input, lineage_annotations,
-                                     focus_comparison, condiments_results),
+  plot_condiments_fate_shares(input, lineage_annotations, excluded_conditions,
+                              comparison = focus_comparison,
+                              results = condiments_results),
+  plot_condiments_fate_shares(input, lineage_annotations, excluded_conditions),
   plot_condiments_test_results(condiments_results, compartment, &quot;fate&quot;,
                                lineage_annotations),
   plot_condiments_fate_mice(sample_lineage_probabilities, lineage_annotations,

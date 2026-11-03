@@ -703,25 +703,41 @@ condiments_fdr_label <- function(p, status) {
   }, character(1))
 }
 
+# Weighted ECDF: sort by pseudotime, cumulative sum of lineage weights / total.
+# Each curve starts at 0 so geom_step draws the first rise.
+weighted_ecdf_tbl <- function(x, w) {
+  data <- tibble::tibble(pseudotime = x, weight = w) |>
+    dplyr::group_by(.data$pseudotime) |>
+    dplyr::summarise(weight = sum(.data$weight), .groups = "drop") |>
+    dplyr::arrange(.data$pseudotime) |>
+    dplyr::mutate(cumulative = cumsum(.data$weight) / sum(.data$weight))
+  dplyr::bind_rows(
+    tibble::tibble(pseudotime = min(data$pseudotime), weight = 0, cumulative = 0),
+    data
+  ) |>
+    dplyr::mutate(mean_pseudotime = stats::weighted.mean(.data$pseudotime, .data$weight))
+}
+
+# Lineage-weighted ECDFs for the given conditions on every lineage, using cells
+# with weight on that lineage (the same inputs as the progression KS tests).
+condiments_progression_ecdf <- function(input, conditions) {
+  purrr::map_dfr(input$lineage_names, function(lineage) {
+    purrr::map_dfr(conditions, function(condition) {
+      keep <- input$condition == condition & input$weights[, lineage] > 0
+      weighted_ecdf_tbl(input$pseudotime[keep, lineage],
+                        input$weights[keep, lineage]) |>
+        dplyr::mutate(lineage = lineage, condition = condition)
+    })
+  })
+}
+
 # Focus on one prespecified condition pair. Weighted empirical CDFs show the
 # same pseudotimes/soft weights used by the KS test. Means show direction only;
 # the cached two-sided test can also detect crossing or shape differences.
 plot_condiments_progression_distribution <- function(input, annotations,
                                                       comparison, results) {
   conditions <- c(comparison$condition_a[[1]], comparison$condition_b[[1]])
-  data <- purrr::map_dfr(input$lineage_names, function(lineage) {
-    purrr::map_dfr(conditions, function(condition) {
-      keep <- input$condition == condition & input$weights[, lineage] > 0
-      tibble::tibble(pseudotime = input$pseudotime[keep, lineage],
-                     weight = input$weights[keep, lineage]) |>
-        dplyr::group_by(.data$pseudotime) |>
-        dplyr::summarise(weight = sum(.data$weight), .groups = "drop") |>
-        dplyr::arrange(.data$pseudotime) |>
-        dplyr::mutate(cumulative = cumsum(.data$weight) / sum(.data$weight),
-                      mean_pseudotime = stats::weighted.mean(.data$pseudotime, .data$weight),
-                      lineage = lineage, condition = condition)
-    })
-  })
+  data <- condiments_progression_ecdf(input, conditions)
   data$condition <- factor(data$condition, levels = conditions)
   labels <- condiments_lineage_labels(annotations, input$compartment)
   tests <- results |>
@@ -763,76 +779,181 @@ plot_condiments_progression_distribution <- function(input, annotations,
       x = "Shared pseudotime", y = "Cumulative lineage-weighted fraction", color = NULL)
 }
 
-# Compare the per-cell relative weights actually used in pairwise fate tests.
-# For L1 vs L3, x = w3 / (w1 + w3); cells with zero weight in both are excluded.
-# No cell is assigned to a single lineage. Draw all eligible cells rather than
-# reproducing the test's random condition-size balancing/subsampling.
-plot_condiments_fate_distribution <- function(input, annotations, comparison, results) {
-  conditions <- c(comparison$condition_a[[1]], comparison$condition_b[[1]])
+# All constructs overlaid on each lineage: the curves compared by the
+# per-lineage KS tests for every pair. Curves can cross, so no single summary
+# number (mean or area) is shown.
+plot_condiments_progression_overlay <- function(input, annotations, exclude_conditions) {
+  conditions <- display_conditions(input$condition, exclude_conditions)
+  data <- condiments_progression_ecdf(input, conditions)
+  data$condition <- factor(data$condition, levels = conditions)
+  labels <- condiments_lineage_labels(annotations, input$compartment)
+  ggplot2::ggplot(data, ggplot2::aes(.data$pseudotime, .data$cumulative,
+                                      color = .data$condition)) +
+    ggplot2::geom_hline(yintercept = 0.5, color = "grey85", linewidth = 0.4) +
+    ggplot2::geom_step(linewidth = 0.8) +
+    ggplot2::facet_wrap(~ lineage, nrow = 1, scales = "free_x",
+                        labeller = ggplot2::as_labeller(labels)) +
+    ggplot2::scale_color_manual(values = condition_colors,
+                                labels = condition_plot_label) +
+    ggplot2::scale_y_continuous(limits = c(0, 1),
+                                labels = function(x) paste0(round(100 * x), "%")) +
+    ggplot2::guides(color = ggplot2::guide_legend(nrow = 1)) +
+    ggplot2::theme_classic(base_size = 12) +
+    ggplot2::theme(legend.position = "bottom", strip.background = ggplot2::element_blank(),
+                   panel.spacing.x = grid::unit(1.2, "lines"),
+                   plot.caption = ggplot2::element_text(hjust = 0, size = 10),
+                   plot.margin = ggplot2::margin(12, 18, 12, 12)) +
+    ggplot2::labs(title = paste(input$compartment, "Progression: all constructs per lineage"),
+      subtitle = "Lineage-weighted cumulative distributions | Pooled cells",
+      caption = paste(
+        "A curve further right (lower) means that construct's cells are further along the lineage.",
+        "A curve reaches 100% at that construct's latest cell. Curves that cross have no single direction.",
+        "KS FDRs for every pair are in the results TSV (adjusted within each comparison across its four tests).",
+        sep = "\n"),
+      x = "Shared pseudotime", y = "Cumulative lineage-weighted fraction", color = NULL)
+}
+
+# One row per construct and one column per lineage: lineage-weighted pseudotime
+# densities over pooled cells, each panel scaled to a peak of 1 so shapes stay
+# readable. Compare hump positions down a column, not heights.
+plot_condiments_progression_density <- function(input, annotations, exclude_conditions) {
+  conditions <- display_conditions(input$condition, exclude_conditions)
+  data <- purrr::map_dfr(input$lineage_names, function(lineage) {
+    keep <- input$condition %in% conditions & input$weights[, lineage] > 0
+    tibble::tibble(condition = input$condition[keep],
+                   pseudotime = input$pseudotime[keep, lineage],
+                   weight = input$weights[keep, lineage]) |>
+      dplyr::mutate(lineage = lineage)
+  })
+  data$condition <- factor(data$condition, levels = conditions)
+  means <- data |>
+    dplyr::group_by(.data$lineage, .data$condition) |>
+    dplyr::summarise(mean_pseudotime = stats::weighted.mean(.data$pseudotime, .data$weight),
+                     .groups = "drop")
+  labels <- condiments_lineage_labels(annotations, input$compartment)
+  ggplot2::ggplot(data, ggplot2::aes(.data$pseudotime, y = ggplot2::after_stat(scaled),
+                                      weight = .data$weight)) +
+    ggplot2::geom_density(bounds = c(0, Inf), fill = "#BFD0EE", colour = "#2A62C9",
+                          linewidth = 0.6) +
+    ggplot2::geom_vline(data = means, ggplot2::aes(xintercept = .data$mean_pseudotime),
+                        linetype = "dashed", linewidth = 0.5) +
+    ggplot2::facet_grid(condition ~ lineage, scales = "free_x",
+      labeller = ggplot2::labeller(
+        lineage = ggplot2::as_labeller(labels),
+        condition = ggplot2::as_labeller(function(x) condition_label_string(x),
+                                         default = ggplot2::label_parsed))) +
+    ggplot2::scale_y_continuous(breaks = c(0, 0.5, 1)) +
+    ggplot2::theme_classic(base_size = 12) +
+    ggplot2::theme(strip.background = ggplot2::element_blank(),
+                   strip.text.y = ggplot2::element_text(angle = 0, hjust = 0),
+                   panel.spacing.x = grid::unit(1.2, "lines"),
+                   plot.caption = ggplot2::element_text(hjust = 0, size = 10),
+                   plot.margin = ggplot2::margin(12, 18, 12, 12)) +
+    ggplot2::labs(title = paste(input$compartment, "Progression: pseudotime distribution by construct"),
+      subtitle = "Descriptive | Pooled cells, weighted by lineage membership",
+      caption = paste(
+        "A hump further right means that construct's cells are further along the lineage. Dashed line: weighted mean pseudotime.",
+        "Each panel is scaled to a peak of 1: compare hump positions within a column, not heights. X-axes differ between lineages.",
+        sep = "\n"),
+      x = "Shared pseudotime", y = "Density (each panel scaled to peak = 1)")
+}
+
+# Share of each construct's cells on the first lineage only, on both (shared,
+# usually early cells), or on the second lineage only, for every lineage pair.
+# Relative weights w2 / (w1 + w2) are almost always 0, 0.5 or 1; `cutoffs`
+# assign the few in-between cells. Shares are out of cells with weight on
+# either lineage of the pair; cells only on the third lineage drop out.
+# With `comparison` and `results`, draws the focused pair with its MMD FDRs in
+# the panel titles; without them, draws all constructs.
+plot_condiments_fate_shares <- function(input, annotations, exclude_conditions,
+                                        comparison = NULL, results = NULL,
+                                        cutoffs = c(0.25, 0.75)) {
+  focused <- !is.null(comparison)
+  conditions <- if (focused) {
+    c(comparison$condition_a[[1]], comparison$condition_b[[1]])
+  } else {
+    display_conditions(input$condition, exclude_conditions)
+  }
   pairs <- utils::combn(input$lineage_names, 2, simplify = FALSE)
+  pair_ids <- vapply(pairs, paste, character(1), collapse = " vs ")
   labels <- annotations[annotations$compartment == input$compartment, ]
-  tests <- results |>
-    dplyr::filter(.data$compartment == .env$input$compartment,
-      .data$comparison == .env$comparison$comparison_id[[1]], .data$test == "fate")
   panel_labels <- vapply(pairs, function(pair) {
-    pair_id <- paste(pair, collapse = " vs ")
-    ids <- sub("slingPseudotime_", "L", pair, fixed = TRUE)
     programs <- sub(" trajectory$", "", labels$assigned_program[match(pair, labels$lineage)])
-    test <- tests[match(pair_id, tests$lineage), ]
-    paste(
-      paste(strwrap(paste0(ids[[2]], ": ", programs[[2]]), width = 36), collapse = "\n"),
-      paste(strwrap(paste0("relative to ", ids[[1]], ": ", programs[[1]]), width = 36), collapse = "\n"),
-      condiments_fdr_label(test$p_adj, test$status), sep = "\n")
+    paste0(sub("slingPseudotime_", "L", pair, fixed = TRUE), " ", programs,
+           collapse = "\nvs ")
   }, character(1))
-  names(panel_labels) <- vapply(pairs, paste, character(1), collapse = " vs ")
+  if (focused) {
+    tests <- results |>
+      dplyr::filter(.data$compartment == .env$input$compartment,
+        .data$comparison == .env$comparison$comparison_id[[1]], .data$test == "fate")
+    tests <- tests[match(pair_ids, tests$lineage), ]
+    panel_labels <- paste(panel_labels, condiments_fdr_label(tests$p_adj, tests$status),
+                          sep = "\n")
+  }
+  names(panel_labels) <- pair_ids
+
+  # Categories are keyed by pair so each panel keeps its own order on a free x-axis.
+  category_levels <- unlist(lapply(pairs, function(pair) {
+    ids <- sub("slingPseudotime_", "L", pair, fixed = TRUE)
+    paste(paste(pair, collapse = " vs "),
+          c(paste(ids[[1]], "only"), "Shared", paste(ids[[2]], "only")), sep = "|")
+  }))
   data <- purrr::map_dfr(pairs, function(pair) {
     pair_id <- paste(pair, collapse = " vs ")
+    ids <- sub("slingPseudotime_", "L", pair, fixed = TRUE)
     pair_weight <- rowSums(input$weights[, pair, drop = FALSE])
     purrr::map_dfr(conditions, function(condition) {
       keep <- input$condition == condition & pair_weight > 0
       relative_weight <- input$weights[keep, pair[[2]]] / pair_weight[keep]
-      tibble::tibble(relative_weight = relative_weight) |>
-        dplyr::count(relative_weight, name = "n_cells") |>
-        dplyr::arrange(.data$relative_weight) |>
-        dplyr::mutate(cumulative = cumsum(.data$n_cells) / sum(.data$n_cells),
-          mean_relative_weight = stats::weighted.mean(.data$relative_weight, .data$n_cells),
-          lineage = pair_id, condition = condition)
+      category <- dplyr::case_when(
+        relative_weight < cutoffs[[1]] ~ paste(ids[[1]], "only"),
+        relative_weight > cutoffs[[2]] ~ paste(ids[[2]], "only"),
+        TRUE ~ "Shared")
+      levels <- paste(pair_id, c(paste(ids[[1]], "only"), "Shared",
+                                 paste(ids[[2]], "only")), sep = "|")
+      counts <- table(factor(paste(pair_id, category, sep = "|"), levels = levels))
+      tibble::tibble(category = names(counts), n_cells = as.integer(counts),
+                     share = as.integer(counts) / sum(keep),
+                     pair = pair_id, condition = condition)
     })
   })
   data$condition <- factor(data$condition, levels = conditions)
-  means <- dplyr::distinct(data, lineage, condition, mean_relative_weight)
-  ggplot2::ggplot(data, ggplot2::aes(.data$relative_weight, .data$cumulative,
-                                      color = .data$condition)) +
-    ggplot2::geom_hline(yintercept = 0.5, color = "grey85", linewidth = 0.4) +
-    ggplot2::geom_step(linewidth = 1) +
-    ggplot2::geom_vline(data = means, ggplot2::aes(xintercept = .data$mean_relative_weight,
-      color = .data$condition), linetype = "dashed", linewidth = 0.55,
-      show.legend = FALSE) +
-    ggplot2::geom_text(data = means, ggplot2::aes(x = Inf,
-      y = ifelse(.data$condition == conditions[[1]], 0.12, 0.04),
-      label = sprintf("mean: %.2f", .data$mean_relative_weight), color = .data$condition),
-      inherit.aes = FALSE, hjust = 1.05, size = 3.4, show.legend = FALSE) +
-    ggplot2::facet_wrap(~ lineage, nrow = 1,
-      labeller = ggplot2::as_labeller(panel_labels)) +
-    ggplot2::scale_color_manual(values = condition_colors, labels = condition_plot_label) +
-    ggplot2::scale_x_continuous(limits = c(0, 1), breaks = seq(0, 1, 0.25)) +
-    ggplot2::scale_y_continuous(limits = c(0, 1),
-      labels = function(x) paste0(round(100 * x), "%")) +
-    ggplot2::guides(color = ggplot2::guide_legend(nrow = 1)) +
+  data$category <- factor(data$category, levels = category_levels)
+  data$pair <- factor(data$pair, levels = pair_ids)
+
+  dodge <- ggplot2::position_dodge(width = 0.9)
+  ggplot2::ggplot(data, ggplot2::aes(.data$category, .data$share, fill = .data$condition)) +
+    ggplot2::geom_col(position = dodge, width = 0.85, colour = "white", linewidth = 0.3) +
+    ggplot2::geom_text(ggplot2::aes(label = round(100 * .data$share)), position = dodge,
+                       vjust = -0.4, size = if (focused) 3 else 2.5, colour = "grey25") +
+    ggplot2::facet_wrap(~ pair, nrow = 1, scales = "free_x",
+                        labeller = ggplot2::as_labeller(panel_labels)) +
+    ggplot2::scale_x_discrete(labels = function(x) sub(".*\\|", "", x)) +
+    ggplot2::scale_y_continuous(labels = function(x) paste0(round(100 * x), "%"),
+                                expand = ggplot2::expansion(mult = c(0, 0.08))) +
+    ggplot2::scale_fill_manual(values = condition_colors, labels = condition_plot_label) +
+    ggplot2::guides(fill = ggplot2::guide_legend(nrow = 1)) +
     ggplot2::theme_classic(base_size = 12) +
     ggplot2::theme(legend.position = "bottom", strip.background = ggplot2::element_blank(),
-      strip.text = ggplot2::element_text(size = 10),
-      panel.spacing.x = grid::unit(1.2, "lines"),
-      plot.caption = ggplot2::element_text(hjust = 0, size = 10),
-      plot.margin = ggplot2::margin(12, 18, 12, 12)) +
-    ggplot2::labs(title = paste(input$compartment, "Fate selection: which lineage has stronger relative membership?"),
-      subtitle = paste("Focused comparison:", comparison$comparison_id[[1]],
-        "| Cell-level distributions and cached MMD FDRs"),
+                   strip.text = ggplot2::element_text(size = 10),
+                   axis.ticks.x = ggplot2::element_blank(),
+                   axis.line.x = ggplot2::element_blank(),
+                   panel.spacing.x = grid::unit(1.2, "lines"),
+                   plot.caption = ggplot2::element_text(hjust = 0, size = 10),
+                   plot.margin = ggplot2::margin(12, 18, 12, 12)) +
+    ggplot2::labs(
+      title = paste(input$compartment, "Fate selection: how each construct's cells split between two lineages"),
+      subtitle = paste(
+        if (focused) paste("Focused comparison:", comparison$comparison_id[[1]]) else "All CARs",
+        "| Cells on the first lineage only, on both (shared/early), or on the second only | Pooled cells"),
       caption = paste(
-        "For L1 vs L3, x = L3 weight / (L1 + L3 weight): 0 favors L1, 1 favors L3. Dashed lines and numbers: cell means.",
-        "The MMD test detects any distribution difference, not its direction.",
+        "Shares are out of cells with weight on either lineage of the pair; cells only on the third lineage are not counted.",
+        sprintf("Relative weight w2 / (w1 + w2) < %s = first lineage only, > %s = second lineage only, otherwise shared. Numbers above bars are %%.",
+                cutoffs[[1]], cutoffs[[2]]),
+        if (focused) "Panel FDRs: pair-level MMD test for this comparison (detects a difference, not its direction)."
+        else "MMD FDRs for every pair are in the results TSV (adjusted within each comparison across its four tests).",
         sep = "\n"),
-      x = "Relative weight of the named lineage within the pair", y = "Cumulative fraction of cells", color = NULL)
+      x = NULL, y = "Share of cells in the pair", fill = NULL)
 }
 
 # Show every mouse as a separate bar; do not imply that D1/D2 are paired across
