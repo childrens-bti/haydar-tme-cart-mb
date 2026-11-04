@@ -103,6 +103,26 @@ load_mouse_pathways <- function(file, db_version = "2025.1.Mm") {
   members
 }
 
+# Read the four CD8 T-cell signatures of Miller et al. 2019 (PMC6673650,
+# supplementary table 1): genes up-regulated in each tumor-infiltrating CD8
+# cluster, one sheet per cluster. Mouse symbols are used as given.
+load_cd8_signatures <- function(file, collection = "Miller2019_CD8") {
+  sheets <- c(`Progenitor Exh.` = "MILLER2019_PROGENITOR_EXHAUSTED",
+              `Effector-like` = "MILLER2019_EFFECTOR_LIKE",
+              `Terminally Exh.` = "MILLER2019_TERMINALLY_EXHAUSTED",
+              Proliferating = "MILLER2019_PROLIFERATING")
+  if (!file.exists(file) || !setequal(readxl::excel_sheets(file), names(sheets))) {
+    stop("Missing CD8 signature table or unexpected sheets: ", file)
+  }
+  members <- purrr::imap_dfr(sheets, function(pathway, sheet) {
+    genes <- readxl::read_excel(file, sheet = sheet)$gene
+    tibble::tibble(collection = collection, pathway = pathway,
+      gene = unique(genes[!is.na(genes) & nzchar(genes)]), db_version = "PMC6673650_SuppTable1")
+  })
+  if (any(table(members$pathway) < 15L)) stop("A CD8 signature has fewer than 15 genes")
+  members
+}
+
 # Rank once, record all pathway overlaps, and test only sets represented by
 # min_size..max_size genes. Size limits refer to the modeled ranking, not the
 # full database set. Gene symbols remain case-sensitive mouse symbols. Fix
@@ -235,7 +255,7 @@ summarise_lineage_pathways <- function(results, review, fdr = 0.05) {
 }
 
 short_pathway_name <- function(pathway) {
-  gsub("_", " ", sub("^(HALLMARK|GOBP)_", "", pathway))
+  gsub("_", " ", sub("^(HALLMARK|GOBP|MILLER2019)_", "", pathway))
 }
 
 lineage_label <- function(lineage, program) {
@@ -272,35 +292,59 @@ pathway_matrix_rows <- function(results, review, compartment, collection,
         levels = rev(unique(stringr::str_wrap(short_pathway_name(rows$pathway), 45)))))
 }
 
+# Matrix rows for a prespecified collection: every set in the given order,
+# whether or not it is FDR-supported, in one row group.
+signature_matrix_rows <- function(results, compartment, collection, pathways, group) {
+  results <- results[results$compartment == compartment & results$collection == collection, ]
+  rows <- tibble::tibble(program_category = group, pathway = pathways,
+    row_order = seq_along(pathways))
+  rows |>
+    dplyr::inner_join(results, by = "pathway", relationship = "one-to-many") |>
+    dplyr::mutate(
+      lineage_label = lineage_label(.data$lineage, .data$assigned_program),
+      program_category = factor(.data$program_category, levels = group),
+      pathway_label = factor(short_pathway_name(.data$pathway),
+        levels = rev(short_pathway_name(pathways))))
+}
+
 # Pathway-by-lineage dot matrix. Filled dots are FDR-supported (color = NES,
 # size = FDR); open grey dots were tested but not supported; blank cells were
 # not tested at the size limits. NES is clamped to a fixed range so colors are
-# comparable across lineages, compartments and collections.
-plot_pathway_matrix <- function(data, title, fdr = 0.05, nes_limit = 2.5) {
+# comparable across lineages, compartments and collections. compact = TRUE fixes
+# the panel size per lineage and row, so pages with few rows are not stretched
+# to fill the page.
+plot_pathway_matrix <- function(data, title, fdr = 0.05, nes_limit = 2.5, compact = FALSE) {
   data <- data |>
     dplyr::filter(.data$test_status == "estimated") |>
     dplyr::mutate(
       significant = is.finite(.data$p_adj) & .data$p_adj < fdr,
       fdr_score = pmin(-log10(pmax(.data$p_adj, 1e-8)), 8),
       NES_plot = pmax(pmin(.data$NES, nes_limit), -nes_limit))
+  panel_size <- if (compact) {
+    rows_per_group <- tapply(as.character(data$pathway_label), data$program_category,
+      dplyr::n_distinct)
+    ggplot2::theme(panel.widths = grid::unit(dplyr::n_distinct(data$lineage_label), "in"),
+      # A minimum height leaves room for a wrapped row-group label.
+      panel.heights = grid::unit(pmax(0.3 * rows_per_group[!is.na(rows_per_group)], 0.55), "in"))
+  }
   ggplot2::ggplot(data, ggplot2::aes(.data$lineage_label, .data$pathway_label)) +
+    # Train the axes on all rows first so row order follows the factor levels,
+    # not the order in which the two dot layers first meet each pathway.
+    ggplot2::geom_blank() +
     ggplot2::geom_point(data = data[!data$significant, ],
-      ggplot2::aes(shape = paste0("FDR \u2265 ", fdr)), size = 2, color = "grey65", stroke = 0.5) +
+      shape = 1, size = 2, color = "grey65", stroke = 0.5) +
     ggplot2::geom_point(data = data[data$significant, ],
       ggplot2::aes(size = .data$fdr_score, fill = .data$NES_plot),
       shape = 21, color = "grey20", stroke = 0.3) +
     ggplot2::facet_grid(program_category ~ ., scales = "free_y", space = "free_y",
       labeller = ggplot2::label_wrap_gen(width = 22)) +
     ggplot2::scale_x_discrete(position = "top") +
-    ggplot2::scale_shape_manual(values = 1, name = NULL) +
     ggplot2::scale_fill_gradient2(low = "#2a78d6", mid = "#f0efec", high = "#e34948",
-      midpoint = 0, limits = c(-nes_limit, nes_limit),
-      name = "NES\n(red: higher at\nendpoint; blue:\nlower)") +
+      midpoint = 0, limits = c(-nes_limit, nes_limit), name = "NES") +
     ggplot2::scale_size_continuous(range = c(2.5, 7.5), limits = c(-log10(fdr), 8),
       breaks = c(2, 4, 8), labels = c("0.01", "1e-4", "\u2264 1e-8"), name = "FDR") +
     ggplot2::guides(fill = ggplot2::guide_colorbar(order = 1),
-      size = ggplot2::guide_legend(order = 2, override.aes = list(fill = "grey50")),
-      shape = ggplot2::guide_legend(order = 3)) +
+      size = ggplot2::guide_legend(order = 2, override.aes = list(fill = "grey50"))) +
     ggplot2::theme_bw(base_size = 10) +
     ggplot2::theme(
       panel.grid.major = ggplot2::element_line(color = "grey92", linewidth = 0.3),
@@ -312,5 +356,6 @@ plot_pathway_matrix <- function(data, title, fdr = 0.05, nes_limit = 2.5) {
       plot.title = ggplot2::element_text(face = "bold"),
       plot.title.position = "plot",
       plot.background = ggplot2::element_rect(fill = "white", color = NA)) +
+    panel_size +
     ggplot2::labs(title = title, x = NULL, y = NULL)
 }

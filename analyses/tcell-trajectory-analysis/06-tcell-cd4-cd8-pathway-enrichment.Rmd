@@ -22,7 +22,7 @@ This analysis asks which biological programs go up or down along each shared CD4
 - Enrichment is measured against the ~3,000 variable genes modeled in stage 04, not the whole transcriptome. Each lineage uses only its testable subset of those genes, so compare lineages by direction and FDR rather than small NES differences.
 - Results are cell-level and describe start-to-endpoint change only, so programs that peak mid-lineage are not captured.
 - CD8 lineage 3 has sparse support in some conditions; interpret it with caution.
-- Pathway enrichment alone cannot confirm exhaustion or separate it from cytotoxic activation.
+- Hallmark and GO BP have no exhaustion set. For CD8 only, four published CD8 T-cell signatures (Miller et al. 2019: progenitor exhausted, effector-like, terminally exhausted and proliferating) are therefore also tested, as a prespecified set reported in full. The progenitor signature is dominated by ribosomal and mitochondrial genes, so it is less specific.
 
 ## Setup
 
@@ -68,12 +68,19 @@ if (length(requested_compartment) != 1L || is.na(requested_compartment) ||
 }
 selected_compartments <- if (requested_compartment == "both") names(compartment_stems) else requested_compartment
 collections <- c("Hallmark", "GO_BP")
+# CD8-only prespecified signatures (Miller et al. 2019, PMC6673650, supplementary table 1).
+signature_collection <- "Miller2019_CD8"
+signature_file <- file.path(analysis_dir, "input", "NIHMS1026478-supplement-SUPPTB1.xlsx")
+compartment_collections <- list(`CD4-like` = collections,
+  `CD8-like` = c(collections, signature_collection))
 msigdb_version <- "2025.1.Mm"
 min_pathway_size <- 15L
 max_pathway_size <- 500L
 review_fdr <- 0.05
 top_pathways_per_direction <- 4L
 max_review_jaccard <- 0.5
+# Figure pages with fewer pathway rows use a fixed, compact dot spacing.
+compact_max_rows <- 10L
 analysis_seed <- 1234L
 fgsea_eps <- 1e-10
 # Increase the initial permutations to reduce unavailable pathway estimates.
@@ -116,17 +123,18 @@ knitr::kable(tibble(file = names(input_checksums), md5 = unname(input_checksums)
 
 ## Load the frozen mouse gene sets
 
-This chunk saves the exact Hallmark and GO BP gene memberships on first use. The first run may download the mouse MSigDB release; later renders reuse this compressed TSV offline. Hallmarks are orthology-mapped within the mouse database. No capitalization-based gene conversion is performed. Coverage is measured against the modeled genes, not all expressed genes.
+This chunk saves the exact Hallmark and GO BP gene memberships on first use. The first run may download the mouse MSigDB release; later renders reuse this compressed TSV offline. Hallmarks are orthology-mapped within the mouse database. No capitalization-based gene conversion is performed. Coverage is measured against the modeled genes, not all expressed genes. The four CD8 signatures are read from the supplementary table in `input/`; each lists the genes up-regulated in one tumor-infiltrating CD8 cluster.
 
 ```{r load-gene-sets}
-gene_sets <- load_mouse_pathways(gene_set_file, msigdb_version)
+gene_sets <- bind_rows(load_mouse_pathways(gene_set_file, msigdb_version),
+  load_cd8_signatures(signature_file, signature_collection))
 knitr::kable(gene_sets %>% distinct(collection, pathway, db_version) %>%
   count(collection, db_version, name = "n_pathways"))
 ```
 
 ## Run or reuse lineage enrichment
 
-This chunk runs preranked `fgseaMultilevel()` for each lineage and collection, or reuses a matching compartment cache. The initial estimation uses 100,000 simple permutations to reduce unavailable estimates from unbalanced ranking statistics; this setting is included in the cache context. Size limits apply after intersection with the ranking. All sets remain in the full result table, with explicit `excluded_size` or `not_estimated` status where appropriate. BH correction spans all eligible attempted tests across the three lineages within each compartment and collection; excluded-size sets are not additional tests. Hallmark and GO BP are separate FDR families.
+This chunk runs preranked `fgseaMultilevel()` for each lineage and collection, or reuses a matching compartment cache. The initial estimation uses 100,000 simple permutations to reduce unavailable estimates from unbalanced ranking statistics; this setting is included in the cache context. Size limits apply after intersection with the ranking. All sets remain in the full result table, with explicit `excluded_size` or `not_estimated` status where appropriate. BH correction spans all eligible attempted tests across the three lineages within each compartment and collection; excluded-size sets are not additional tests. Hallmark, GO BP and the CD8 signatures are separate FDR families, so the four signatures are corrected against each other across the three CD8 lineages (12 tests).
 
 ```{r enrich-lineages}
 enrichment_results <- imap_dfr(ranking_inputs, function(input, compartment) {
@@ -153,6 +161,10 @@ enrichment_results <- imap_dfr(ranking_inputs, function(input, compartment) {
     fgsea_version = as.character(packageVersion("fgsea")),
     msigdbr_version = as.character(packageVersion("msigdbr"))
   )
+  # Only the CD8 cache depends on the signature table.
+  if (signature_collection %in% compartment_collections[[compartment]]) {
+    context$signature_md5 <- unname(tools::md5sum(signature_file))
+  }
   cached <- if (file.exists(cache_file) && !force_enrichment)
     readRDS(cache_file) else NULL
   if (is.list(cached) && identical(cached$context, context) && is.data.frame(cached$results)) {
@@ -164,12 +176,13 @@ enrichment_results <- imap_dfr(ranking_inputs, function(input, compartment) {
       if (is.null(cached)) ")" else "; cache context changed)")
     rows <- list()
     lineages <- sort(unique(input$ranks$lineage))
+    run_collections <- compartment_collections[[compartment]]
     for (i in seq_along(lineages)) {
-      for (j in seq_along(collections)) {
+      for (j in seq_along(run_collections)) {
         # Seeds do not depend on whether the other compartment is requested.
         seed <- analysis_seed + 100L * match(compartment, names(compartment_stems)) + 10L * i + j
         rows[[paste(i, j)]] <- enrich_lineage_pathways(
-          input$ranks, gene_sets, compartment, lineages[[i]], collections[[j]],
+          input$ranks, gene_sets, compartment, lineages[[i]], run_collections[[j]],
           min_pathway_size, max_pathway_size, seed, workers, fgsea_eps,
           n_perm_simple = fgsea_n_perm_simple
         )
@@ -207,24 +220,42 @@ review_pathways <- map(set_names(selected_compartments), function(compartment) {
 
 ## Lineage pathway summary
 
-This chunk lists, for each lineage, how many pathways are FDR-supported in each direction and the selected Hallmark and GO BP pathways that are higher or lower at the endpoint, next to the reviewed label. Use the table to judge whether each lineage's top pathways fit its label; it does not assign or change labels. Hallmark and GO BP have no specific exhaustion or memory sets, so those programs rely on the stage 04 gene trends.
+This chunk lists, for each lineage, how many pathways are FDR-supported in each direction and the selected Hallmark and GO BP pathways that are higher or lower at the endpoint, next to the reviewed label. Use the table to judge whether each lineage's top pathways fit its label; it does not assign or change labels. Hallmark and GO BP have no specific exhaustion or memory sets; for CD8, exhaustion is tested with the published signatures in the next section.
 
 ```{r lineage-summary}
 lineage_summary <- imap_dfr(review_pathways, function(review, compartment) {
-  summarise_lineage_pathways(filter(enrichment_results, compartment == !!compartment),
-    review, review_fdr)
+  summarise_lineage_pathways(filter(enrichment_results, compartment == !!compartment,
+    collection %in% collections), review, review_fdr)
 })
 knitr::kable(lineage_summary)
 ```
 
+## CD8 T-cell signatures
+
+This chunk lists all four Miller et al. 2019 signatures on every CD8 lineage, whether or not they are FDR-supported. A positive NES means the signature's genes are higher at the lineage endpoint than at its start. `n_genes_in_ranking` is the number of signature genes among that lineage's ranked genes.
+
+```{r cd8-signatures}
+signature_results <- enrichment_results %>%
+  filter(collection == signature_collection) %>%
+  mutate(signature = short_pathway_name(pathway),
+    lineage = sub("slingPseudotime_", "L", lineage, fixed = TRUE)) %>%
+  select(compartment, lineage, assigned_program, signature, n_genes_in_set,
+    n_genes_in_ranking, test_status, NES, p_value, p_adj)
+if (nrow(signature_results) > 0L) {
+  knitr::kable(arrange(signature_results, lineage, signature), digits = 3)
+} else {
+  cat("No CD8 compartment in this render.\n")
+}
+```
+
 ## Pathway figures
 
-This chunk writes one two-page PDF per compartment, Hallmark (primary) and GO BP (supporting detail), and shows the same figures below. `tcell_<compartment>_pathway_enrichment_plot_data.tsv` holds exactly the rows drawn in the matching PDF; `tcell_<compartment>_pathway_enrichment.tsv` holds every pathway tested.
+This chunk writes one PDF per compartment, with a Hallmark page (primary) and a GO BP page (supporting detail), and shows the same figures below. `tcell_<compartment>_pathway_enrichment_plot_data.tsv` holds exactly the rows drawn in the matching PDF; `tcell_<compartment>_pathway_enrichment.tsv` holds every pathway tested.
 
 How to read the figures:
 
 - **Columns** are the three shared lineages, labeled with the reviewed annotations from `config/tcell-lineage-annotation-manifest.tsv`. Enrichment supports or questions these labels but does not assign them.
-- **Rows** are the selected pathways, grouped by the lineage that selected them ("Top in L1", "Top in L2", "Top in L3"). Each row shows all three lineages, so a pathway selected by more than one lineage is drawn once, under the first of them (L1, then L2, then L3); its dots in the other columns show its results there. A pathway that largely repeats an earlier row (Jaccard >= 0.5) is shown once.
+- **Rows** are the selected pathways, grouped by the lineage that selected them ("Top in L1", "Top in L2", "Top in L3"). Each row shows all three lineages, so a pathway selected by more than one lineage is drawn once, under the first of them (L1, then L2, then L3); its dots in the other columns show its results there. A pathway that largely repeats an earlier row (Jaccard >= 0.5) is shown once. For CD8, the Hallmark page ends with a "Miller et al. 2019 CD8 T-cell signatures" group that shows all four signatures, selected in advance; their FDR is from the signatures' own 12 tests, not the Hallmark tests.
 - **Filled dots** have FDR < 0.05. Color is NES (red: higher at the lineage endpoint than at its start; blue: lower), clamped to ±2.5 so colors are comparable across pages; size is FDR. **Open grey dots** were tested but not supported; **blank cells** were outside the 15–500 gene size limits for that lineage.
 - **Ranking:** mean condition-specific log2 fitted end/start change per lineage, using testable tradeSeq model genes only. BH FDR spans all three lineages within each compartment and collection.
 - These are not CAR-construct or mouse-level tests, and broad Hallmark sets are not specific exhaustion or Treg signatures.
@@ -233,16 +264,36 @@ How to read the figures:
 for (compartment in selected_compartments) {
   stem <- compartment_stems[[compartment]]
   ranked_genes <- unique(ranking_inputs[[compartment]]$ranks$gene)
-  pages <- map(c(Hallmark = "Hallmark", GO_BP = "GO_BP"), function(collection) {
-    rows <- pathway_matrix_rows(enrichment_results, review_pathways[[compartment]], compartment,
+  page_rows <- map(c(Hallmark = "Hallmark", GO_BP = "GO_BP"), function(collection) {
+    pathway_matrix_rows(enrichment_results, review_pathways[[compartment]], compartment,
       collection, gene_sets, ranked_genes, max_review_jaccard)
-    list(rows = rows, n_rows = length(unique(rows$pathway)), plot = plot_pathway_matrix(rows,
-      paste0(compartment, ": ", sub("_", " ", collection), " enrichment by lineage"), review_fdr))
+  })
+  page_titles <- c(Hallmark = "Hallmark", GO_BP = "GO BP")
+  if (signature_collection %in% compartment_collections[[compartment]]) {
+    # The CD8 signatures are drawn as a final row group on the Hallmark page.
+    signatures <- unique(gene_sets$pathway[gene_sets$collection == signature_collection])
+    signature_rows <- signature_matrix_rows(enrichment_results, compartment, signature_collection,
+      signatures, "Miller et al. 2019 CD8 T-cell signatures")
+    hallmark_rows <- page_rows$Hallmark
+    page_rows$Hallmark <- bind_rows(hallmark_rows,
+        mutate(signature_rows, row_order = row_order + max(c(0L, hallmark_rows$row_order)))) %>%
+      mutate(
+        program_category = factor(program_category, levels = c(levels(hallmark_rows$program_category),
+          levels(signature_rows$program_category))),
+        pathway_label = factor(pathway_label, levels = c(levels(signature_rows$pathway_label),
+          levels(hallmark_rows$pathway_label))))
+    page_titles[["Hallmark"]] <- "Hallmark and CD8 T-cell signature"
+  }
+  pages <- imap(page_rows, function(rows, page) {
+    n_rows <- length(unique(rows$pathway))
+    list(rows = rows, n_rows = n_rows, plot = plot_pathway_matrix(rows,
+      paste0(compartment, ": ", page_titles[[page]], " enrichment by lineage"), review_fdr,
+      compact = n_rows < compact_max_rows))
   })
   plot_file <- file.path(plot_dir, paste0("tcell_", stem, "_pathway_enrichment.pdf"))
   # The exact rows drawn in the PDF, one per pathway and lineage, in page and row order.
-  plot_data <- map_dfr(pages, "rows") %>%
-    arrange(match(collection, names(pages)), row_order, lineage) %>%
+  plot_data <- map_dfr(pages, "rows", .id = "page") %>%
+    arrange(match(page, names(pages)), row_order, lineage) %>%
     select(collection, row_group = program_category, pathway, lineage, assigned_program,
       test_status, NES, p_value, p_adj, n_genes_in_ranking, n_genes_in_set, leading_edge)
   write.table(plot_data, file.path(results_dir, paste0("tcell_", stem, "_pathway_enrichment_plot_data.tsv")),
@@ -250,7 +301,7 @@ for (compartment in selected_compartments) {
   # A local function ensures the graphics device closes if a page fails.
   save_pages <- function() {
     height <- min(max(6, 2.5 + 0.24 * max(map_int(pages, "n_rows"))), 14)
-    # cairo_pdf renders the >= and <= symbols in the legends.
+    # cairo_pdf renders the <= symbol in the FDR legend.
     grDevices::cairo_pdf(plot_file, width = 10, height = height, onefile = TRUE)
     on.exit(grDevices::dev.off(), add = TRUE)
     walk(pages, ~ print(.x$plot))

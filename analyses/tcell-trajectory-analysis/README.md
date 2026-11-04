@@ -23,7 +23,7 @@ This renders analyses 01–03, then separate CD4-like and CD8-like tradeSeq (04)
 3. `03-tcell-cd4-cd8-slingshot.Rmd`: runs shared all-condition Slingshot analyses for the CD4-like and CD8-like compartments by default, caches successful trajectory inference, and generates pseudotime, lineage, gene-trend, and AUCell program outputs.
 4. `04-tcell-cd4-cd8-tradeseq.Rmd`: validates the shared CD4-like and CD8-like trajectories, fits condition-aware tradeSeq models to a balanced gene set, tests lineage-associated and condition-dependent expression, validates the manually reviewed lineage labels, and generates fitted gene-trend and heatmap outputs.
 5. `05-tcell-cd4-cd8-condiments.Rmd`: compares CAR constructs using topology, progression, and fate-selection tests. A global topology test refits trajectories on all tested constructs, then fits each construct's curves and compares them with permuted labels; pairwise progression and fate selection use the fixed shared trajectories for each prespecified condition pair. Separate PDFs distinguish cell-level test evidence from weighted cell distributions and mouse-level descriptive summaries; progression is also shown as all-construct cumulative curves and pseudotime densities, and fate as the share of each construct's cells on one lineage, both, or the other.
-6. `06-tcell-cd4-cd8-pathway-enrichment.Rmd`: performs mouse Hallmark and GO BP enrichment of saved endpoint-versus-start fitted changes, separately by compartment and lineage, as one line of evidence for the reviewed lineage labels. Reports each lineage's top pathways and writes a pathway-by-lineage dot matrix PDF (Hallmark and GO BP pages) without changing lineage annotations or testing CAR-versus-CAR pathways.
+6. `06-tcell-cd4-cd8-pathway-enrichment.Rmd`: performs mouse Hallmark and GO BP enrichment of saved endpoint-versus-start fitted changes, separately by compartment and lineage, as one line of evidence for the reviewed lineage labels. For CD8, it also tests four published CD8 T-cell signatures (Miller et al. 2019; `input/NIHMS1026478-supplement-SUPPTB1.xlsx`) because Hallmark and GO BP have no exhaustion set. Reports each lineage's top pathways and writes a pathway-by-lineage dot matrix PDF (Hallmark and GO BP pages, with the CD8 signatures added to the CD8 Hallmark page) without changing lineage annotations or testing CAR-versus-CAR pathways.
 
 ## Analysis module directory structure
 
@@ -52,6 +52,8 @@ This renders analyses 01–03, then separate CD4-like and CD8-like tradeSeq (04)
 │   ├── tcell-trajectory-cd4-review.md
 │   ├── tcell-trajectory-cd8-review.md
 │   └── tcell-trajectory-condiments-review.md
+├── input
+│   └── NIHMS1026478-supplement-SUPPTB1.xlsx
 ├── plots
 │   ├── combined-tcell-trajectory
 │   ├── cd4-cd8-annotation
