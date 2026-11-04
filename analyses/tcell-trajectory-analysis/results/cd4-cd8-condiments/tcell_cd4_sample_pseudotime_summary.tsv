@@ -1,0 +1,37 @@
+compartment	condition	sample	lineage	lineage_program	n_cells	weight_sum	weighted_mean_pseudotime
+CD4-like	tumor	Tumor_only_D1	slingPseudotime_1	regulatory/Treg-associated	47	22.3542954625633	26.8256788577325
+CD4-like	tumor	Tumor_only_D2	slingPseudotime_1	regulatory/Treg-associated	38	18.2129239113881	27.9278433143692
+CD4-like	STOP	STOP_pos_T_D1	slingPseudotime_1	regulatory/Treg-associated	91	34.470625522695	27.8580146763037
+CD4-like	STOP	STOP_pos_T_D2	slingPseudotime_1	regulatory/Treg-associated	311	97.5520355507227	31.7293144548688
+CD4-like	B7H3	B7H3_pos_T_D1	slingPseudotime_1	regulatory/Treg-associated	191	62.4269703715391	27.7547989652865
+CD4-like	B7H3	B7H3_pos_T_D2	slingPseudotime_1	regulatory/Treg-associated	365	144.411006177267	33.1374757088009
+CD4-like	41BB-L	41BB-L_pos_T_D1	slingPseudotime_1	regulatory/Treg-associated	125	52.811300988283	31.5278668797258
+CD4-like	41BB-L	41BB-L_pos_T_D2	slingPseudotime_1	regulatory/Treg-associated	213	116.577574003162	34.2449607254761
+CD4-like	CD8-41BB	CD8-41BB_pos_T_D1	slingPseudotime_1	regulatory/Treg-associated	651	158.754036919998	29.1340341904588
+CD4-like	CD8-41BB	CD8-41BB_pos_T_D2	slingPseudotime_1	regulatory/Treg-associated	201	113.925318939475	36.4131813640084
+CD4-like	CD28-41BB	CD28-41BB_pos_T_D1	slingPseudotime_1	regulatory/Treg-associated	49	20.0451729431256	26.0101687502309
+CD4-like	CD28-41BB	CD28-41BB_pos_T_D2	slingPseudotime_1	regulatory/Treg-associated	223	111.158896258854	33.4855237159888
+CD4-like	tumor	Tumor_only_D1	slingPseudotime_2	proliferating CD4	47	4.2203967477717	20.9725246935588
+CD4-like	tumor	Tumor_only_D2	slingPseudotime_2	proliferating CD4	38	5.54211202848588	23.4456951458589
+CD4-like	STOP	STOP_pos_T_D1	slingPseudotime_2	proliferating CD4	91	28.7471820739123	29.122616041908
+CD4-like	STOP	STOP_pos_T_D2	slingPseudotime_2	proliferating CD4	311	158.226509800234	33.5756635026184
+CD4-like	B7H3	B7H3_pos_T_D1	slingPseudotime_2	proliferating CD4	191	67.3412287068944	34.0613700935623
+CD4-like	B7H3	B7H3_pos_T_D2	slingPseudotime_2	proliferating CD4	365	137.103200785627	42.5524207526118
+CD4-like	41BB-L	41BB-L_pos_T_D1	slingPseudotime_2	proliferating CD4	125	34.6439219960674	37.0539471762051
+CD4-like	41BB-L	41BB-L_pos_T_D2	slingPseudotime_2	proliferating CD4	213	50.4872841273726	32.6755815474886
+CD4-like	CD8-41BB	CD8-41BB_pos_T_D1	slingPseudotime_2	proliferating CD4	651	261.400189106826	47.9039736663183
+CD4-like	CD8-41BB	CD8-41BB_pos_T_D2	slingPseudotime_2	proliferating CD4	201	52.8409104255904	28.4800826694575
+CD4-like	CD28-41BB	CD28-41BB_pos_T_D1	slingPseudotime_2	proliferating CD4	49	11.1565584587581	28.80200313959
+CD4-like	CD28-41BB	CD28-41BB_pos_T_D2	slingPseudotime_2	proliferating CD4	223	53.0983780799541	42.9580488708784
+CD4-like	tumor	Tumor_only_D1	slingPseudotime_3	activated helper/Th1-like	47	20.425307789665	26.8239636402002
+CD4-like	tumor	Tumor_only_D2	slingPseudotime_3	activated helper/Th1-like	38	14.244964060126	25.2399813100124
+CD4-like	STOP	STOP_pos_T_D1	slingPseudotime_3	activated helper/Th1-like	91	27.7821924033927	26.3702418546967
+CD4-like	STOP	STOP_pos_T_D2	slingPseudotime_3	activated helper/Th1-like	311	55.2214546490432	24.8582749330544
+CD4-like	B7H3	B7H3_pos_T_D1	slingPseudotime_3	activated helper/Th1-like	191	61.2318009215665	28.6552922389237
+CD4-like	B7H3	B7H3_pos_T_D2	slingPseudotime_3	activated helper/Th1-like	365	83.4857930371063	26.5621013639871
+CD4-like	41BB-L	41BB-L_pos_T_D1	slingPseudotime_3	activated helper/Th1-like	125	37.5447770156496	28.4751665121492
+CD4-like	41BB-L	41BB-L_pos_T_D2	slingPseudotime_3	activated helper/Th1-like	213	45.9351418694653	26.9910759233364
+CD4-like	CD8-41BB	CD8-41BB_pos_T_D1	slingPseudotime_3	activated helper/Th1-like	651	230.845773973176	35.1304745171615
+CD4-like	CD8-41BB	CD8-41BB_pos_T_D2	slingPseudotime_3	activated helper/Th1-like	201	34.2337706349351	22.8771931552357
+CD4-like	CD28-41BB	CD28-41BB_pos_T_D1	slingPseudotime_3	activated helper/Th1-like	49	17.7982685981163	27.1360225677538
+CD4-like	CD28-41BB	CD28-41BB_pos_T_D2	slingPseudotime_3	activated helper/Th1-like	223	58.7427256611915	27.1206527440614

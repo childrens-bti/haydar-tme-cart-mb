@@ -1,0 +1,37 @@
+compartment	condition	sample	lineage	lineage_program	n_cells	weight_sum	mean_lineage_probability
+CD8-like	tumor	Tumor_only_D1	slingPseudotime_1	cytotoxic effector trajectory	41	14.1888902791231	0.346070494612757
+CD8-like	tumor	Tumor_only_D1	slingPseudotime_2	proliferating effector/dysfunction trajectory	41	14.6902602857835	0.358299031360573
+CD8-like	tumor	Tumor_only_D1	slingPseudotime_3	exhausted/dysfunctional trajectory	41	12.1208494350935	0.29563047402667
+CD8-like	tumor	Tumor_only_D2	slingPseudotime_1	cytotoxic effector trajectory	41	18.1433179387568	0.442519949725777
+CD8-like	tumor	Tumor_only_D2	slingPseudotime_2	proliferating effector/dysfunction trajectory	41	9.66542313510353	0.235742027685452
+CD8-like	tumor	Tumor_only_D2	slingPseudotime_3	exhausted/dysfunctional trajectory	41	13.1912589261396	0.321738022588771
+CD8-like	STOP	STOP_pos_T_D1	slingPseudotime_1	cytotoxic effector trajectory	115	52.6347107948051	0.457693137346131
+CD8-like	STOP	STOP_pos_T_D1	slingPseudotime_2	proliferating effector/dysfunction trajectory	115	32.9847819276592	0.286824190675298
+CD8-like	STOP	STOP_pos_T_D1	slingPseudotime_3	exhausted/dysfunctional trajectory	115	29.3805072775357	0.255482671978571
+CD8-like	STOP	STOP_pos_T_D2	slingPseudotime_1	cytotoxic effector trajectory	123	82.1579232092679	0.6679505951973
+CD8-like	STOP	STOP_pos_T_D2	slingPseudotime_2	proliferating effector/dysfunction trajectory	123	19.0018453758665	0.154486547771272
+CD8-like	STOP	STOP_pos_T_D2	slingPseudotime_3	exhausted/dysfunctional trajectory	123	21.8402314148656	0.177562857031428
+CD8-like	B7H3	B7H3_pos_T_D1	slingPseudotime_1	cytotoxic effector trajectory	283	151.53379683146	0.535455112478656
+CD8-like	B7H3	B7H3_pos_T_D1	slingPseudotime_2	proliferating effector/dysfunction trajectory	283	85.0119928792182	0.300395734555541
+CD8-like	B7H3	B7H3_pos_T_D1	slingPseudotime_3	exhausted/dysfunctional trajectory	283	46.4542102893221	0.164149152965802
+CD8-like	B7H3	B7H3_pos_T_D2	slingPseudotime_1	cytotoxic effector trajectory	426	314.998999501039	0.739434271129199
+CD8-like	B7H3	B7H3_pos_T_D2	slingPseudotime_2	proliferating effector/dysfunction trajectory	426	77.9436776841923	0.182966379540357
+CD8-like	B7H3	B7H3_pos_T_D2	slingPseudotime_3	exhausted/dysfunctional trajectory	426	33.057322814769	0.0775993493304437
+CD8-like	41BB-L	41BB-L_pos_T_D1	slingPseudotime_1	cytotoxic effector trajectory	75	28.7660755400006	0.383547673866675
+CD8-like	41BB-L	41BB-L_pos_T_D1	slingPseudotime_2	proliferating effector/dysfunction trajectory	75	29.3079724641002	0.390772966188003
+CD8-like	41BB-L	41BB-L_pos_T_D1	slingPseudotime_3	exhausted/dysfunctional trajectory	75	16.9259519958991	0.225679359945322
+CD8-like	41BB-L	41BB-L_pos_T_D2	slingPseudotime_1	cytotoxic effector trajectory	185	142.470901965163	0.770112983595477
+CD8-like	41BB-L	41BB-L_pos_T_D2	slingPseudotime_2	proliferating effector/dysfunction trajectory	185	30.5256612490386	0.165003574319127
+CD8-like	41BB-L	41BB-L_pos_T_D2	slingPseudotime_3	exhausted/dysfunctional trajectory	185	12.0034367857982	0.0648834420853958
+CD8-like	CD8-41BB	CD8-41BB_pos_T_D1	slingPseudotime_1	cytotoxic effector trajectory	603	137.450695591366	0.227944768808236
+CD8-like	CD8-41BB	CD8-41BB_pos_T_D1	slingPseudotime_2	proliferating effector/dysfunction trajectory	603	149.293515557209	0.247584602914111
+CD8-like	CD8-41BB	CD8-41BB_pos_T_D1	slingPseudotime_3	exhausted/dysfunctional trajectory	603	316.255788851425	0.524470628277653
+CD8-like	CD8-41BB	CD8-41BB_pos_T_D2	slingPseudotime_1	cytotoxic effector trajectory	99	56.9664192172976	0.575418375932299
+CD8-like	CD8-41BB	CD8-41BB_pos_T_D2	slingPseudotime_2	proliferating effector/dysfunction trajectory	99	20.9733340375903	0.211851858965559
+CD8-like	CD8-41BB	CD8-41BB_pos_T_D2	slingPseudotime_3	exhausted/dysfunctional trajectory	99	21.0602467451121	0.212729765102142
+CD8-like	CD28-41BB	CD28-41BB_pos_T_D1	slingPseudotime_1	cytotoxic effector trajectory	47	16.7763627468885	0.35694388823167
+CD8-like	CD28-41BB	CD28-41BB_pos_T_D1	slingPseudotime_2	proliferating effector/dysfunction trajectory	47	15.7542840055506	0.33519753203299
+CD8-like	CD28-41BB	CD28-41BB_pos_T_D1	slingPseudotime_3	exhausted/dysfunctional trajectory	47	14.469353247561	0.30785857973534
+CD8-like	CD28-41BB	CD28-41BB_pos_T_D2	slingPseudotime_1	cytotoxic effector trajectory	100	52.6692274430489	0.526692274430489
+CD8-like	CD28-41BB	CD28-41BB_pos_T_D2	slingPseudotime_2	proliferating effector/dysfunction trajectory	100	18.4828922327717	0.184828922327717
+CD8-like	CD28-41BB	CD28-41BB_pos_T_D2	slingPseudotime_3	exhausted/dysfunctional trajectory	100	28.8478803241794	0.288478803241794

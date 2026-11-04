@@ -1,0 +1,82 @@
+compartment	test	lineage	lineage_program	comparison	comparison_set	condition_a	condition_b	method	statistic	p_value	p_adj	n_samples	n_cells	status	status_note
+CD8-like	fate	All	All lineage pairs	41BB-L_vs_CD28-41BB	primary_pairwise	41BB-L	CD28-41BB	mmd	0.0802248803717651	0.001	0.00133333333333333	4	407	ok	NA
+CD8-like	fate	slingPseudotime_1 vs slingPseudotime_2	cytotoxic effector trajectory vs proliferating effector/dysfunction trajectory	41BB-L_vs_CD28-41BB	primary_pairwise	41BB-L	CD28-41BB	mmd	0.0124543309627014	0.043	0.043	4	407	ok	NA
+CD8-like	fate	slingPseudotime_1 vs slingPseudotime_3	cytotoxic effector trajectory vs exhausted/dysfunctional trajectory	41BB-L_vs_CD28-41BB	primary_pairwise	41BB-L	CD28-41BB	mmd	0.0873233234224642	0.001	0.00133333333333333	4	407	ok	NA
+CD8-like	fate	slingPseudotime_2 vs slingPseudotime_3	proliferating effector/dysfunction trajectory vs exhausted/dysfunctional trajectory	41BB-L_vs_CD28-41BB	primary_pairwise	41BB-L	CD28-41BB	mmd	0.0520956176936893	0.001	0.00133333333333333	4	407	ok	NA
+CD8-like	fate	All	All lineage pairs	41BB-L_vs_CD8-41BB	primary_pairwise	41BB-L	CD8-41BB	mmd	0.262899593695542	0.001	0.001	4	962	ok	NA
+CD8-like	fate	slingPseudotime_1 vs slingPseudotime_2	cytotoxic effector trajectory vs proliferating effector/dysfunction trajectory	41BB-L_vs_CD8-41BB	primary_pairwise	41BB-L	CD8-41BB	mmd	0.113029034685715	0.001	0.001	4	962	ok	NA
+CD8-like	fate	slingPseudotime_1 vs slingPseudotime_3	cytotoxic effector trajectory vs exhausted/dysfunctional trajectory	41BB-L_vs_CD8-41BB	primary_pairwise	41BB-L	CD8-41BB	mmd	0.311578228727283	0.001	0.001	4	962	ok	NA
+CD8-like	fate	slingPseudotime_2 vs slingPseudotime_3	proliferating effector/dysfunction trajectory vs exhausted/dysfunctional trajectory	41BB-L_vs_CD8-41BB	primary_pairwise	41BB-L	CD8-41BB	mmd	0.160022451335516	0.001	0.001	4	962	ok	NA
+CD8-like	fate	All	All lineage pairs	41BB-L_vs_STOP	secondary_control	41BB-L	STOP	mmd	0.0274102554920548	0.001	0.00133333333333333	4	498	ok	NA
+CD8-like	fate	slingPseudotime_1 vs slingPseudotime_2	cytotoxic effector trajectory vs proliferating effector/dysfunction trajectory	41BB-L_vs_STOP	secondary_control	41BB-L	STOP	mmd	0.0107667159268654	0.008	0.008	4	498	ok	NA
+CD8-like	fate	slingPseudotime_1 vs slingPseudotime_3	cytotoxic effector trajectory vs exhausted/dysfunctional trajectory	41BB-L_vs_STOP	secondary_control	41BB-L	STOP	mmd	0.0325577139710123	0.001	0.00133333333333333	4	498	ok	NA
+CD8-like	fate	slingPseudotime_2 vs slingPseudotime_3	proliferating effector/dysfunction trajectory vs exhausted/dysfunctional trajectory	41BB-L_vs_STOP	secondary_control	41BB-L	STOP	mmd	0.0323873411166258	0.001	0.00133333333333333	4	498	ok	NA
+CD8-like	fate	All	All lineage pairs	B7H3_vs_41BB-L	primary_pairwise	B7H3	41BB-L	mmd	-0.000980047269843576	0.535	0.629	4	969	ok	NA
+CD8-like	fate	slingPseudotime_1 vs slingPseudotime_2	cytotoxic effector trajectory vs proliferating effector/dysfunction trajectory	B7H3_vs_41BB-L	primary_pairwise	B7H3	41BB-L	mmd	-0.000680264219624194	0.462	0.629	4	969	ok	NA
+CD8-like	fate	slingPseudotime_1 vs slingPseudotime_3	cytotoxic effector trajectory vs exhausted/dysfunctional trajectory	B7H3_vs_41BB-L	primary_pairwise	B7H3	41BB-L	mmd	-0.00129590754084341	0.629	0.629	4	969	ok	NA
+CD8-like	fate	slingPseudotime_2 vs slingPseudotime_3	proliferating effector/dysfunction trajectory vs exhausted/dysfunctional trajectory	B7H3_vs_41BB-L	primary_pairwise	B7H3	41BB-L	mmd	-0.00153535610896061	0.526	0.629	4	969	ok	NA
+CD8-like	fate	All	All lineage pairs	B7H3_vs_CD28-41BB	primary_pairwise	B7H3	CD28-41BB	mmd	0.0571863024209185	0.001	0.00133333333333333	4	856	ok	NA
+CD8-like	fate	slingPseudotime_1 vs slingPseudotime_2	cytotoxic effector trajectory vs proliferating effector/dysfunction trajectory	B7H3_vs_CD28-41BB	primary_pairwise	B7H3	CD28-41BB	mmd	0.0625977514014171	0.001	0.00133333333333333	4	856	ok	NA
+CD8-like	fate	slingPseudotime_1 vs slingPseudotime_3	cytotoxic effector trajectory vs exhausted/dysfunctional trajectory	B7H3_vs_CD28-41BB	primary_pairwise	B7H3	CD28-41BB	mmd	0.0879107377513813	0.001	0.00133333333333333	4	856	ok	NA
+CD8-like	fate	slingPseudotime_2 vs slingPseudotime_3	proliferating effector/dysfunction trajectory vs exhausted/dysfunctional trajectory	B7H3_vs_CD28-41BB	primary_pairwise	B7H3	CD28-41BB	mmd	0.0412943412886211	0.002	0.002	4	856	ok	NA
+CD8-like	fate	All	All lineage pairs	B7H3_vs_CD8-41BB	primary_pairwise	B7H3	CD8-41BB	mmd	0.266240422541439	0.001	0.001	4	1411	ok	NA
+CD8-like	fate	slingPseudotime_1 vs slingPseudotime_2	cytotoxic effector trajectory vs proliferating effector/dysfunction trajectory	B7H3_vs_CD8-41BB	primary_pairwise	B7H3	CD8-41BB	mmd	0.13127522304509	0.001	0.001	4	1411	ok	NA
+CD8-like	fate	slingPseudotime_1 vs slingPseudotime_3	cytotoxic effector trajectory vs exhausted/dysfunctional trajectory	B7H3_vs_CD8-41BB	primary_pairwise	B7H3	CD8-41BB	mmd	0.343864865170356	0.001	0.001	4	1411	ok	NA
+CD8-like	fate	slingPseudotime_2 vs slingPseudotime_3	proliferating effector/dysfunction trajectory vs exhausted/dysfunctional trajectory	B7H3_vs_CD8-41BB	primary_pairwise	B7H3	CD8-41BB	mmd	0.12287966271188	0.001	0.001	4	1411	ok	NA
+CD8-like	fate	All	All lineage pairs	B7H3_vs_STOP	secondary_control	B7H3	STOP	mmd	0.0187361516663531	0.001	0.001	4	947	ok	NA
+CD8-like	fate	slingPseudotime_1 vs slingPseudotime_2	cytotoxic effector trajectory vs proliferating effector/dysfunction trajectory	B7H3_vs_STOP	secondary_control	B7H3	STOP	mmd	0.0183438423754123	0.001	0.001	4	947	ok	NA
+CD8-like	fate	slingPseudotime_1 vs slingPseudotime_3	cytotoxic effector trajectory vs exhausted/dysfunctional trajectory	B7H3_vs_STOP	secondary_control	B7H3	STOP	mmd	0.0321773939424284	0.001	0.001	4	947	ok	NA
+CD8-like	fate	slingPseudotime_2 vs slingPseudotime_3	proliferating effector/dysfunction trajectory vs exhausted/dysfunctional trajectory	B7H3_vs_STOP	secondary_control	B7H3	STOP	mmd	0.0245236354436542	0.001	0.001	4	947	ok	NA
+CD8-like	fate	All	All lineage pairs	CD28-41BB_vs_STOP	secondary_control	CD28-41BB	STOP	mmd	0.012972362895306	0.02	0.064	4	385	ok	NA
+CD8-like	fate	slingPseudotime_1 vs slingPseudotime_2	cytotoxic effector trajectory vs proliferating effector/dysfunction trajectory	CD28-41BB_vs_STOP	secondary_control	CD28-41BB	STOP	mmd	-0.001708282138557	0.504	0.504	4	385	ok	NA
+CD8-like	fate	slingPseudotime_1 vs slingPseudotime_3	cytotoxic effector trajectory vs exhausted/dysfunctional trajectory	CD28-41BB_vs_STOP	secondary_control	CD28-41BB	STOP	mmd	0.012362686711562	0.032	0.064	4	385	ok	NA
+CD8-like	fate	slingPseudotime_2 vs slingPseudotime_3	proliferating effector/dysfunction trajectory vs exhausted/dysfunctional trajectory	CD28-41BB_vs_STOP	secondary_control	CD28-41BB	STOP	mmd	0.00601708861302597	0.104	0.138666666666667	4	385	ok	NA
+CD8-like	fate	All	All lineage pairs	CD8-41BB_vs_CD28-41BB	primary_pairwise	CD8-41BB	CD28-41BB	mmd	0.0545133184680313	0.001	0.00133333333333333	4	849	ok	NA
+CD8-like	fate	slingPseudotime_1 vs slingPseudotime_2	cytotoxic effector trajectory vs proliferating effector/dysfunction trajectory	CD8-41BB_vs_CD28-41BB	primary_pairwise	CD8-41BB	CD28-41BB	mmd	0.0333633018471609	0.001	0.00133333333333333	4	849	ok	NA
+CD8-like	fate	slingPseudotime_1 vs slingPseudotime_3	cytotoxic effector trajectory vs exhausted/dysfunctional trajectory	CD8-41BB_vs_CD28-41BB	primary_pairwise	CD8-41BB	CD28-41BB	mmd	0.116606184138705	0.001	0.00133333333333333	4	849	ok	NA
+CD8-like	fate	slingPseudotime_2 vs slingPseudotime_3	proliferating effector/dysfunction trajectory vs exhausted/dysfunctional trajectory	CD8-41BB_vs_CD28-41BB	primary_pairwise	CD8-41BB	CD28-41BB	mmd	0.00419351083799335	0.152	0.152	4	849	ok	NA
+CD8-like	fate	All	All lineage pairs	CD8-41BB_vs_STOP	secondary_control	CD8-41BB	STOP	mmd	0.142708557408286	0.001	0.001	4	940	ok	NA
+CD8-like	fate	slingPseudotime_1 vs slingPseudotime_2	cytotoxic effector trajectory vs proliferating effector/dysfunction trajectory	CD8-41BB_vs_STOP	secondary_control	CD8-41BB	STOP	mmd	0.0728708350336458	0.001	0.001	4	940	ok	NA
+CD8-like	fate	slingPseudotime_1 vs slingPseudotime_3	cytotoxic effector trajectory vs exhausted/dysfunctional trajectory	CD8-41BB_vs_STOP	secondary_control	CD8-41BB	STOP	mmd	0.140239154000835	0.001	0.001	4	940	ok	NA
+CD8-like	fate	slingPseudotime_2 vs slingPseudotime_3	proliferating effector/dysfunction trajectory vs exhausted/dysfunctional trajectory	CD8-41BB_vs_STOP	secondary_control	CD8-41BB	STOP	mmd	0.0461878774637787	0.001	0.001	4	940	ok	NA
+CD8-like	progression	All	All lineages	41BB-L_vs_CD28-41BB	primary_pairwise	41BB-L	CD28-41BB	KS	7.77451523490686	3.78684379529803e-15	1.51473751811921e-14	4	407	ok	NA
+CD8-like	progression	slingPseudotime_1	cytotoxic effector trajectory	41BB-L_vs_CD28-41BB	primary_pairwise	41BB-L	CD28-41BB	KS	0.427268347978147	6.32946473011486e-10	1.26589294602297e-09	4	407	ok	NA
+CD8-like	progression	slingPseudotime_2	proliferating effector/dysfunction trajectory	41BB-L_vs_CD28-41BB	primary_pairwise	41BB-L	CD28-41BB	KS	0.28693412677739	0.00689061840032379	0.00689061840032379	4	407	ok	NA
+CD8-like	progression	slingPseudotime_3	exhausted/dysfunctional trajectory	41BB-L_vs_CD28-41BB	primary_pairwise	41BB-L	CD28-41BB	KS	0.449902244399266	1.92309855762129e-06	2.56413141016173e-06	4	407	ok	NA
+CD8-like	progression	All	All lineages	41BB-L_vs_CD8-41BB	primary_pairwise	41BB-L	CD8-41BB	KS	13.5808612445981	2.6005618913011e-42	1.04022475652044e-41	4	962	ok	NA
+CD8-like	progression	slingPseudotime_1	cytotoxic effector trajectory	41BB-L_vs_CD8-41BB	primary_pairwise	41BB-L	CD8-41BB	KS	0.534060304153252	2.2e-16	2.93333333333333e-16	4	962	ok	NA
+CD8-like	progression	slingPseudotime_2	proliferating effector/dysfunction trajectory	41BB-L_vs_CD8-41BB	primary_pairwise	41BB-L	CD8-41BB	KS	0.466140874993372	2.62789789928775e-13	2.62789789928775e-13	4	962	ok	NA
+CD8-like	progression	slingPseudotime_3	exhausted/dysfunctional trajectory	41BB-L_vs_CD8-41BB	primary_pairwise	41BB-L	CD8-41BB	KS	0.613954422669593	2.2e-16	2.93333333333333e-16	4	962	ok	NA
+CD8-like	progression	All	All lineages	41BB-L_vs_STOP	secondary_control	41BB-L	STOP	KS	7.75250723480038	4.50478409560947e-15	1.80191363824379e-14	4	498	ok	NA
+CD8-like	progression	slingPseudotime_1	cytotoxic effector trajectory	41BB-L_vs_STOP	secondary_control	41BB-L	STOP	KS	0.347549628051643	7.28318627629676e-10	1.45663725525935e-09	4	498	ok	NA
+CD8-like	progression	slingPseudotime_2	proliferating effector/dysfunction trajectory	41BB-L_vs_STOP	secondary_control	41BB-L	STOP	KS	0.395211660409291	1.13023320291727e-06	1.5069776038897e-06	4	498	ok	NA
+CD8-like	progression	slingPseudotime_3	exhausted/dysfunctional trajectory	41BB-L_vs_STOP	secondary_control	41BB-L	STOP	KS	0.217075734023063	0.0320268129320869	0.0320268129320869	4	498	ok	NA
+CD8-like	progression	All	All lineages	B7H3_vs_41BB-L	primary_pairwise	B7H3	41BB-L	KS	3.82942644926138	6.4221131769267e-05	0.000256884527077068	4	969	ok	NA
+CD8-like	progression	slingPseudotime_1	cytotoxic effector trajectory	B7H3_vs_41BB-L	primary_pairwise	B7H3	41BB-L	KS	0.144110496448865	0.00583393634265716	0.00777858179020955	4	969	ok	NA
+CD8-like	progression	slingPseudotime_2	proliferating effector/dysfunction trajectory	B7H3_vs_41BB-L	primary_pairwise	B7H3	41BB-L	KS	0.250342760664731	0.000820574510165817	0.00164114902033163	4	969	ok	NA
+CD8-like	progression	slingPseudotime_3	exhausted/dysfunctional trajectory	B7H3_vs_41BB-L	primary_pairwise	B7H3	41BB-L	KS	0.132011852677346	0.282998025873164	0.282998025873164	4	969	ok	NA
+CD8-like	progression	All	All lineages	B7H3_vs_CD28-41BB	primary_pairwise	B7H3	CD28-41BB	KS	7.31478339369319	1.28898447602908e-13	5.15593790411632e-13	4	856	ok	NA
+CD8-like	progression	slingPseudotime_1	cytotoxic effector trajectory	B7H3_vs_CD28-41BB	primary_pairwise	B7H3	CD28-41BB	KS	0.307173508958875	1.5179733070525e-06	2.02396440940333e-06	4	856	ok	NA
+CD8-like	progression	slingPseudotime_2	proliferating effector/dysfunction trajectory	B7H3_vs_CD28-41BB	primary_pairwise	B7H3	CD28-41BB	KS	0.371710807693158	6.63418082869072e-06	6.63418082869072e-06	4	856	ok	NA
+CD8-like	progression	slingPseudotime_3	exhausted/dysfunctional trajectory	B7H3_vs_CD28-41BB	primary_pairwise	B7H3	CD28-41BB	KS	0.500598069610402	4.97278884736829e-11	9.94557769473658e-11	4	856	ok	NA
+CD8-like	progression	All	All lineages	B7H3_vs_CD8-41BB	primary_pairwise	B7H3	CD8-41BB	KS	13.6378187885105	1.19295304687609e-42	4.77181218750438e-42	4	1411	ok	NA
+CD8-like	progression	slingPseudotime_1	cytotoxic effector trajectory	B7H3_vs_CD8-41BB	primary_pairwise	B7H3	CD8-41BB	KS	0.531958096433204	2.2e-16	2.2e-16	4	1411	ok	NA
+CD8-like	progression	slingPseudotime_2	proliferating effector/dysfunction trajectory	B7H3_vs_CD8-41BB	primary_pairwise	B7H3	CD8-41BB	KS	0.534519383281387	2.2e-16	2.2e-16	4	1411	ok	NA
+CD8-like	progression	slingPseudotime_3	exhausted/dysfunctional trajectory	B7H3_vs_CD8-41BB	primary_pairwise	B7H3	CD8-41BB	KS	0.65745380245996	2.2e-16	2.2e-16	4	1411	ok	NA
+CD8-like	progression	All	All lineages	B7H3_vs_STOP	secondary_control	B7H3	STOP	KS	8.55655662721099	5.81443642217793e-18	2.32577456887117e-17	4	947	ok	NA
+CD8-like	progression	slingPseudotime_1	cytotoxic effector trajectory	B7H3_vs_STOP	secondary_control	B7H3	STOP	KS	0.27953542221832	4.14068779264198e-09	5.52091705685598e-09	4	947	ok	NA
+CD8-like	progression	slingPseudotime_2	proliferating effector/dysfunction trajectory	B7H3_vs_STOP	secondary_control	B7H3	STOP	KS	0.465354577821953	2.5113244817021e-13	5.02264896340421e-13	4	947	ok	NA
+CD8-like	progression	slingPseudotime_3	exhausted/dysfunctional trajectory	B7H3_vs_STOP	secondary_control	B7H3	STOP	KS	0.247873951047382	0.000328637013151334	0.000328637013151334	4	947	ok	NA
+CD8-like	progression	All	All lineages	CD28-41BB_vs_STOP	secondary_control	CD28-41BB	STOP	KS	2.86505954065717	0.00208465420457448	0.00647809073432559	4	385	ok	NA
+CD8-like	progression	slingPseudotime_1	cytotoxic effector trajectory	CD28-41BB_vs_STOP	secondary_control	CD28-41BB	STOP	KS	0.156036566245	0.121613000234998	0.162150666979997	4	385	ok	NA
+CD8-like	progression	slingPseudotime_2	proliferating effector/dysfunction trajectory	CD28-41BB_vs_STOP	secondary_control	CD28-41BB	STOP	KS	0.166665866361879	0.265507756187504	0.265507756187504	4	385	ok	NA
+CD8-like	progression	slingPseudotime_3	exhausted/dysfunctional trajectory	CD28-41BB_vs_STOP	secondary_control	CD28-41BB	STOP	KS	0.286067383059925	0.0032390453671628	0.00647809073432559	4	385	ok	NA
+CD8-like	progression	All	All lineages	CD8-41BB_vs_CD28-41BB	primary_pairwise	CD8-41BB	CD28-41BB	KS	4.97459777735458	3.26916280031699e-07	1.30766512012679e-06	4	849	ok	NA
+CD8-like	progression	slingPseudotime_1	cytotoxic effector trajectory	CD8-41BB_vs_CD28-41BB	primary_pairwise	CD8-41BB	CD28-41BB	KS	0.305254494655438	4.63482198820309e-06	9.26964397640617e-06	4	849	ok	NA
+CD8-like	progression	slingPseudotime_2	proliferating effector/dysfunction trajectory	CD8-41BB_vs_CD28-41BB	primary_pairwise	CD8-41BB	CD28-41BB	KS	0.276888732948673	0.00112150468281413	0.00149533957708551	4	849	ok	NA
+CD8-like	progression	slingPseudotime_3	exhausted/dysfunctional trajectory	CD8-41BB_vs_CD28-41BB	primary_pairwise	CD8-41BB	CD28-41BB	KS	0.167481720773129	0.0908581350256322	0.0908581350256322	4	849	ok	NA
+CD8-like	progression	All	All lineages	CD8-41BB_vs_STOP	secondary_control	CD8-41BB	STOP	KS	12.5387181808477	2.29174666244211e-36	9.16698664976845e-36	4	940	ok	NA
+CD8-like	progression	slingPseudotime_1	cytotoxic effector trajectory	CD8-41BB_vs_STOP	secondary_control	CD8-41BB	STOP	KS	0.380475324173865	9.76996261670138e-15	1.30266168222685e-14	4	940	ok	NA
+CD8-like	progression	slingPseudotime_2	proliferating effector/dysfunction trajectory	CD8-41BB_vs_STOP	secondary_control	CD8-41BB	STOP	KS	0.372086733593205	1.45394629669227e-09	1.45394629669227e-09	4	940	ok	NA
+CD8-like	progression	slingPseudotime_3	exhausted/dysfunctional trajectory	CD8-41BB_vs_STOP	secondary_control	CD8-41BB	STOP	KS	0.44836914745136	2.55351295663786e-15	5.10702591327572e-15	4	940	ok	NA
+CD8-like	topology	All	Trajectory structure	all_conditions	global_all_conditions	NA	NA	Classifier	0.785454545454545	5.16212706031684e-95	5.16212706031684e-95	10	2056	ok	All-condition refit has 3 lineages

@@ -1,0 +1,82 @@
+compartment	test	lineage	lineage_program	comparison	comparison_set	condition_a	condition_b	method	statistic	p_value	p_adj	n_samples	n_cells	status	status_note
+CD4-like	fate	All	All lineage pairs	41BB-L_vs_CD28-41BB	primary_pairwise	41BB-L	CD28-41BB	mmd	0.000378544124977953	0.291	0.432	4	610	ok	NA
+CD4-like	fate	slingPseudotime_1 vs slingPseudotime_2	regulatory/Treg-associated vs proliferating CD4	41BB-L_vs_CD28-41BB	primary_pairwise	41BB-L	CD28-41BB	mmd	-0.00208435736757395	0.866	0.866	4	610	ok	NA
+CD4-like	fate	slingPseudotime_1 vs slingPseudotime_3	regulatory/Treg-associated vs activated helper/Th1-like	41BB-L_vs_CD28-41BB	primary_pairwise	41BB-L	CD28-41BB	mmd	0.000621916259591959	0.239	0.432	4	610	ok	NA
+CD4-like	fate	slingPseudotime_2 vs slingPseudotime_3	proliferating CD4 vs activated helper/Th1-like	41BB-L_vs_CD28-41BB	primary_pairwise	41BB-L	CD28-41BB	mmd	0.00032920318296914	0.324	0.432	4	610	ok	NA
+CD4-like	fate	All	All lineage pairs	41BB-L_vs_CD8-41BB	primary_pairwise	41BB-L	CD8-41BB	mmd	0.0368693505434234	0.001	0.00133333333333333	4	1190	ok	NA
+CD4-like	fate	slingPseudotime_1 vs slingPseudotime_2	regulatory/Treg-associated vs proliferating CD4	41BB-L_vs_CD8-41BB	primary_pairwise	41BB-L	CD8-41BB	mmd	0.0526775146923963	0.001	0.00133333333333333	4	1190	ok	NA
+CD4-like	fate	slingPseudotime_1 vs slingPseudotime_3	regulatory/Treg-associated vs activated helper/Th1-like	41BB-L_vs_CD8-41BB	primary_pairwise	41BB-L	CD8-41BB	mmd	0.0346787091081391	0.001	0.00133333333333333	4	1190	ok	NA
+CD4-like	fate	slingPseudotime_2 vs slingPseudotime_3	proliferating CD4 vs activated helper/Th1-like	41BB-L_vs_CD8-41BB	primary_pairwise	41BB-L	CD8-41BB	mmd	0.0122110992877016	0.013	0.013	4	1190	ok	NA
+CD4-like	fate	All	All lineage pairs	41BB-L_vs_STOP	secondary_control	41BB-L	STOP	mmd	0.0711803513626945	0.001	0.001	4	740	ok	NA
+CD4-like	fate	slingPseudotime_1 vs slingPseudotime_2	regulatory/Treg-associated vs proliferating CD4	41BB-L_vs_STOP	secondary_control	41BB-L	STOP	mmd	0.0924770091436378	0.001	0.001	4	740	ok	NA
+CD4-like	fate	slingPseudotime_1 vs slingPseudotime_3	regulatory/Treg-associated vs activated helper/Th1-like	41BB-L_vs_STOP	secondary_control	41BB-L	STOP	mmd	0.0102891890572567	0.001	0.001	4	740	ok	NA
+CD4-like	fate	slingPseudotime_2 vs slingPseudotime_3	proliferating CD4 vs activated helper/Th1-like	41BB-L_vs_STOP	secondary_control	41BB-L	STOP	mmd	0.0963262423689542	0.001	0.001	4	740	ok	NA
+CD4-like	fate	All	All lineage pairs	B7H3_vs_41BB-L	primary_pairwise	B7H3	41BB-L	mmd	0.0231058760635097	0.001	0.00133333333333333	4	894	ok	NA
+CD4-like	fate	slingPseudotime_1 vs slingPseudotime_2	regulatory/Treg-associated vs proliferating CD4	B7H3_vs_41BB-L	primary_pairwise	B7H3	41BB-L	mmd	0.0342202748480718	0.001	0.00133333333333333	4	894	ok	NA
+CD4-like	fate	slingPseudotime_1 vs slingPseudotime_3	regulatory/Treg-associated vs activated helper/Th1-like	B7H3_vs_41BB-L	primary_pairwise	B7H3	41BB-L	mmd	0.0195336361674272	0.001	0.00133333333333333	4	894	ok	NA
+CD4-like	fate	slingPseudotime_2 vs slingPseudotime_3	proliferating CD4 vs activated helper/Th1-like	B7H3_vs_41BB-L	primary_pairwise	B7H3	41BB-L	mmd	0.0166571414077823	0.006	0.006	4	894	ok	NA
+CD4-like	fate	All	All lineage pairs	B7H3_vs_CD28-41BB	primary_pairwise	B7H3	CD28-41BB	mmd	0.0216080367573515	0.001	0.004	4	828	ok	NA
+CD4-like	fate	slingPseudotime_1 vs slingPseudotime_2	regulatory/Treg-associated vs proliferating CD4	B7H3_vs_CD28-41BB	primary_pairwise	B7H3	CD28-41BB	mmd	0.0217919598949987	0.003	0.006	4	828	ok	NA
+CD4-like	fate	slingPseudotime_1 vs slingPseudotime_3	regulatory/Treg-associated vs activated helper/Th1-like	B7H3_vs_CD28-41BB	primary_pairwise	B7H3	CD28-41BB	mmd	0.00426255752715754	0.034	0.034	4	828	ok	NA
+CD4-like	fate	slingPseudotime_2 vs slingPseudotime_3	proliferating CD4 vs activated helper/Th1-like	B7H3_vs_CD28-41BB	primary_pairwise	B7H3	CD28-41BB	mmd	0.0174141789710136	0.006	0.008	4	828	ok	NA
+CD4-like	fate	All	All lineage pairs	B7H3_vs_CD8-41BB	primary_pairwise	B7H3	CD8-41BB	mmd	0.0181325531556134	0.001	0.002	4	1408	ok	NA
+CD4-like	fate	slingPseudotime_1 vs slingPseudotime_2	regulatory/Treg-associated vs proliferating CD4	B7H3_vs_CD8-41BB	primary_pairwise	B7H3	CD8-41BB	mmd	0.00928773019644913	0.002	0.00266666666666667	4	1408	ok	NA
+CD4-like	fate	slingPseudotime_1 vs slingPseudotime_3	regulatory/Treg-associated vs activated helper/Th1-like	B7H3_vs_CD8-41BB	primary_pairwise	B7H3	CD8-41BB	mmd	0.0301283538405686	0.001	0.002	4	1408	ok	NA
+CD4-like	fate	slingPseudotime_2 vs slingPseudotime_3	proliferating CD4 vs activated helper/Th1-like	B7H3_vs_CD8-41BB	primary_pairwise	B7H3	CD8-41BB	mmd	0.00150879073157739	0.149	0.149	4	1408	ok	NA
+CD4-like	fate	All	All lineage pairs	B7H3_vs_STOP	secondary_control	B7H3	STOP	mmd	0.0119347051141661	0.003	0.004	4	958	ok	NA
+CD4-like	fate	slingPseudotime_1 vs slingPseudotime_2	regulatory/Treg-associated vs proliferating CD4	B7H3_vs_STOP	secondary_control	B7H3	STOP	mmd	0.0310139259297306	0.001	0.002	4	958	ok	NA
+CD4-like	fate	slingPseudotime_1 vs slingPseudotime_3	regulatory/Treg-associated vs activated helper/Th1-like	B7H3_vs_STOP	secondary_control	B7H3	STOP	mmd	0.000427930913264873	0.246	0.246	4	958	ok	NA
+CD4-like	fate	slingPseudotime_2 vs slingPseudotime_3	proliferating CD4 vs activated helper/Th1-like	B7H3_vs_STOP	secondary_control	B7H3	STOP	mmd	0.0513986705183203	0.001	0.002	4	958	ok	NA
+CD4-like	fate	All	All lineage pairs	CD28-41BB_vs_STOP	secondary_control	CD28-41BB	STOP	mmd	0.0628165871616875	0.001	0.00133333333333333	4	674	ok	NA
+CD4-like	fate	slingPseudotime_1 vs slingPseudotime_2	regulatory/Treg-associated vs proliferating CD4	CD28-41BB_vs_STOP	secondary_control	CD28-41BB	STOP	mmd	0.102629346430179	0.001	0.00133333333333333	4	674	ok	NA
+CD4-like	fate	slingPseudotime_1 vs slingPseudotime_3	regulatory/Treg-associated vs activated helper/Th1-like	CD28-41BB_vs_STOP	secondary_control	CD28-41BB	STOP	mmd	0.000366132753320647	0.243	0.243	4	674	ok	NA
+CD4-like	fate	slingPseudotime_2 vs slingPseudotime_3	proliferating CD4 vs activated helper/Th1-like	CD28-41BB_vs_STOP	secondary_control	CD28-41BB	STOP	mmd	0.100291111895816	0.001	0.00133333333333333	4	674	ok	NA
+CD4-like	fate	All	All lineage pairs	CD8-41BB_vs_CD28-41BB	primary_pairwise	CD8-41BB	CD28-41BB	mmd	0.0574427811151739	0.001	0.001	4	1124	ok	NA
+CD4-like	fate	slingPseudotime_1 vs slingPseudotime_2	regulatory/Treg-associated vs proliferating CD4	CD8-41BB_vs_CD28-41BB	primary_pairwise	CD8-41BB	CD28-41BB	mmd	0.0622787840736683	0.001	0.001	4	1124	ok	NA
+CD4-like	fate	slingPseudotime_1 vs slingPseudotime_3	regulatory/Treg-associated vs activated helper/Th1-like	CD8-41BB_vs_CD28-41BB	primary_pairwise	CD8-41BB	CD28-41BB	mmd	0.0251825867149431	0.001	0.001	4	1124	ok	NA
+CD4-like	fate	slingPseudotime_2 vs slingPseudotime_3	proliferating CD4 vs activated helper/Th1-like	CD8-41BB_vs_CD28-41BB	primary_pairwise	CD8-41BB	CD28-41BB	mmd	0.0438561109374624	0.001	0.001	4	1124	ok	NA
+CD4-like	fate	All	All lineage pairs	CD8-41BB_vs_STOP	secondary_control	CD8-41BB	STOP	mmd	0.0169805024769392	0.001	0.00133333333333333	4	1254	ok	NA
+CD4-like	fate	slingPseudotime_1 vs slingPseudotime_2	regulatory/Treg-associated vs proliferating CD4	CD8-41BB_vs_STOP	secondary_control	CD8-41BB	STOP	mmd	0.00100872342363623	0.198	0.198	4	1254	ok	NA
+CD4-like	fate	slingPseudotime_1 vs slingPseudotime_3	regulatory/Treg-associated vs activated helper/Th1-like	CD8-41BB_vs_STOP	secondary_control	CD8-41BB	STOP	mmd	0.0251827979108181	0.001	0.00133333333333333	4	1254	ok	NA
+CD4-like	fate	slingPseudotime_2 vs slingPseudotime_3	proliferating CD4 vs activated helper/Th1-like	CD8-41BB_vs_STOP	secondary_control	CD8-41BB	STOP	mmd	0.0198381794265245	0.001	0.00133333333333333	4	1254	ok	NA
+CD4-like	progression	All	All lineages	41BB-L_vs_CD28-41BB	primary_pairwise	41BB-L	CD28-41BB	KS	2.87712572831446	0.00200657831012536	0.00802631324050144	4	610	ok	NA
+CD4-like	progression	slingPseudotime_1	regulatory/Treg-associated	41BB-L_vs_CD28-41BB	primary_pairwise	41BB-L	CD28-41BB	KS	0.122637911233785	0.0846248086124569	0.112833078149943	4	610	ok	NA
+CD4-like	progression	slingPseudotime_2	proliferating CD4	41BB-L_vs_CD28-41BB	primary_pairwise	41BB-L	CD28-41BB	KS	0.219034114576226	0.0233829145161117	0.0467658290322235	4	610	ok	NA
+CD4-like	progression	slingPseudotime_3	activated helper/Th1-like	41BB-L_vs_CD28-41BB	primary_pairwise	41BB-L	CD28-41BB	KS	0.117346138974356	0.183476820937683	0.183476820937683	4	610	ok	NA
+CD4-like	progression	All	All lineages	41BB-L_vs_CD8-41BB	primary_pairwise	41BB-L	CD8-41BB	KS	10.3009235278978	3.4894026623376e-25	1.39576106493504e-24	4	1190	ok	NA
+CD4-like	progression	slingPseudotime_1	regulatory/Treg-associated	41BB-L_vs_CD8-41BB	primary_pairwise	41BB-L	CD8-41BB	KS	0.163470128654556	0.000779552116395466	0.000779552116395466	4	1190	ok	NA
+CD4-like	progression	slingPseudotime_2	proliferating CD4	41BB-L_vs_CD8-41BB	primary_pairwise	41BB-L	CD8-41BB	KS	0.40228657577964	4.58777460465853e-12	6.11703280621138e-12	4	1190	ok	NA
+CD4-like	progression	slingPseudotime_3	activated helper/Th1-like	41BB-L_vs_CD8-41BB	primary_pairwise	41BB-L	CD8-41BB	KS	0.495028267655372	2.2e-16	4.4e-16	4	1190	ok	NA
+CD4-like	progression	All	All lineages	41BB-L_vs_STOP	secondary_control	41BB-L	STOP	KS	7.19657333124935	3.08722940433026e-13	1.2348917617321e-12	4	740	ok	NA
+CD4-like	progression	slingPseudotime_1	regulatory/Treg-associated	41BB-L_vs_STOP	secondary_control	41BB-L	STOP	KS	0.263741668010074	4.11634372254888e-07	6.30369890360545e-07	4	740	ok	NA
+CD4-like	progression	slingPseudotime_2	proliferating CD4	41BB-L_vs_STOP	secondary_control	41BB-L	STOP	KS	0.209441636329328	0.00354050006553785	0.00354050006553785	4	740	ok	NA
+CD4-like	progression	slingPseudotime_3	activated helper/Th1-like	41BB-L_vs_STOP	secondary_control	41BB-L	STOP	KS	0.283073642029769	4.72777417770409e-07	6.30369890360545e-07	4	740	ok	NA
+CD4-like	progression	All	All lineages	B7H3_vs_41BB-L	primary_pairwise	B7H3	41BB-L	KS	5.48621721716984	2.05315960146705e-08	8.2126384058682e-08	4	894	ok	NA
+CD4-like	progression	slingPseudotime_1	regulatory/Treg-associated	B7H3_vs_41BB-L	primary_pairwise	B7H3	41BB-L	KS	0.247212650517992	8.93581042493707e-08	1.78716208498741e-07	4	894	ok	NA
+CD4-like	progression	slingPseudotime_2	proliferating CD4	B7H3_vs_41BB-L	primary_pairwise	B7H3	41BB-L	KS	0.16593811818823	0.0349214237755435	0.0465618983673914	4	894	ok	NA
+CD4-like	progression	slingPseudotime_3	activated helper/Th1-like	B7H3_vs_41BB-L	primary_pairwise	B7H3	41BB-L	KS	0.0949224691643058	0.241306870405795	0.241306870405795	4	894	ok	NA
+CD4-like	progression	All	All lineages	B7H3_vs_CD28-41BB	primary_pairwise	B7H3	CD28-41BB	KS	3.32092603457499	0.000448596555105382	0.00179438622042153	4	828	ok	NA
+CD4-like	progression	slingPseudotime_1	regulatory/Treg-associated	B7H3_vs_CD28-41BB	primary_pairwise	B7H3	CD28-41BB	KS	0.147843185172963	0.00943457352184152	0.018869147043683	4	828	ok	NA
+CD4-like	progression	slingPseudotime_2	proliferating CD4	B7H3_vs_CD28-41BB	primary_pairwise	B7H3	CD28-41BB	KS	0.133479953702201	0.226712612764079	0.226712612764079	4	828	ok	NA
+CD4-like	progression	slingPseudotime_3	activated helper/Th1-like	B7H3_vs_CD28-41BB	primary_pairwise	B7H3	CD28-41BB	KS	0.125735510122514	0.0645292772727457	0.0860390363636609	4	828	ok	NA
+CD4-like	progression	All	All lineages	B7H3_vs_CD8-41BB	primary_pairwise	B7H3	CD8-41BB	KS	10.2750660032335	4.56409670291397e-25	1.82563868116559e-24	4	1408	ok	NA
+CD4-like	progression	slingPseudotime_1	regulatory/Treg-associated	B7H3_vs_CD8-41BB	primary_pairwise	B7H3	CD8-41BB	KS	0.189736624759869	3.73452315427514e-06	3.73452315427514e-06	4	1408	ok	NA
+CD4-like	progression	slingPseudotime_2	proliferating CD4	B7H3_vs_CD8-41BB	primary_pairwise	B7H3	CD8-41BB	KS	0.244049506961062	6.155117826534e-08	8.20682376871199e-08	4	1408	ok	NA
+CD4-like	progression	slingPseudotime_3	activated helper/Th1-like	B7H3_vs_CD8-41BB	primary_pairwise	B7H3	CD8-41BB	KS	0.537892881885653	2.2e-16	4.4e-16	4	1408	ok	NA
+CD4-like	progression	All	All lineages	B7H3_vs_STOP	secondary_control	B7H3	STOP	KS	8.92486064446746	2.23130345563018e-19	8.92521382252072e-19	4	958	ok	NA
+CD4-like	progression	slingPseudotime_1	regulatory/Treg-associated	B7H3_vs_STOP	secondary_control	B7H3	STOP	KS	0.188184612420662	0.000199018453682975	0.000199018453682975	4	958	ok	NA
+CD4-like	progression	slingPseudotime_2	proliferating CD4	B7H3_vs_STOP	secondary_control	B7H3	STOP	KS	0.299620504755747	1.95878979702968e-09	2.61171972937291e-09	4	958	ok	NA
+CD4-like	progression	slingPseudotime_3	activated helper/Th1-like	B7H3_vs_STOP	secondary_control	B7H3	STOP	KS	0.304880492621992	2.69196998026189e-10	5.38393996052378e-10	4	958	ok	NA
+CD4-like	progression	All	All lineages	CD28-41BB_vs_STOP	secondary_control	CD28-41BB	STOP	KS	5.76238600596621	4.14665277933904e-09	1.65866111173562e-08	4	674	ok	NA
+CD4-like	progression	slingPseudotime_1	regulatory/Treg-associated	CD28-41BB_vs_STOP	secondary_control	CD28-41BB	STOP	KS	0.152330613615447	0.0190721259451908	0.0190721259451908	4	674	ok	NA
+CD4-like	progression	slingPseudotime_2	proliferating CD4	CD28-41BB_vs_STOP	secondary_control	CD28-41BB	STOP	KS	0.30183416271904	3.46032198420554e-05	6.92064396841108e-05	4	674	ok	NA
+CD4-like	progression	slingPseudotime_3	activated helper/Th1-like	CD28-41BB_vs_STOP	secondary_control	CD28-41BB	STOP	KS	0.23883529404689	7.42669722318956e-05	9.90226296425275e-05	4	674	ok	NA
+CD4-like	progression	All	All lineages	CD8-41BB_vs_CD28-41BB	primary_pairwise	CD8-41BB	CD28-41BB	KS	7.27372472321621	1.74854132476121e-13	3.49708264952243e-13	4	1124	ok	NA
+CD4-like	progression	slingPseudotime_1	regulatory/Treg-associated	CD8-41BB_vs_CD28-41BB	primary_pairwise	CD8-41BB	CD28-41BB	KS	0.116984699385709	0.0584320601928121	0.0584320601928121	4	1124	ok	NA
+CD4-like	progression	slingPseudotime_2	proliferating CD4	CD8-41BB_vs_CD28-41BB	primary_pairwise	CD8-41BB	CD28-41BB	KS	0.225346426794856	0.00214130253379796	0.00285507004506395	4	1124	ok	NA
+CD4-like	progression	slingPseudotime_3	activated helper/Th1-like	CD8-41BB_vs_CD28-41BB	primary_pairwise	CD8-41BB	CD28-41BB	KS	0.478527272628126	2.2e-16	8.8e-16	4	1124	ok	NA
+CD4-like	progression	All	All lineages	CD8-41BB_vs_STOP	secondary_control	CD8-41BB	STOP	KS	10.9843890192784	2.27151053470567e-28	9.08604213882266e-28	4	1254	ok	NA
+CD4-like	progression	slingPseudotime_1	regulatory/Treg-associated	CD8-41BB_vs_STOP	secondary_control	CD8-41BB	STOP	KS	0.141362324343511	0.00820585617008385	0.00820585617008385	4	1254	ok	NA
+CD4-like	progression	slingPseudotime_2	proliferating CD4	CD8-41BB_vs_STOP	secondary_control	CD8-41BB	STOP	KS	0.427147923149363	2.2e-16	2.93333333333333e-16	4	1254	ok	NA
+CD4-like	progression	slingPseudotime_3	activated helper/Th1-like	CD8-41BB_vs_STOP	secondary_control	CD8-41BB	STOP	KS	0.525703300601016	2.2e-16	2.93333333333333e-16	4	1254	ok	NA
+CD4-like	topology	All	Trajectory structure	all_conditions	global_all_conditions	NA	NA	Classifier	0.837796143250689	4.23560615992176e-160	4.23560615992176e-160	10	2420	ok	All-condition refit has 3 lineages
