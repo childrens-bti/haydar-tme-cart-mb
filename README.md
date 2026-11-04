@@ -51,4 +51,4 @@ cd /home/rstudio/haydar-scrna/analyses/module_of_interest
 
 ## Code Authors
 
-Sam Chen ([@sychen9584](https://github.com/sychen9584))
+Sam Chen ([@sychen9584](https://github.com/sychen9584)) Bicna Song ([@bicnasong](https://github.com/bicnasong))
