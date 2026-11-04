@@ -1028,6 +1028,59 @@ plot_condiments_fate_mice <- function(summary, annotations, compartment,
       x = "Mouse", y = "Mean lineage membership", fill = NULL)
 }
 
+# Pool both mice of each construct: a lineage's share is the sum of the cells'
+# normalized weights on it over the construct's cells, so every cell counts once
+# and the three segments sum to 100%. The MMD fate test compares these weights.
+plot_condiments_fate_pooled <- function(summary, annotations, compartment,
+                                        exclude_conditions) {
+  conditions <- display_conditions(summary$condition, exclude_conditions)
+  data <- summary |>
+    dplyr::filter(.data$compartment == .env$compartment,
+                  .data$condition %in% conditions) |>
+    dplyr::group_by(.data$condition, .data$lineage) |>
+    dplyr::summarise(weight_sum = sum(.data$weight_sum), .groups = "drop") |>
+    dplyr::left_join(
+      summary |>
+        dplyr::filter(.data$compartment == .env$compartment) |>
+        dplyr::distinct(.data$condition, .data$sample, .data$n_cells) |>
+        dplyr::group_by(.data$condition) |>
+        dplyr::summarise(n_cells = sum(.data$n_cells), .groups = "drop"),
+      by = "condition") |>
+    dplyr::mutate(share = .data$weight_sum / .data$n_cells,
+                  condition = factor(.data$condition, levels = conditions),
+                  lineage = factor(.data$lineage,
+                    levels = annotations$lineage[annotations$compartment == compartment]))
+  totals <- dplyr::distinct(data, condition, n_cells)
+  labels <- condiments_lineage_labels(annotations, compartment)
+  colors <- stats::setNames(c("#0072B2", "#D55E00", "#009E73"), names(labels))
+  ggplot2::ggplot(data, ggplot2::aes(.data$condition, .data$share, fill = .data$lineage)) +
+    ggplot2::geom_col(width = 0.7, color = "white", linewidth = 0.25,
+                      position = ggplot2::position_stack(reverse = TRUE)) +
+    ggplot2::geom_text(ggplot2::aes(label = ifelse(.data$share >= 0.05,
+                                                   paste0(round(100 * .data$share), "%"), "")),
+                       position = ggplot2::position_stack(vjust = 0.5, reverse = TRUE),
+                       color = "white", size = 3.6) +
+    ggplot2::geom_text(data = totals, ggplot2::aes(.data$condition, 1.04,
+                       label = paste0("n=", .data$n_cells)),
+                       inherit.aes = FALSE, size = 3.2) +
+    ggplot2::scale_x_discrete(labels = condition_plot_label) +
+    ggplot2::scale_fill_manual(values = colors, labels = labels) +
+    ggplot2::scale_y_continuous(breaks = seq(0, 1, 0.25),
+                                labels = function(x) paste0(round(100 * x), "%"),
+                                limits = c(0, 1.1), expand = c(0, 0)) +
+    ggplot2::guides(fill = ggplot2::guide_legend(nrow = 1)) +
+    ggplot2::theme_classic(base_size = 12) +
+    ggplot2::theme(legend.position = "bottom",
+                   plot.caption = ggplot2::element_text(hjust = 0)) +
+    ggplot2::labs(title = paste(compartment, "Lineage membership by construct"),
+      subtitle = "Descriptive | Both mice pooled; n = cells",
+      caption = paste(
+        "Each cell's lineage weights sum to one; a segment is the mean weight on that lineage over all of the construct's cells.",
+        "Cells before the lineages split are divided between them. FDRs for each pair are on the next page.",
+        sep = "\n"),
+      x = NULL, y = "Mean lineage membership", fill = NULL)
+}
+
 # Keep a topic's test evidence and descriptive views on separate PDF pages.
 save_condiments_pages <- function(file, pages) {
   grDevices::pdf(file, width = 12, height = 7, onefile = TRUE)

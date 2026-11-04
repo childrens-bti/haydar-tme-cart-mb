@@ -367,9 +367,9 @@ Three PDFs are written for the compartment:
 
 - **Topology curves** (four pages): the curves that the global topology test compares, drawn in the SLING space where Slingshot fitted them. Pages 1 and 3 compare constructs within each lineage; pages 2 and 4 show each construct's own curves. Pages 1–2 use SLING dimensions 1–2 and pages 3–4 use dimensions 3–4. Refit lineages are matched to the shared L1–L3 by their end clusters.
 - **Progression** (five pages): pseudotime distributions for one pair with KS FDRs; the same cumulative curves for all five constructs overlaid; pseudotime densities by construct; FDRs for all comparisons; and each mouse's lineage-weighted mean pseudotime.
-- **Fate** (four pages): for one pair with MMD FDRs, then for all five constructs, the share of cells on the first lineage only, on both lineages (shared), or on the second lineage only, for each lineage pair; FDRs for all comparisons; and each mouse's mean lineage membership.
+- **Fate** (five pages): each construct's share of cells on each lineage, both mice pooled; FDRs for all comparisons; then for one pair with MMD FDRs, and for all five constructs, the share of cells on the first lineage only, on both lineages (shared), or on the second lineage only, for each lineage pair; and each mouse's mean lineage membership.
 
-Page 1 of the progression and fate PDFs shows one pair (`plot_comparison`, default B7H3 vs 41BB-L); page 2 shows all constructs, and the FDR overview shows all pairs. Dashed lines are means over pooled cells. FDRs are adjusted within each comparison across its four tests, not across the 10 comparisons.
+Page 1 of the progression PDF and page 3 of the fate PDF show one pair (`plot_comparison`, default B7H3 vs 41BB-L); the FDR overviews show all pairs. Dashed lines are means over pooled cells. FDRs are adjusted within each comparison across its four tests, not across the 10 comparisons.
 
 ```{r condiments-figures, results='asis', fig.show='hide'}
 plot_file <- function(topic) {
@@ -409,12 +409,14 @@ progression_pages <- list(
                                    compartment, excluded_conditions)
 )
 fate_pages <- list(
+  plot_condiments_fate_pooled(sample_lineage_probabilities, lineage_annotations,
+                              compartment, excluded_conditions),
+  plot_condiments_test_results(condiments_results, compartment, "fate",
+                               lineage_annotations),
   plot_condiments_fate_shares(input, lineage_annotations, excluded_conditions,
                               comparison = focus_comparison,
                               results = condiments_results),
   plot_condiments_fate_shares(input, lineage_annotations, excluded_conditions),
-  plot_condiments_test_results(condiments_results, compartment, "fate",
-                               lineage_annotations),
   plot_condiments_fate_mice(sample_lineage_probabilities, lineage_annotations,
                             compartment, excluded_conditions)
 )
