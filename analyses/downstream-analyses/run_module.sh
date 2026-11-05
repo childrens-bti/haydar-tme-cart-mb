@@ -27,23 +27,14 @@ Rscript -e "rmarkdown::render('06-tcell-reclustering.Rmd')"
 # Perform DC re-clustering and run AUCell on Hallmark pathways
 Rscript -e "rmarkdown::render('07-dc-reclustering.Rmd')"
 
-# Perform T cell trajectory analysis using Slingshot
-Rscript -e "rmarkdown::render('08-tcell-trajectory.Rmd')"
-
 # Run miloR neighborhood differential abundance testing for myeloid cells
-Rscript -e "rmarkdown::render('09-myeloid-milor-analysis.Rmd')"
+Rscript -e "rmarkdown::render('08-myeloid-milor-analysis.Rmd')"
 
 # Run miloR neighborhood differential abundance testing for refined T cells
-Rscript -e "rmarkdown::render('10-tcell-milor-analysis.Rmd')"
+Rscript -e "rmarkdown::render('09-tcell-milor-analysis.Rmd')"
 
 # Perform refined T cell subtype composition analysis using sccomp
-Rscript -e "rmarkdown::render('11-tcell-composition-analysis.Rmd')"
-
-# Prepare annotated CD4-like and CD8-like T cell objects for trajectory analysis
-Rscript -e "rmarkdown::render('12-tcell-cd4-cd8-annotation.Rmd')"
-
-# Perform CD4-like and CD8-like T cell trajectory analysis using Slingshot
-Rscript -e "rmarkdown::render('13-tcell-cd4-cd8-slingshot.Rmd')"
+Rscript -e "rmarkdown::render('10-tcell-composition-analysis.Rmd')"
 
 # Export finalized Seurat objects for interactive review in Loupe Browser
-Rscript --vanilla 14-generate-loupe-files.R
+Rscript --vanilla 11-generate-loupe-files.R
