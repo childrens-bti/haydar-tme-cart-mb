@@ -25,19 +25,20 @@ condition_plot_labels <- list(
   all_conditions = "All conditions"
 )
 
-# Fixed condition colors. These match the ggplot2 default hues used in the
-# tradeSeq trend plots (five conditions in alphabetical order), so the same
-# CAR construct has the same color in every figure of this module.
+# Fixed condition colors. These match the ggplot2 default hues for all six
+# conditions in alphabetical order (as in the UMAP and AUCell plots), so the
+# same condition has the same color in every figure of this module.
 condition_colors <- c(
   `41BB-L` = "#F8766D",
-  B7H3 = "#A3A500",
-  `CD28-41BB` = "#00BF7D",
-  `CD8-41BB` = "#00B0F6",
-  STOP = "#E76BF3"
+  B7H3 = "#B79F00",
+  `CD28-41BB` = "#00BA38",
+  `CD8-41BB` = "#00BFC4",
+  STOP = "#619CFF",
+  tumor = "#F564E3"
 )
 
-# Display order for CAR constructs, with the control CAR last.
-condition_display_order <- c("B7H3", "41BB-L", "CD8-41BB", "CD28-41BB", "STOP")
+# Display order for conditions: alphabetical, with the control CAR and tumor last.
+condition_display_order <- c("41BB-L", "B7H3", "CD28-41BB", "CD8-41BB", "STOP", "tumor")
 
 # Return condition labels as plotmath strings for facet labellers.
 condition_label_string <- function(condition) {
