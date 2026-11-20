@@ -736,7 +736,7 @@ condiments_progression_ecdf <- function(input, conditions) {
 # the cached two-sided test can also detect crossing or shape differences.
 plot_condiments_progression_distribution <- function(input, annotations,
                                                       comparison, results) {
-  conditions <- c(comparison$condition_a[[1]], comparison$condition_b[[1]])
+  conditions <- display_conditions(c(comparison$condition_a[[1]], comparison$condition_b[[1]]))
   data <- condiments_progression_ecdf(input, conditions)
   data$condition <- factor(data$condition, levels = conditions)
   labels <- condiments_lineage_labels(annotations, input$compartment)
@@ -870,7 +870,7 @@ plot_condiments_fate_shares <- function(input, annotations, exclude_conditions,
                                         cutoffs = c(0.25, 0.75)) {
   focused <- !is.null(comparison)
   conditions <- if (focused) {
-    c(comparison$condition_a[[1]], comparison$condition_b[[1]])
+    display_conditions(c(comparison$condition_a[[1]], comparison$condition_b[[1]]))
   } else {
     display_conditions(input$condition, exclude_conditions)
   }

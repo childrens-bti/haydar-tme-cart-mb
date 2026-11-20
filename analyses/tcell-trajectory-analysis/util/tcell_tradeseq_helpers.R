@@ -839,8 +839,9 @@ plot_priority_gene_program <- function(
     ggplot2::aes(x = time, y = log1p(yhat), color = condition)
   ) +
     ggplot2::geom_line(linewidth = 0.7) +
-    ggplot2::scale_color_discrete(
-      breaks = condition_levels,
+    ggplot2::scale_color_manual(
+      values = condition_colors,
+      breaks = intersect(condition_display_order, condition_levels),
       labels = condition_plot_label
     ) +
     ggplot2::facet_grid(gene ~ lineage, scales = "free") +
